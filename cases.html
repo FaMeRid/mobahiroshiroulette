@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Выберите кейс для открытия в MOBAHIROSHI — MLBB Heroes, Battle Spells, Lanes или Emblems."/>
+  <meta name="keywords" content="MLBB кейсы, открытие, heroes, spells, lanes, emblems"/>
+  <title>Выбор — MOBAHIROSHI</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Exo+2:wght@900&display=swap" rel="stylesheet"/>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <style>
+    :root {
+      --neon-cyan: #00fff5;
+      --gold: #ffd700;
+      --orange-red: #ff4500;
+      --deep-dark: #030714;
+      --text-glow: #e0ffff;
+      --shadow-neon: rgba(0, 255, 245, 0.8);
+      --bright-blue: #00d4ff;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      margin: 0;
+      background: linear-gradient(to bottom, #030714, #0a0f28);
+      color: var(--text-glow);
+      font-family: 'Exo 2', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Неоновый пульсирующий оверлей */
+    .neon-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 30%, rgba(0,255,245,0.12) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: -5;
+      animation: neon-breath 15s infinite alternate ease-in-out;
+      mix-blend-mode: screen;
+    }
+
+    @keyframes neon-breath {
+      0%   { opacity: 0.4; transform: scale(1); }
+      50%  { opacity: 0.8; transform: scale(1.05); }
+      100% { opacity: 0.5; transform: scale(1.02); }
+    }
+
+    /* Герои по краям страницы — не огромные */
+    .heroes-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -2;
+      overflow: hidden;
+    }
+
+    .hero-video {
+      position: absolute;
+      bottom: -2%;
+      width: clamp(280px, 40vw, 450px);          /* средний размер, не гигантский */
+      height: auto;
+      object-fit: contain;
+      filter: 
+        drop-shadow(0 80px 180px var(--shadow-neon)) 
+        brightness(1.4) 
+        contrast(1.2);
+      opacity: 0;
+      transform: translateY(120px) scale(0.9);
+      animation: 
+        hero-reveal 2.2s cubic-bezier(0.22,1,0.36,1) forwards,
+        hero-sway 14s infinite ease-in-out;
+      will-change: transform, opacity, filter;
+      mix-blend-mode: screen;
+    }
+
+    .hero-left  { left: -5%; animation-delay: 0.4s; }   /* строго слева */
+    .hero-right { right: -5%; animation-delay: 0.8s; }  /* строго справа */
+
+    @keyframes hero-reveal {
+      0%   { opacity: 0; transform: translateY(120px) scale(0.9) rotate(-3deg); }
+      60%  { opacity: 1; transform: translateY(20px) scale(1.05) rotate(1deg); }
+      100% { opacity: 0.95; transform: translateY(0) scale(1) rotate(0deg); }
+    }
+
+    /* Лёгкое покачивание (очень мягкое) */
+    @keyframes hero-sway {
+      0%,100% { transform: translateX(0) rotate(0deg); }
+      50%     { transform: translateX(12px) rotate(0.8deg); }
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: rgba(3,7,20,0.88);
+      backdrop-filter: blur(14px);
+      padding: 1.2rem 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      border-bottom: 1px solid rgba(0,255,245,0.2);
+    }
+
+    .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2.4rem, 6.5vw, 3.6rem);
+      font-weight: 900;
+      color: var(--gold);
+      text-shadow: 0 0 35px var(--gold);
+      letter-spacing: 5px;
+    }
+
+    .social-icons {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .social-icon {
+      font-size: 2.6rem;
+      color: var(--neon-cyan);
+      transition: all 0.5s ease;
+      text-shadow: 0 0 20px var(--shadow-neon);
+    }
+
+    .social-icon:hover {
+      transform: translateY(-12px) scale(1.4) rotate(15deg);
+      color: var(--gold);
+      text-shadow: 0 0 40px var(--gold);
+    }
+
+    main.case-main {
+      padding: 150px 20px 100px;
+      position: relative;
+      z-index: 10;
+    }
+
+    h2.case-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(4rem, 12vw, 7.5rem);
+      font-weight: 900;
+      text-align: center;
+      margin-bottom: 5rem;
+      background: linear-gradient(90deg, var(--gold), var(--orange-red), var(--neon-cyan), var(--gold));
+      background-size: 500%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 80px rgba(255,215,0,0.9);
+      animation: title-shine 12s linear infinite, title-glow 5s ease-in-out infinite alternate;
+    }
+
+    @keyframes title-shine {
+      0%   { background-position: 0% 50%; }
+      100% { background-position: 500% 50%; }
+    }
+
+    @keyframes title-glow {
+      0%   { text-shadow: 0 0 80px rgba(255,215,0,0.9); }
+      100% { text-shadow: 0 0 160px rgba(255,69,0,1), 0 0 280px rgba(0,255,245,0.8); }
+    }
+
+    .case-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 3.5rem;
+      max-width: 1700px;
+      margin: 0 auto;
+    }
+
+    .case-card {
+      background: rgba(8,12,35,0.8);
+      border: 3px solid rgba(0,255,245,0.35);
+      border-radius: 28px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 20px 80px rgba(0,0,0,0.8);
+      position: relative;
+      opacity: 0;
+      transform: translateY(100px) rotateX(20deg) scale(0.92);
+      animation: card-reveal 1.4s ease-out forwards;
+      will-change: transform, box-shadow, border-color;
+    }
+
+    .case-card:nth-child(1) { animation-delay: 0.5s; }
+    .case-card:nth-child(2) { animation-delay: 0.8s; }
+    .case-card:nth-child(3) { animation-delay: 1.1s; }
+    .case-card:nth-child(4) { animation-delay: 1.4s; }
+
+    @keyframes card-reveal {
+      to { opacity: 1; transform: translateY(0) rotateX(0deg) scale(1); }
+    }
+
+    .case-card:hover {
+      transform: translateY(-35px) scale(1.1) rotateX(0deg);
+      box-shadow: 0 60px 180px rgba(255,69,0,0.7), 0 0 120px rgba(0,255,245,0.5);
+      border-color: var(--orange-red);
+    }
+
+    .case-card img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      transition: transform 0.8s ease;
+    }
+
+    .case-card:hover img {
+      transform: scale(1.18);
+    }
+
+    .case-card p {
+      padding: 2rem;
+      font-size: 2.2rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--gold), var(--orange-red));
+      background-size: 300%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 25px var(--shadow-neon);
+      text-align: center;
+      margin: 0;
+      animation: text-shimmer 6s linear infinite;
+    }
+
+    @keyframes text-shimmer {
+      0%   { background-position: 0% 50%; }
+      100% { background-position: 300% 50%; }
+    }
+
+    /* Лёгкие CSS-частицы при наведении */
+    .case-card::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(255,69,0,0.2) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.6s;
+      pointer-events: none;
+    }
+
+    .case-card:hover::after {
+      opacity: 1;
+    }
+
+    @media (max-width: 1024px) {
+      .hero-video { width: clamp(320px, 50vw, 500px); bottom: -20%; }
+      .case-grid { gap: 2.5rem; }
+    }
+
+    @media (max-width: 768px) {
+      .hero-video { width: clamp(260px, 60vw, 420px); bottom: -25%; }
+      h2.case-title { font-size: clamp(3.2rem, 14vw, 5.8rem); }
+      .case-card img { height: 240px; }
+      .case-card p { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Неоновый пульсирующий оверлей -->
+  <div class="neon-overlay"></div>
+
+  <!-- Герои по краям страницы (не огромные) -->
+  <div class="heroes-bg">
+    <video class="hero-video hero-left" autoplay loop muted playsinline>
+      <source src="assets/videos/hero3.mp4" type="video/mp4">
+    </video>
+    <video class="hero-video hero-right" autoplay loop muted playsinline>
+      <source src="assets/videos/hero4.mp4" type="video/mp4">
+    </video>
+  </div>
+
+  <header>
+    <a href="index.html" style="text-decoration:none;">
+      <div class="logo">MOBAHIROSHI</div>
+    </a>
+
+    <div class="social-icons">
+      <a href="https://www.youtube.com/@Mobahiroshi" target="_blank" class="social-icon">
+        <i class="fab fa-youtube"></i>
+      </a>
+      <a href="https://t.me/mobahiroshi" target="_blank" class="social-icon">
+        <i class="fab fa-telegram-plane"></i>
+      </a>
+      <a href="https://www.instagram.com/mobahiroshi" target="_blank" class="social-icon">
+        <i class="fab fa-instagram"></i>
+      </a>
+    </div>
+  </header>
+
+  <main class="case-main">
+    <h2 class="case-title">ВЫБИРАЙ ЧТО ОТКРЫТЬ</h2>
+
+    <div class="case-grid">
+      <div class="case-card" data-case="heroes">
+        <img src="assets/preview/previewheroes.png" alt="MLBB Heroes" loading="lazy">
+        <p>HEROES</p>
+      </div>
+
+      <div class="case-card" data-case="spells">
+        <img src="assets/preview/previewspells.png" alt="Battle Spells" loading="lazy">
+        <p>BATTLE SPELLS</p>
+      </div>
+
+      <div class="case-card" data-case="lanes">
+        <img src="assets/preview/previewlanes.png" alt="Lanes" loading="lazy">
+        <p>LANES</p>
+      </div>
+
+      <div class="case-card" data-case="emblems">
+        <img src="assets/preview/previewemblems.png" alt="Emblems" loading="lazy">
+        <p>EMBLEMS</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.case-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const caseType = card.getAttribute('data-case');
+          if (caseType) {
+            window.location.href = `open.html?case=${caseType}`;
+          }
+        });
+
+        // Взрыв частиц при наведении
+        card.addEventListener('mouseenter', () => {
+          for (let i = 0; i < 20; i++) {
+            const p = document.createElement('div');
+            p.style.position = 'absolute';
+            p.style.width = '8px';
+            p.style.height = '8px';
+            p.style.background = ['#ffd700', '#ff4500', '#00fff5', '#ff00ff'][Math.floor(Math.random()*4)];
+            p.style.borderRadius = '50%';
+            p.style.left = Math.random()*100 + '%';
+            p.style.top = Math.random()*100 + '%';
+            p.style.pointerEvents = 'none';
+            p.style.zIndex = '20';
+            p.style.animation = 'particle-burst 1.4s forwards';
+            card.appendChild(p);
+            setTimeout(() => p.remove(), 1400);
+          }
+        });
+      });
+    });
+  </script>
+
+  <style>
+    @keyframes particle-burst {
+      0%   { transform: translate(0,0) scale(0.6); opacity: 1; }
+      100% { transform: translate(calc((var(--r) - 50) * 3vw), calc((var(--r) - 50) * -3vh)) scale(0); opacity: 0; }
+    }
+  </style>
+
+</body>
+</html>

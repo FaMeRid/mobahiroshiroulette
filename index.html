@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="MOBAHIROSHI — где каждый кейс может изменить всё. Легендарки ждут только тебя."/>
+  <title>MOBAHIROSHI</title>
+
+  <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Exo+2:wght@900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <style>
+    :root {
+      --neon-cyan: #00fff5;
+      --gold: #ffd700;
+      --deep-dark: #030714;
+      --text-glow: #e0ffff;
+      --shadow-neon: rgba(0, 255, 245, 0.8);
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      min-height: 100dvh;
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--text-glow);
+      font-family: 'Exo 2', sans-serif;
+      position: relative;
+      background: var(--deep-dark);
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+
+    body.loaded {
+      opacity: 1;
+    }
+
+    /* Видео-фон с искрами */
+    #bg-particles {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center bottom;
+      opacity: 0.18;
+      z-index: -10;
+      pointer-events: none;
+      transform: scale(1.1);
+    }
+
+    .bg-glow {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 20%, rgba(0,255,245,0.28) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: -5;
+    }
+
+    .container {
+      position: relative;
+      z-index: 10;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .heroes {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 15;
+      perspective: 1000px;
+    }
+
+    .hero {
+      position: absolute;
+      bottom: 0;
+      width: clamp(320px, 45vw, 580px);        /* ← БОЛЬШЕ, было 220–420 */
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 80px 180px var(--shadow-neon)) brightness(1.35);
+      opacity: 0;
+      transform: translateY(80px);
+      transition: transform 0.4s ease-out;
+      animation: hero-reveal 2.2s cubic-bezier(0.16,1,0.3,1) forwards;
+      pointer-events: none;
+    }
+.hero video {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  background: transparent !important;
+
+  mix-blend-mode: multiply;                /* вместо screen — иногда лучше для очень яркого зелёного */                 /* основной режим для удаления яркого зелёного */
+
+  filter:
+    hue-rotate(200deg)                       /* точный поворот для #00FF00 → становится почти чёрным */
+    saturate(0.01)                           /* максимально убираем цвет */
+    brightness(1.55)                         /* герой становится ярче после удаления фона */
+    contrast(1.45)
+    sepia(0.05)                              /* убирает остаточный зелёный оттенок */
+    drop-shadow(0 0 15px rgba(255,215,0,0.6)); /* добавляет glow вокруг героя */
+}
+    /* Ближе к центру */
+    .hero-left  { left: -2%; animation-delay: 0.3s; }   /* ← было -8%, теперь ближе */
+    .hero-right { right: -2%; animation-delay: 0.7s; }  /* ← было -8%, теперь ближе */
+
+    @keyframes hero-reveal {
+      to { opacity: 0.98; transform: translateY(0); }
+    }
+
+    .title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(3.2rem, 9.5vw, 6.2rem);
+      font-weight: 900;
+      letter-spacing: 5px;
+      background: linear-gradient(90deg, var(--gold), #fffacd, var(--gold));
+      background-size: 400%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 80px rgba(255,215,0,0.7);
+      margin: 0.2em 0 0.1em;
+      line-height: 0.85;
+      opacity: 0;
+      transform: translateY(40px);
+      animation: reveal-text 1.8s ease-out forwards 0.5s, shine 12s linear infinite;
+    }
+
+    @keyframes reveal-text {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes shine {
+      0%   { background-position: 0% 50%; }
+      100% { background-position: 400% 50%; }
+    }
+
+    .nickname {
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-weight: 900;
+      color: var(--neon-cyan);
+      text-shadow: 0 0 40px var(--shadow-neon);
+      margin: 0.2em 0 1.2em;
+      opacity: 0;
+      animation: reveal-text 1.4s ease-out forwards 1s;
+    }
+
+    .tagline {
+      font-size: clamp(1.3rem, 4vw, 1.8rem);
+      max-width: 780px;
+      font-weight: 700;
+      color: #d0fffc;
+      text-shadow: 0 4px 20px #000c;
+      margin: 0 auto 2.5rem;
+      line-height: 1.35;
+      opacity: 0;
+      animation: reveal-text 1.4s ease-out forwards 1.3s;
+    }
+
+    .start-btn {
+      padding: clamp(18px, 4.5vw, 26px) clamp(70px, 12vw, 160px);
+      font-size: clamp(1.7rem, 5.5vw, 2.6rem);
+      font-weight: 900;
+      color: #030714;
+      background: linear-gradient(90deg, var(--gold), #ffeb3b, var(--gold));
+      background-size: 300% 100%;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 0 90px rgba(255,215,0,0.8), inset 0 0 50px rgba(255,255,255,0.4);
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      opacity: 0;
+      transform: scale(0.85);
+      animation: reveal-btn 1.6s cubic-bezier(0.34,1.56,0.64,1) forwards 1.6s, pulse-glow 4s ease-in-out infinite 2.5s;
+    }
+
+    .start-btn:hover {
+      transform: translateY(-16px) scale(1.08);
+      box-shadow: 0 0 180px rgba(255,215,0,1);
+      background-position: 100% 0;
+    }
+
+    @keyframes reveal-btn {
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes pulse-glow {
+      0%,100% { box-shadow: 0 0 90px rgba(255,215,0,0.8); }
+      50%     { box-shadow: 0 0 160px rgba(255,215,0,1); }
+    }
+
+    .social-bar {
+      display: flex;
+      gap: clamp(50px, 10vw, 100px);
+      margin-top: 2rem;
+      opacity: 0;
+      animation: reveal-text 1.2s ease-out forwards 2.2s;
+    }
+
+    .social-icon {
+      width: clamp(70px, 10vw, 90px);
+      height: clamp(70px, 10vw, 90px);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: clamp(2rem, 5vw, 2.8rem);
+      color: white;
+      transition: all 0.5s ease;
+      box-shadow: 0 12px 50px rgba(0,0,0,0.7);
+    }
+
+    .social-icon:hover {
+      transform: translateY(-16px) scale(1.25) rotate(10deg);
+      box-shadow: 0 30px 100px var(--shadow-neon);
+    }
+
+    .youtube   { background: #ff0000e8; }
+    .telegram  { background: #229ed9e8; }
+    .instagram { background: linear-gradient(145deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+
+    @media (max-width: 768px) {
+      .hero { width: clamp(200px, 45vw, 380px); bottom: -5%; opacity: 0.75; }
+      .hero-left  { left: 0%; }
+      .hero-right { right: 0%; }
+      .title { font-size: clamp(2.8rem, 14vw, 5.2rem); }
+      .tagline { font-size: 1.4rem; }
+      .start-btn { padding: 16px 90px; font-size: 2rem; }
+    }
+
+    @media (max-width: 480px) {
+      .start-btn { padding: 14px 70px; font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Видео-фон с искрами -->
+<video id="bg-particles" autoplay loop muted playsinline>
+  <source src="assets/videos/fire-sparks.mp4" type="video/mp4">
+</video>
+
+<div class="bg-glow"></div>
+
+<div class="heroes">
+  <!-- Левый герой — видео вместо png -->
+  <video class="hero hero-left" autoplay loop muted playsinline>
+    <source src="assets/videos/hero1.mp4" type="video/mp4">
+  </video>
+
+  <!-- Правый герой — видео вместо png -->
+  <video class="hero hero-right" autoplay loop muted playsinline>
+    <source src="assets/videos/hero2.mp4" type="video/mp4">
+  </video>
+</div>
+
+<div class="container">
+  <h1 class="title">MOBAHIROSHI</h1>
+  <div class="nickname">@mobahiroshi</div>
+  <p class="tagline">Игры слишком скучные? Тогда ты по адресу!</p>
+
+  <button class="start-btn" onclick="location.href='cases.html'">
+    ОТКРЫТЬ СЕЙЧАС
+  </button>
+
+  <div class="social-bar">
+    <a href="#" class="social-icon youtube" target="_blank"><i class="fab fa-youtube"></i></a>
+    <a href="#" class="social-icon telegram" target="_blank"><i class="fab fa-telegram-plane"></i></a>
+    <a href="#" class="social-icon instagram" target="_blank"><i class="fab fa-instagram"></i></a>
+  </div>
+</div>
+
+<!-- Фоновый звук -->
+<audio id="bg-audio" loop>
+  <source src="https://assets.mixkit.co/sfx/preview/mixkit-epic-cinematic-trailer-104.mp3" type="audio/mpeg">
+  Ваш браузер не поддерживает аудио.
+</audio>
+
+<script>
+  // Звук
+  const audio = document.getElementById('bg-audio');
+  audio.volume = 0.2;
+
+  // Parallax на героях (только десктоп)
+  if (window.innerWidth > 768) {
+    document.addEventListener('mousemove', (e) => {
+      const x = (window.innerWidth / 2 - e.clientX) / 60;  // чуть меньше смещение
+      const y = (window.innerHeight / 2 - e.clientY) / 60;
+      document.querySelector('.hero-left').style.transform = `translate(${x}px, ${y}px) translateY(0)`;
+      document.querySelector('.hero-right').style.transform = `translate(${-x}px, ${-y}px) translateY(0)`;
+    });
+  }
+
+  // Принудительно показываем страницу
+  document.body.classList.add('loaded');
+
+  // Запуск видео по клику (на мобильных часто нужно)
+  document.addEventListener('click', () => {
+    document.querySelectorAll('video').forEach(vid => {
+      if (vid.paused) vid.play().catch(() => {});
+    });
+  }, { once: true });
+</script>
+
+</body>
+</html>

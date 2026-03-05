@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Твой билд — MOBAHIROSHI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Exo+2:wght@900&display=swap" rel="stylesheet"/>
+  <style>
+    body { background: #030714; color: #e0ffff; font-family: 'Exo 2', sans-serif; text-align: center; padding: 40px 20px; }
+    h1 { font-family: 'Orbitron', sans-serif; font-size: 3.5rem; color: #ffd700; text-shadow: 0 0 30px #ffd700; }
+    .build { display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; margin: 3rem auto; max-width: 1200px; }
+    .build-item { background: rgba(10,15,40,0.7); border: 2px solid #00fff5; border-radius: 16px; padding: 1.5rem; width: 300px; box-shadow: 0 0 40px rgba(0,255,245,0.4); }
+    .build-item img { width: 100%; border-radius: 12px; margin-bottom: 1rem; }
+    .build-item h3 { color: #ffd700; margin: 0.5rem 0; }
+    .build-item p { margin: 0; font-size: 1.2rem; }
+    .back-btn { padding: 14px 60px; font-size: 1.6rem; background: #ffd700; color: #000; border: none; border-radius: 50px; cursor: pointer; margin-top: 3rem; }
+  </style>
+</head>
+<body>
+
+  <h1>ТВОЙ ИТОГОВЫЙ БИЛД</h1>
+
+  <div class="build" id="buildContainer"></div>
+
+  <button class="back-btn" onclick="location.href='cases.html'">Вернуться к выбору кейсов</button>
+
+  <script>
+    const wins = {
+      heroes: JSON.parse(localStorage.getItem('win_heroes') || '{}'),
+      spells: JSON.parse(localStorage.getItem('win_spells') || '{}'),
+      lanes: JSON.parse(localStorage.getItem('win_lanes') || '{}'),
+      emblems: JSON.parse(localStorage.getItem('win_emblems') || '{}')
+    };
+
+    const container = document.getElementById('buildContainer');
+
+    if (Object.keys(wins.heroes).length === 0) {
+      container.innerHTML = '<p style="font-size:2rem;">Сначала открой все кейсы!</p>';
+    } else {
+      const items = [
+        { type: 'Герой', data: wins.heroes },
+        { type: 'Спелл', data: wins.spells },
+        { type: 'Лейн', data: wins.lanes },
+        { type: 'Эмблема', data: wins.emblems }
+      ];
+
+      items.forEach(item => {
+        if (item.data.name) {
+          const div = document.createElement('div');
+          div.className = 'build-item';
+          div.innerHTML = `
+            <img src="${item.data.img}" alt="${item.data.name}">
+            <h3>${item.type}</h3>
+            <p>${item.data.name} (${item.data.rarity})</p>
+          `;
+          container.appendChild(div);
+        }
+      });
+    }
+
+    // Очистка после показа билда (опционально)
+    // localStorage.clear();
+  </script>
+</body>
+</html>
