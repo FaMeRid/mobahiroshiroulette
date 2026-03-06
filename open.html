@@ -716,9 +716,11 @@ const spells = [
         items = [...baseItems].sort(() => Math.random() - 0.5);
         generateRoulette();
 
-        const centerIndex = Math.floor(Math.random() * items.length);
-        const centerCopy = Math.floor(DUPLICATES / 2);
-        const targetPosition = centerCopy * items.length + centerIndex;
+        const winnerIndex = Math.floor(Math.random() * items.length);
+const winner = items[winnerIndex];
+
+const centerCopy = Math.floor(DUPLICATES / 2);
+const targetPosition = centerCopy * items.length + winnerIndex;
 
         const viewportCenter = window.innerWidth / 2;
         const imageHalf = ITEM_WIDTH / 2;
@@ -728,9 +730,9 @@ const spells = [
         roulette.style.transform = `translateX(-${finalOffset}px)`;
 
         setTimeout(() => {
-          const leftIndex   = (centerIndex - 1 + items.length) % items.length;
-          const middleIndex = centerIndex;
-          const rightIndex  = (centerIndex + 1) % items.length;
+         const leftIndex   = (winnerIndex - 1 + items.length) % items.length;
+const middleIndex = winnerIndex;
+const rightIndex  = (winnerIndex + 1) % items.length;
 
           const winners = [
             items[leftIndex],
