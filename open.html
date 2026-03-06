@@ -699,173 +699,153 @@ const spells = [
 
     generateRoulette();
 
-    btn.addEventListener('click', () => {
-      btn.disabled = true;
-      btn.textContent = 'КРУТИТСЯ...';
-      choicesContainer.innerHTML = '';
-      winnerName.style.display = 'none';
-      nextBtn.style.display = 'none';
-      buildBtn.style.display = 'none';
-      winnerSection.classList.remove('visible');
+btn.addEventListener('click', () => {
 
-      // Запускаем звук прокрутки
-      spinSound.currentTime = 0; // сбрасываем на начало
-      spinSound.play().catch(() => {});
+btn.disabled = true;
+btn.textContent = 'КРУТИТСЯ...';
 
-      if (caseType === 'heroes') {
-        items = [...baseItems].sort(() => Math.random() - 0.5);
-        generateRoulette();
+choicesContainer.innerHTML = '';
+winnerName.style.display = 'none';
+nextBtn.style.display = 'none';
+buildBtn.style.display = 'none';
+winnerSection.classList.remove('visible');
 
-        const winnerIndex = Math.floor(Math.random() * items.length);
+spinSound.currentTime = 0;
+spinSound.play().catch(()=>{});
+
+
+// ======================
+// РАВНЫЙ ШАНС ДЛЯ ВСЕХ
+// ======================
+
+items = [...baseItems];
+
+const winnerIndex = Math.floor(Math.random() * items.length);
 const winner = items[winnerIndex];
+
+
+// ======================
+// РУЛЕТКА
+// ======================
+
+generateRoulette();
 
 const centerCopy = Math.floor(DUPLICATES / 2);
 const targetPosition = centerCopy * items.length + winnerIndex;
 
-        const viewportCenter = window.innerWidth / 2;
-        const imageHalf = ITEM_WIDTH / 2;
-        const finalOffset = targetPosition * ITEM_WIDTH - (viewportCenter - imageHalf) + (Math.random() * 20 - 10);
+const wrapper = document.querySelector('.roulette-wrapper');
+const wrapperWidth = wrapper.offsetWidth;
 
-        roulette.style.transition = 'transform 8s cubic-bezier(0.16, 1, 0.3, 1)';
-        roulette.style.transform = `translateX(-${finalOffset}px)`;
+const viewportCenter = wrapperWidth / 2;
+const imageHalf = ITEM_WIDTH / 2;
 
-        setTimeout(() => {
-         const leftIndex   = (winnerIndex - 1 + items.length) % items.length;
+const finalOffset = targetPosition * ITEM_WIDTH - (viewportCenter - imageHalf);
+
+roulette.style.transition = 'transform 8s cubic-bezier(0.16, 1, 0.3, 1)';
+roulette.style.transform = `translateX(-${finalOffset}px)`;
+
+
+// ======================
+// ПОСЛЕ ПРОКРУТКИ
+// ======================
+
+setTimeout(()=>{
+
+if(caseType === 'heroes'){
+
+const leftIndex = (winnerIndex - 1 + items.length) % items.length;
 const middleIndex = winnerIndex;
-const rightIndex  = (winnerIndex + 1) % items.length;
+const rightIndex = (winnerIndex + 1) % items.length;
 
-          const winners = [
-            items[leftIndex],
-            items[middleIndex],
-            items[rightIndex]
-          ];
+const winners = [
+items[leftIndex],
+items[middleIndex],
+items[rightIndex]
+];
 
-          winners.forEach((winner, idx) => {
-            const choiceDiv = document.createElement('div');
-            choiceDiv.className = 'choice';
-            const img = document.createElement('img');
-            img.src = winner.img;
-            img.alt = winner.name;
-            choiceDiv.appendChild(img);
+choicesContainer.innerHTML = '';
 
-            choiceDiv.onclick = () => {
-              document.querySelectorAll('.choice').forEach(el => el.style.display = 'none');
-              choiceDiv.style.display = 'block';
-              choiceDiv.classList.add('selected');
+winners.forEach((hero)=>{
 
-              winnerName.textContent = `${winner.name} (${winner.rarity})`;
-              winnerName.className = 'winner-name ' + winner.rarity;
-              winnerName.style.display = 'block';
+const choiceDiv = document.createElement('div');
+choiceDiv.className = 'choice';
 
-              localStorage.setItem(`win_${caseType}`, JSON.stringify(winner));
+const img = document.createElement('img');
+img.src = hero.img;
+img.alt = hero.name;
 
-              // Звук выигрыша
-              winSound.currentTime = 0;
-              winSound.play().catch(() => {});
+choiceDiv.appendChild(img);
 
-              document.body.style.animation = 'shake 0.5s';
-              setTimeout(() => document.body.style.animation = '', 500);
+choiceDiv.onclick = ()=>{
 
-              for (let i = 0; i < 80; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'neon-particle';
-                particle.style.left = `${Math.random() * 100}vw`;
-                particle.style.top = `${Math.random() * 100}vh`;
-                particle.style.background = ['#ffd700', '#ff4500', '#00fff5', '#ff00ff'][Math.floor(Math.random() * 4)];
-                particle.style.boxShadow = `0 0 15px ${particle.style.background}`;
-                document.body.appendChild(particle);
-                setTimeout(() => particle.remove(), 4000);
-              }
+document.querySelectorAll('.choice').forEach(el=>el.style.display='none');
+choiceDiv.style.display='block';
+choiceDiv.classList.add('selected');
 
-              winnerName.style.animation = 'epic-reveal-name 1.5s, pulse-glow-name 2s infinite alternate';
-            };
+winnerName.textContent = `${hero.name} (${hero.rarity})`;
+winnerName.className = 'winner-name ' + hero.rarity;
+winnerName.style.display = 'block';
 
-            choicesContainer.appendChild(choiceDiv);
-          });
+localStorage.setItem(`win_${caseType}`, JSON.stringify(hero));
 
-          winnerSection.classList.add('visible');
+winSound.currentTime = 0;
+winSound.play().catch(()=>{});
 
-          btn.disabled = false;
-          btn.textContent = 'ОТКРЫТЬ ЕЩЁ РАЗ';
+};
 
-          if (nextCase) {
-            nextBtn.textContent = `Следующий кейс (${nextCase})`;
-            nextBtn.style.display = 'block';
-            nextBtn.onclick = () => {
-              window.location.href = `open.html?case=${nextCase}`;
-            };
-          } else {
-            buildBtn.style.display = 'block';
-            buildBtn.onclick = () => {
-              window.location.href = 'result.html';
-            };
-          }
-        }, 8500);
-      } else {
-        // Для spells и lanes — одна картинка
-        const winnerIndex = Math.floor(Math.random() * items.length);
-        const winner = items[winnerIndex];
+choicesContainer.appendChild(choiceDiv);
 
-        const centerCopy = Math.floor(DUPLICATES / 2);
-        const targetPosition = centerCopy * items.length + winnerIndex;
+});
 
-        const viewportCenter = window.innerWidth / 2;
-        const imageHalf = ITEM_WIDTH / 2;
-        const finalOffset = targetPosition * ITEM_WIDTH - (viewportCenter - imageHalf) + (Math.random() * 20 - 10);
+} else {
 
-        roulette.style.transition = 'transform 8s cubic-bezier(0.16, 1, 0.3, 1)';
-        roulette.style.transform = `translateX(-${finalOffset}px)`;
+choicesContainer.innerHTML = '';
 
-        setTimeout(() => {
-          const winnerImg = document.createElement('img');
-          winnerImg.src = winner.img;
-          winnerImg.alt = winner.name;
-          choicesContainer.appendChild(winnerImg);
+const img = document.createElement('img');
+img.src = winner.img;
+img.alt = winner.name;
 
-          winnerName.textContent = `${winner.name} (${winner.rarity})`;
-          winnerName.className = 'winner-name ' + winner.rarity;
-          winnerName.style.display = 'block';
+choicesContainer.appendChild(img);
 
-          winnerSection.classList.add('visible');
+winnerName.textContent = `${winner.name} (${winner.rarity})`;
+winnerName.className = 'winner-name ' + winner.rarity;
+winnerName.style.display = 'block';
 
-          localStorage.setItem(`win_${caseType}`, JSON.stringify(winner));
+localStorage.setItem(`win_${caseType}`, JSON.stringify(winner));
 
-          btn.disabled = false;
-          btn.textContent = 'ОТКРЫТЬ ЕЩЁ РАЗ';
+winSound.currentTime = 0;
+winSound.play().catch(()=>{});
 
-          // Звук выигрыша
-          winSound.currentTime = 0;
-          winSound.play().catch(() => {});
+}
 
-          document.body.style.animation = 'shake 0.5s';
-          setTimeout(() => document.body.style.animation = '', 500);
+winnerSection.classList.add('visible');
 
-          for (let i = 0; i < 50; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'neon-particle';
-            particle.style.left = `${Math.random() * 100}vw`;
-            particle.style.top = `${Math.random() * 100}vh`;
-            particle.style.background = '#00fff5';
-            particle.style.boxShadow = '0 0 15px #00fff5';
-            document.body.appendChild(particle);
-            setTimeout(() => particle.remove(), 4000);
-          }
+btn.disabled = false;
+btn.textContent = 'ОТКРЫТЬ ЕЩЁ РАЗ';
 
-          if (nextCase) {
-            nextBtn.textContent = `Следующий кейс (${nextCase})`;
-            nextBtn.style.display = 'block';
-            nextBtn.onclick = () => {
-              window.location.href = `open.html?case=${nextCase}`;
-            };
-          } else {
-            buildBtn.style.display = 'block';
-            buildBtn.onclick = () => {
-              window.location.href = 'result.html';
-            };
-          }
-        }, 8500);
-      }
-    });
+
+if(nextCase){
+
+nextBtn.textContent = `Следующий кейс (${nextCase})`;
+nextBtn.style.display = 'block';
+
+nextBtn.onclick = ()=>{
+window.location.href = `open.html?case=${nextCase}`;
+};
+
+}else{
+
+buildBtn.style.display = 'block';
+
+buildBtn.onclick = ()=>{
+window.location.href = 'result.html';
+};
+
+}
+
+},8500);
+
+});
 
     // Экранный шейк
     const shakeKeyframes = `
