@@ -302,6 +302,152 @@
             background: linear-gradient(90deg, #ff4500, #ffd700);
             color: #000;
         }
+        
+/* ============================= */
+/* 📱 MOBILE OPTIMIZATION */
+/* ============================= */
+
+@media (max-width:900px){
+
+header{
+padding:1rem 1.5rem;
+}
+
+.logo{
+font-size:clamp(1.8rem,6vw,2.6rem);
+letter-spacing:3px;
+}
+
+.social-icons{
+gap:1.2rem;
+}
+
+.social-icon{
+font-size:2rem;
+}
+
+/* HEROES ON SIDES */
+
+.hero-bg{
+width:clamp(160px,40vw,240px);
+bottom:-15%;
+opacity:.6;
+}
+
+.hero-left{
+left:-18%;
+}
+
+.hero-right{
+right:-18%;
+}
+
+/* MAIN */
+
+.open-main{
+padding:120px 12px 60px;
+}
+
+/* TITLE */
+
+h1{
+font-size:clamp(2.4rem,10vw,4rem);
+margin-bottom:2rem;
+}
+
+/* ROULETTE */
+
+.roulette-wrapper{
+padding:1.5rem .8rem;
+border-radius:18px;
+}
+
+.roulette{
+gap:14px;
+}
+
+.roulette img{
+width:160px;
+height:160px;
+}
+
+/* CENTER LINE */
+
+.center-line{
+width:4px;
+}
+
+/* BUTTON */
+
+.open-btn{
+padding:16px 60px;
+font-size:1.6rem;
+border-radius:40px;
+}
+
+/* WINNER AREA */
+
+.choices{
+gap:1.5rem;
+flex-wrap:wrap;
+}
+
+.choice img{
+max-width:200px;
+}
+
+.winner-name{
+font-size:2.2rem;
+text-align:center;
+}
+
+/* NEXT BUTTONS */
+
+.next-btn,
+.result-btn{
+padding:16px 60px;
+font-size:1.6rem;
+border-radius:40px;
+}
+
+}
+
+/* EXTRA SMALL PHONES */
+
+@media (max-width:480px){
+
+.logo{
+font-size:1.6rem;
+}
+
+.social-icon{
+font-size:1.8rem;
+}
+
+.hero-bg{
+width:200px;
+opacity:.5;
+}
+
+.roulette img{
+width:130px;
+height:130px;
+}
+
+.open-btn{
+padding:14px 40px;
+font-size:1.3rem;
+}
+
+.choice img{
+max-width:160px;
+}
+
+.winner-name{
+font-size:1.8rem;
+}
+
+}
     </style>
 </head>
 <body>

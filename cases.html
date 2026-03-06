@@ -266,6 +266,116 @@
       .case-card img { height: 240px; }
       .case-card p { font-size: 1.8rem; }
     }
+/* ============================= */
+/* 📱 MOBILE OPTIMIZATION */
+/* ============================= */
+
+@media (max-width:900px){
+
+header{
+padding:1rem 1.5rem;
+}
+
+.logo{
+font-size:clamp(1.8rem,6vw,2.6rem);
+letter-spacing:3px;
+}
+
+.social-icons{
+gap:1.2rem;
+}
+
+.social-icon{
+font-size:2rem;
+}
+
+/* HERO VIDEOS */
+
+.hero-video{
+width:clamp(220px,60vw,340px);
+bottom:-18%;
+opacity:.6;
+}
+
+.hero-left{
+left:-18%;
+}
+
+.hero-right{
+right:-18%;
+}
+
+/* MAIN */
+
+main.case-main{
+padding:120px 15px 80px;
+}
+
+/* TITLE */
+
+h2.case-title{
+font-size:clamp(2.8rem,12vw,4.5rem);
+margin-bottom:3rem;
+}
+
+/* GRID */
+
+.case-grid{
+grid-template-columns:1fr;
+gap:2rem;
+max-width:520px;
+}
+
+/* CARDS */
+
+.case-card{
+border-radius:22px;
+transform:none !important;
+}
+
+.case-card:hover{
+transform:none;
+}
+
+.case-card img{
+height:200px;
+}
+
+.case-card p{
+font-size:1.6rem;
+padding:1.5rem;
+}
+
+}
+
+/* EXTRA SMALL PHONES */
+
+@media (max-width:480px){
+
+.logo{
+font-size:1.6rem;
+}
+
+.social-icon{
+font-size:1.8rem;
+}
+
+.case-card img{
+height:180px;
+}
+
+.case-card p{
+font-size:1.4rem;
+}
+
+.hero-video{
+width:260px;
+bottom:-20%;
+opacity:.5;
+}
+
+}
+
   </style>
 </head>
 <body>
