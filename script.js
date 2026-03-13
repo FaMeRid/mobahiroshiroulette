@@ -150,164 +150,282 @@ const lanes = [
       {name: "Support", rarity: "Legendary", img: "assets/emblems/support.png"},
       {name: "Tank", rarity: "Mythic", img: "assets/emblems/tank.png"}
  ]
-// =======================
-// DATA (with rarity weights) - Добавил больше items в spells/lanes для разнообразия
-// =======================
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
 
-// =======================
-// SETTINGS - Уменьшил DUPLICATES для оптимизации
-// =======================
+let rotation = 0;
+let spinSpeed = 0;
+let spinning = false;
+let finalRotation = 0;
 
-const ITEM_WIDTH = 280;
-const DUPLICATES = 5; // Было 8, уменьшил для производительности
-const SPIN_DURATION = 8000;
-const OVERSHOOT = 80;
+const numSectors = 60;
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+const radius = canvas.width / 2;
 
-// Sounds (предполагаю файлы в assets/sounds/)
-const spinSound = new Audio('assets/sounds/spin.mp3');
-const winSound = new Audio('assets/sounds/win.mp3');
+let selectedWinner = null;
 
-// Проверка autoplay (браузеры могут блокировать)
-document.body.addEventListener('click', () => {
-  spinSound.muted = false;
-  winSound.muted = false;
-}, { once: true });
+/* STREAM MODE */
 
-// =======================
-// GENERATE ROULETTE - Добавил loading="lazy"
-// =======================
+const streamMode = new URLSearchParams(window.location.search).has("stream");
 
-function generate(track, items) {
-    track.innerHTML = "";
-    track.style.transition = "none";
-    track.style.transform = "translateX(0px)";
-
-    for (let i = 0; i < DUPLICATES; i++) {
-        items.forEach(item => {
-            const img = document.createElement("img");
-            img.src = item.img;
-            img.alt = `${item.name} (${item.rarity})`;
-            img.loading = "lazy"; // Lazy loading
-            img.onerror = () => img.src = `https://via.placeholder.com/240?text=${item.name.substring(0,2)} (${item.rarity})`;
-            track.appendChild(img);
-        });
-    }
+if (streamMode) {
+document.body.style.background = "transparent";
 }
 
-// =======================
-// SELECT WEIGHTED WINNER - Добавил shuffle для fairness
-// =======================
+/* ITEMS */
 
-function shuffle(array) {
-  return array.sort(() => Math.random() - 0.5);
+let items = [
+{ name:"Alucard",rarity:"Epic",img:"assets/heroes/alucard.jpg",weight:5 },
+{ name:"Layla",rarity:"Common",img:"assets/heroes/layla.jpg",weight:20 },
+{ name:"Gusion",rarity:"Legendary",img:"assets/heroes/gusion.jpg",weight:2 },
+{ name:"Zilong",rarity:"Rare",img:"assets/heroes/zilong.jpg",weight:10 },
+{ name:"Chou",rarity:"Mythic",img:"assets/heroes/chou.jpg",weight:1 }
+];
+
+/* RANDOM WITHOUT REPEAT */
+
+let dropPool = [];
+
+function refillPool(){
+dropPool = shuffle([...items]);
 }
 
-function selectWeightedItem(items) {
-    const shuffledItems = shuffle([...items]); // Shuffle для случайности
-    const totalWeight = shuffledItems.reduce((sum, item) => sum + (rarityWeights[item.rarity] || 1), 0);
-    let random = Math.random() * totalWeight;
-    for (const item of shuffledItems) {
-        random -= rarityWeights[item.rarity] || 1;
-        if (random <= 0) return item;
-    }
-    return shuffledItems[0];
+function getNextItem(){
+
+if(dropPool.length === 0) refillPool();
+
+return dropPool.pop();
 }
 
-// =======================
-// SPIN CASE - Добавил debounce для кнопки
-// =======================
+/* SHUFFLE */
 
-let isSpinning = false;
-function spinCase(caseType) {
-    if (isSpinning) return;
-    isSpinning = true;
+function shuffle(array){
 
-    const btn = document.getElementById("openBtn");
-    const track = document.getElementById("roulette");
-    const winnerSection = document.getElementById("winnerSection");
+for(let i=array.length-1;i>0;i--){
 
-    btn.textContent = "ОТКРЫВАЕТСЯ...";
+const j=Math.floor(Math.random()*(i+1));
 
-    let items;
-    if (caseType === 'heroes') items = heroes;
-    else if (caseType === 'spells') items = spells;
-    else if (caseType === 'lanes') items = lanes;
-    else items = heroes;
+[array[i],array[j]]=[array[j],array[i]];
 
-    generate(track, items);
-
-    const winner = selectWeightedItem(items);
-    const winnerIndex = items.findIndex(i => i.name === winner.name && i.rarity === winner.rarity); // Exact match
-    const middleCopy = Math.floor(DUPLICATES / 2);
-    const finalIndex = middleCopy * items.length + winnerIndex;
-    let offset = finalIndex * ITEM_WIDTH + (Math.random() * 50 - 25);
-
-    track.offsetHeight; // Reflow
-
-    spinSound.loop = true;
-    spinSound.play().catch(() => {}); // Обработка блокировки
-
-    track.style.transition = `transform ${SPIN_DURATION}ms cubic-bezier(0.16, 1, 0.3, 1)`;
-    track.style.transform = `translateX(-${offset + OVERSHOOT}px)`;
-
-    setTimeout(() => {
-        track.style.transition = 'transform 0.5s ease-out';
-        track.style.transform = `translateX(-${offset}px)`;
-        spinSound.pause();
-        spinSound.currentTime = 0;
-    }, SPIN_DURATION);
-
-    setTimeout(() => {
-        showWinner(winner);
-        btn.textContent = "ОТКРЫТЬ ЕЩЁ РАЗ";
-        isSpinning = false;
-    }, SPIN_DURATION + 500);
 }
 
-// =======================
-// SHOW WINNER + CONFETTI - Уменьшил confetti до 100 для производительности
-// =======================
+return array;
 
-function showWinner(item) {
-    document.getElementById("winnerImg").src = item.img;
-    const winnerName = document.getElementById("winnerName");
-    winnerName.textContent = `${item.name} (${item.rarity})`;
-    winnerName.classList.add(item.rarity.toLowerCase());
-
-    const winnerSection = document.getElementById("winnerSection");
-    winnerSection.classList.remove("hidden");
-    winnerSection.classList.add("visible");
-
-    winSound.play().catch(() => {});
-
-    for (let i = 0; i < 100; i++) { // Уменьшил с 200
-        const confetti = document.createElement('div');
-        confetti.className = 'confetti';
-        confetti.style.left = Math.random() * 100 + 'vw';
-        confetti.style.setProperty('--hue', Math.random() * 360);
-        confetti.style.animationDuration = 1.5 + Math.random() * 2 + 's';
-        document.body.appendChild(confetti);
-        setTimeout(() => confetti.remove(), 4000);
-    }
 }
 
-// =======================
-// INIT - Добавил localStorage для сохранения caseType
-// =======================
+/* DRAW WHEEL */
 
-window.addEventListener("load", () => {
-    const params = new URLSearchParams(window.location.search);
-    let caseType = params.get("case") || localStorage.getItem('lastCase') || "heroes";
-    localStorage.setItem('lastCase', caseType);
+function drawWheel(){
 
-    document.getElementById("caseTitle").textContent = {
-        heroes: "MLBB Heroes Case",
-        spells: "Battle Spell Case",
-        lanes: "Lane Case"
-    }[caseType] || "Открытие кейса";
+ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    document.getElementById("openBtn").onclick = () => spinCase(caseType);
+const sectorAngle = (Math.PI*2)/numSectors;
 
-    let initialItems = caseType === "heroes" ? heroes : caseType === "spells" ? spells : lanes;
-    generate(document.getElementById("roulette"), initialItems);
+for(let i=0;i<numSectors;i++){
+
+const angle = i*sectorAngle + rotation;
+
+const item = items[i % items.length];
+
+ctx.beginPath();
+
+ctx.moveTo(centerX,centerY);
+
+ctx.arc(centerX,centerY,radius,angle,angle+sectorAngle);
+
+ctx.closePath();
+
+/* color */
+
+switch(item.rarity){
+
+case "Common":
+ctx.fillStyle="#555";
+break;
+
+case "Rare":
+ctx.fillStyle="#00c8ff";
+break;
+
+case "Epic":
+ctx.fillStyle="#ff00ff";
+break;
+
+case "Legendary":
+ctx.fillStyle="#ffd700";
+break;
+
+case "Mythic":
+ctx.fillStyle="#ff4500";
+break;
+
+}
+
+ctx.fill();
+
+/* 3D shadow */
+
+ctx.save();
+
+ctx.translate(centerX,centerY);
+ctx.rotate(angle+sectorAngle/2);
+
+ctx.fillStyle="rgba(0,0,0,0.35)";
+ctx.fillRect(0,-2,radius,4);
+
+ctx.restore();
+
+}
+
+}
+
+/* SPIN */
+
+function spin(){
+
+if(spinning) return;
+
+spinning=true;
+
+selectedWinner = getNextItem();
+
+const index = items.findIndex(i=>i.name===selectedWinner.name);
+
+const sectorAngle = (Math.PI*2)/numSectors;
+
+const sectorIndex = Math.floor(Math.random()*(numSectors/items.length))*items.length+index;
+
+const targetAngle = (sectorIndex+0.5)*sectorAngle;
+
+const spins = 8+Math.random()*4;
+
+finalRotation = spins*Math.PI*2+(Math.PI/2-targetAngle);
+
+spinSpeed = 0.35;
+
+document.getElementById("winnerSection").classList.remove("visible");
+
+}
+
+/* ANIMATE */
+
+function animate(){
+
+if(spinning){
+
+rotation+=spinSpeed;
+
+spinSpeed*=0.985;
+
+if(rotation>=finalRotation){
+
+rotation=finalRotation;
+
+spinning=false;
+
+showWinner();
+
+}
+
+}
+
+drawWheel();
+
+requestAnimationFrame(animate);
+
+}
+
+/* HERO DROP ANIMATION */
+
+function showWinner(){
+
+const winner = selectedWinner;
+
+const section = document.getElementById("winnerSection");
+
+const img = document.getElementById("winnerImg");
+
+const name = document.getElementById("winnerName");
+
+img.src = winner.img;
+
+name.textContent = `${winner.name} (${winner.rarity})`;
+
+name.className = "rarity-"+winner.rarity.toLowerCase();
+
+section.classList.add("visible");
+
+/* DROP EFFECT */
+
+img.style.transform="scale(0) rotate(-180deg)";
+img.style.opacity="0";
+
+setTimeout(()=>{
+
+img.style.transition="all 0.8s cubic-bezier(.2,1.8,.4,1)";
+img.style.transform="scale(1) rotate(0)";
+img.style.opacity="1";
+
+},100);
+
+/* CONFETTI */
+
+createConfetti(150);
+
+}
+
+/* CONFETTI */
+
+function createConfetti(count){
+
+for(let i=0;i<count;i++){
+
+const conf=document.createElement("div");
+
+conf.style.position="fixed";
+conf.style.width="8px";
+conf.style.height="8px";
+
+conf.style.background=`hsl(${Math.random()*360},100%,60%)`;
+
+conf.style.left=Math.random()*100+"vw";
+
+conf.style.top="-10px";
+
+conf.style.zIndex=9999;
+
+conf.style.transform=`rotate(${Math.random()*360}deg)`;
+
+document.body.appendChild(conf);
+
+const fall=4+Math.random()*3;
+
+conf.animate([
+
+{transform:"translateY(0)"},
+{transform:"translateY(110vh)"}
+
+],{
+
+duration:fall*1000,
+
+easing:"linear"
+
 });
+
+setTimeout(()=>conf.remove(),fall*1000);
+
+}
+
+}
+
+/* EVENTS */
+
+document.getElementById("spinBtn").addEventListener("click",spin);
+
+/* START */
+
+refillPool();
+drawWheel();
+animate();

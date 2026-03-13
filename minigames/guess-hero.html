@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+
+<meta charset="UTF-8">
+<title>Guess the Hero</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800&display=swap" rel="stylesheet">
+
+<style>
+
+body{
+
+background:
+radial-gradient(circle at 20% 30%, rgba(0,255,255,0.12), transparent 40%),
+radial-gradient(circle at 80% 70%, rgba(255,215,0,0.12), transparent 40%),
+linear-gradient(160deg,#030714,#050d22);
+
+font-family:Orbitron;
+color:#e0ffff;
+text-align:center;
+
+height:100vh;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+
+}
+
+/* заголовок */
+
+h1{
+
+font-size:60px;
+color:#ffd700;
+text-shadow:0 0 30px gold;
+
+}
+
+/* карточка героя */
+
+.heroCard{
+
+background:#0b0f1d;
+
+padding:40px;
+border-radius:20px;
+
+box-shadow:
+0 0 30px gold,
+0 0 60px rgba(255,215,0,0.3);
+
+}
+
+#heroImage{
+
+width:320px;
+border-radius:16px;
+
+box-shadow:
+0 0 30px rgba(255,215,0,0.5);
+
+transition:all 1s;
+
+}
+
+/* кнопка */
+
+button{
+
+margin-top:20px;
+
+padding:15px 40px;
+
+font-size:22px;
+font-family:Orbitron;
+
+border:none;
+border-radius:12px;
+
+background:linear-gradient(145deg,#ffd700,#ffae00);
+
+color:black;
+
+cursor:pointer;
+
+box-shadow:0 0 20px gold;
+
+transition:0.3s;
+
+}
+
+button:hover{
+
+transform:scale(1.05);
+
+box-shadow:
+0 0 40px gold;
+
+}
+
+/* таймер */
+
+#timer{
+
+font-size:40px;
+margin-top:20px;
+color:#00fff5;
+
+}
+
+/* ответ */
+
+#answer{
+
+font-size:50px;
+color:gold;
+margin-top:20px;
+
+opacity:0;
+transition:opacity 1s;
+
+}
+
+.show{
+
+opacity:1;
+
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Guess the Hero</h1>
+
+<div class="heroCard">
+
+<img id="heroImage">
+
+<div id="timer"></div>
+
+<button onclick="startGame()">Start</button>
+
+<h2 id="answer"></h2>
+
+</div>
+
+<script>
+
+const heroes = [
+{ name: "Aamon",img: "assets/heroes/aamon.png"},
+{ name: "Akai", img: "assets/heroes/akai.png"},
+{ name: "Aldous", img: "assets/heroes/aldous.png"},
+{ name: "Alice", img: "assets/heroes/alice.png"},
+{ name: "Alpha", img: "assets/heroes/alpha.png"},
+{ name: "Alucard", img: "assets/heroes/alucard.png"},
+{ name: "Angela", img: "assets/heroes/angela.png"},
+{ name: "Argus", img: "assets/heroes/argus.png"},
+{ name: "Arlott", img: "assets/heroes/arlott.png"},
+{ name: "Atlas", img: "assets/heroes/atlas.png"},
+{ name: "Aulus", img: "assets/heroes/aulus.png"},
+{ name: "Aurora", img: "assets/heroes/aurora.png"},
+{ name: "Badang", img: "assets/heroes/badang.png"},
+{ name: "Balmond", img: "assets/heroes/balmond.png"},
+{ name: "Bane", img: "assets/heroes/bane.png"},
+{ name: "Barats", img: "assets/heroes/barats.png"},
+{ name: "Baxia", img: "assets/heroes/baxia.png"},
+{ name: "Beatrix", img: "assets/heroes/beatrix.png"},
+{ name: "Belerick", img: "assets/heroes/belerick.png"},
+{ name: "Benedetta", img: "assets/heroes/benedetta.png"},
+{ name: "Brody", img: "assets/heroes/brody.png"},
+{ name: "Bruno", img: "assets/heroes/bruno.png"},
+{ name: "Carmilla", img: "assets/heroes/carmilla.png"},
+{ name: "Cecilion", img: "assets/heroes/cecilion.png"},
+{ name: "Chang'e", img: "assets/heroes/change.png"},
+{ name: "Chip", img: "assets/heroes/chip.png"},
+{ name: "Chou", img: "assets/heroes/chou.png"},
+{ name: "Cici", img: "assets/heroes/cici.png"},
+{ name: "Claude", img: "assets/heroes/claude.png"},
+{ name: "Clint", img: "assets/heroes/clint.png"},
+{ name: "Cyclops", img: "assets/heroes/cyclops.png"},
+{ name: "Diggie", img: "assets/heroes/diggie.png"},
+{ name: "Dyrroth", img: "assets/heroes/dyrroth.png"},
+{ name: "Edith", img: "assets/heroes/edith.png"},
+{ name: "Esmeralda", img: "assets/heroes/esmeralda.png"},
+{ name: "Estes", img: "assets/heroes/estes.png"},
+{ name: "Eudora", img: "assets/heroes/eudora.png"},
+{ name: "Fanny", img: "assets/heroes/fanny.png"},
+{ name: "Faramis",  img: "assets/heroes/faramis.png"},
+{ name: "Floryn", img: "assets/heroes/floryn.png"},
+{ name: "Franco", img: "assets/heroes/franco.png"},
+{ name: "Fredrinn", img: "assets/heroes/fredrinn.png"},
+{ name: "Freya", img: "assets/heroes/freya.png"},
+{ name: "Gatotkaca", img: "assets/heroes/gatotkaca.png"},
+{ name: "Gloo", img: "assets/heroes/gloo.png"},
+{ name: "Gord", img: "assets/heroes/gord.png"},
+{ name: "Granger", img: "assets/heroes/granger.png"},
+{ name: "Grock", img: "assets/heroes/grock.png"},
+{ name: "Guinevere", img: "assets/heroes/guinevere.png"},
+{ name: "Gusion", img: "assets/heroes/gusion.png"},
+{ name: "Hanabi", img: "assets/heroes/hanabi.png"},
+{ name: "Hanzo",  img: "assets/heroes/hanzo.png"},
+{ name: "Harith", img: "assets/heroes/harith.png"},
+{ name: "Harley", img: "assets/heroes/harley.png"},
+{ name: "Hayabusa", img: "assets/heroes/hayabusa.png"},
+{ name: "Helcurt", img: "assets/heroes/helcurt.png"},
+{ name: "Hilda", img: "assets/heroes/hilda.png"},
+{ name: "Hylos", img: "assets/heroes/hylos.png"},
+{ name: "Irithel", img: "assets/heroes/irithel.png"},
+{ name: "Ixia", img: "assets/heroes/ixia.png"},
+{ name: "Jawhead", img: "assets/heroes/jawhead.png"},
+{ name: "Johnson", img: "assets/heroes/johnson.png"},
+{ name: "Joy", img: "assets/heroes/joy.png"},
+{ name: "Julian", img: "assets/heroes/julian.png"},
+{ name: "Kadita", img: "assets/heroes/kadita.png"},
+{ name: "Kagura", img: "assets/heroes/kagura.png"},
+{ name: "Kaja", img: "assets/heroes/kaja.png"},
+{ name: "Kalea", img: "assets/heroes/kalea.png"},
+{ name: "Karina", img: "assets/heroes/karina.png"},
+{ name: "Karrie", img: "assets/heroes/karrie.png"},
+{ name: "Khaleed", img: "assets/heroes/khaleed.png"},
+{ name: "Khufra", img: "assets/heroes/khufra.png"},
+{ name: "Kimmy", img: "assets/heroes/kimmy.png"},
+{ name: "Lancelot", img: "assets/heroes/lancelot.png"},
+{ name: "Lapu-Lapu", img: "assets/heroes/lapu-lapu.png"},
+{ name: "Layla", img: "assets/heroes/layla.png"},
+{ name: "Leomord", img: "assets/heroes/leomord.png"},
+{ name: "Lesley", img: "assets/heroes/lesley.png"},
+{ name: "Ling", img: "assets/heroes/ling.png"},
+{ name: "Lolita", img: "assets/heroes/lolita.png"},
+{ name: "Lukas", img: "assets/heroes/lukas.png"},
+{ name: "Lunox", img: "assets/heroes/lunox.png"},
+{ name: "Luo Yi", img: "assets/heroes/luo-yi.png"},
+{ name: "Lylia", img: "assets/heroes/lylia.png"},
+{ name: "Marcel", img: "assets/heroes/marcel.png"},
+{ name: "Masha", img: "assets/heroes/masha.png"},
+{ name: "Mathilda", img: "assets/heroes/mathilda.png"},
+{ name: "Melissa", img: "assets/heroes/melissa.png"},
+{ name: "Minotaur", img: "assets/heroes/minotaur.png"},
+{ name: "Minsitthar", img: "assets/heroes/minsitthar.png"},
+{ name: "Miya", img: "assets/heroes/miya.png"},
+{ name: "Moskov", img: "assets/heroes/moskov.png"},
+{ name: "Nana", img: "assets/heroes/nana.png"},
+{ name: "Natalia", img: "assets/heroes/natalia.png"},
+{ name: "Natan", img: "assets/heroes/natan.png"},
+{ name: "Nolan", img: "assets/heroes/nolan.png"},
+{ name: "Novaria", img: "assets/heroes/novaria.png"},
+{ name: "Obsidia", img: "assets/heroes/obsidia.png"},
+{ name: "Odette", img: "assets/heroes/odette.png"},
+{ name: "Paquito", img: "assets/heroes/paquito.png"},
+{ name: "Pharsa", img: "assets/heroes/pharsa.png"},
+{ name: "Phoveus", img: "assets/heroes/phoveus.png"},
+{ name: "Popol and Kupa", img: "assets/heroes/popol-and-kupa.png"},
+{ name: "Rafaela", img: "assets/heroes/rafaela.png"},
+{ name: "Roger", img: "assets/heroes/roger.png"},
+{ name: "Ruby", img: "assets/heroes/ruby.png"},
+{ name: "Saber", img: "assets/heroes/saber.png"},
+{ name: "Selena", img: "assets/heroes/selena.png"},
+{ name: "Silvanna", img: "assets/heroes/silvanna.png"},
+{ name: "Sora", img: "assets/heroes/sora.png"},
+{ name: "Sun", img: "assets/heroes/sun.png"},
+{ name: "Suyou", img: "assets/heroes/suyou.png"},
+{ name: "Terizla", img: "assets/heroes/terizla.png"},
+{ name: "Thamuz", img: "assets/heroes/thamuz.png"},
+{ name: "Tigreal", img: "assets/heroes/tigreal.png"},
+{ name: "Uranus", img: "assets/heroes/uranus.png"},
+{ name: "Vale", img: "assets/heroes/vale.png"},
+{ name: "Valentina", img: "assets/heroes/valentina.png"},
+{ name: "Valir", img: "assets/heroes/valir.png"},
+{ name: "Vexana", img: "assets/heroes/vexana.png"},
+{ name: "Wanwan", img: "assets/heroes/wanwan.png"},
+{ name: "X.Borg", img: "assets/heroes/x-borg.png"},
+{ name: "Xavier", img: "assets/heroes/xavier.png"},
+{ name: "Yi Sun-shin", img: "assets/heroes/yi-sun-shin.png"},
+{ name: "Yin", img: "assets/heroes/yin.png"},
+{ name: "Yve", img: "assets/heroes/yve.png"},
+{ name: "Yu Zhong", img: "assets/heroes/yu-zhong.png"},
+{ name: "Zhask", img: "assets/heroes/zhask.png"},
+{ name: "Zhuxin", img: "assets/heroes/zhuxin.png"},
+{ name: "Zilong", img: "assets/heroes/zilong.png"},
+{ name: "Zetian", img: "assets/heroes/zetian.png"}
+];
+
+let timerInterval
+
+function startGame(){
+
+const hero=heroes[Math.floor(Math.random()*heroes.length)]
+
+const img=document.getElementById("heroImage")
+
+img.src=hero.img
+
+img.style.filter="brightness(0)"
+
+document.getElementById("answer").classList.remove("show")
+document.getElementById("answer").innerText=""
+
+let time=15
+
+document.getElementById("timer").innerText=time
+
+timerInterval=setInterval(()=>{
+
+time--
+
+document.getElementById("timer").innerText=time
+
+if(time<=0){
+
+clearInterval(timerInterval)
+
+img.style.filter="none"
+
+const answer=document.getElementById("answer")
+
+answer.innerText="Answer: "+hero.name
+answer.classList.add("show")
+
+}
+
+},1000)
+
+}
+
+</script>
+
+</body>
+</html>

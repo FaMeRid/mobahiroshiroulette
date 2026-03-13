@@ -1,0 +1,48 @@
+<h1>🎉 Lucky Viewer</h1>
+<style>#winner{
+
+font-size:50px;
+color:gold;
+
+animation:winnerPop 1s ease;
+
+}
+
+@keyframes winnerPop{
+
+0%{transform:scale(0)}
+100%{transform:scale(1)}
+
+}</style>
+
+<textarea id="names" placeholder="вставь ники зрителей"></textarea>
+
+<br><br>
+
+<button onclick="pickWinner()">Pick Winner</button>
+
+<h2 id="winner"></h2>
+
+<script>
+
+function pickWinner(){
+
+const list=document
+.getElementById("names")
+.value
+.split("\n")
+.filter(n=>n.trim()!="")
+
+if(list.length===0){
+alert("Нет участников")
+return
+}
+
+const winner=list[Math.floor(Math.random()*list.length)]
+
+document.getElementById("winner").innerText=
+"🎉 Победитель: "+winner
+
+}
+
+</script>

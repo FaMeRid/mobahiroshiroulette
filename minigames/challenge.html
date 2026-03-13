@@ -1,0 +1,33 @@
+<h1>Random Challenge</h1>
+
+<button onclick="newChallenge()">Generate Challenge</button>
+
+<h2 id="challenge"></h2>
+
+<script>
+
+const challenges=[
+
+"Играй без ультимейта",
+
+"Запрещено покупать ботинки",
+
+"Можно использовать только базовые атаки",
+
+"Нельзя возвращаться на базу",
+
+"Играй только в кустах",
+
+"Нельзя использовать второй скилл"
+
+]
+
+function newChallenge(){
+
+const c=challenges[Math.floor(Math.random()*challenges.length)]
+
+document.getElementById("challenge").innerText=c
+
+}
+
+</script>

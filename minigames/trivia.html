@@ -1,0 +1,49 @@
+<h1>MLBB Trivia</h1>
+
+<h2 id="question"></h2>
+
+<button onclick="showAnswer()">Show Answer</button>
+
+<h3 id="answer"></h3>
+
+<script>
+
+const questions=[
+
+{
+q:"Какой герой ворует ультимейты?",
+a:"Valentina"
+},
+
+{
+q:"Кто самый быстрый ассасин?",
+a:"Fanny"
+},
+
+{
+q:"Кто превращается в машину?",
+a:"Johnson"
+}
+
+]
+
+let current
+
+function newQuestion(){
+
+current=questions[Math.floor(Math.random()*questions.length)]
+
+document.getElementById("question").innerText=current.q
+document.getElementById("answer").innerText=""
+
+}
+
+function showAnswer(){
+
+document.getElementById("answer").innerText=current.a
+
+}
+
+newQuestion()
+
+</script>

@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MLBB Stream Wheel — MOBAHIROSHI</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+:root{
+
+/* NIGHT THEME */
+
+--bg-main:#030714;
+--bg-secondary:#050d22;
+
+--neon-cyan:#00fff5;
+--neon-purple:#a855ff;
+--gold:#ffd700;
+
+--text-main:#e0ffff;
+--text-dim:#7aa5ff;
+
+--glow-cyan:0 0 20px #00fff5,0 0 60px rgba(0,255,245,0.5);
+--glow-gold:0 0 20px #ffd700,0 0 60px rgba(255,215,0,0.4);
+
+--card-bg:#0b0f1d;
+
+--wheel-dark:#0d1225;
+--wheel-light:#02040a;
+
+}
+
+/* ===== LIGHT THEME ===== */
+
+body.light-theme{
+
+--bg-main:#f4f7ff;
+--bg-secondary:#ffffff;
+
+--neon-cyan:#0096ff;
+--neon-purple:#7a5cff;
+--gold:#c89b3c;
+
+--text-main:#1c1c1c;
+--text-dim:#555;
+
+--glow-cyan:0 0 15px #4db8ff;
+--glow-gold:0 0 20px #c89b3c;
+
+--card-bg:#ffffff;
+
+--wheel-dark:#e8ecff;
+--wheel-light:#ffffff;
+
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-family: Orbitron, sans-serif;
+  overflow: hidden;
+  transition: background 0.5s, color 0.5s;
+}
+header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: rgba(3,7,20,0.88);
+  backdrop-filter: blur(14px);
+  padding: 1.2rem 3rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
+  border-bottom: 1px solid rgba(0,255,245,0.2);
+}
+body.light-theme header { background: rgba(255,255,255,0.9); border-bottom: 1px solid rgba(0,0,0,0.1);}
+.logo{
+
+font-size:clamp(2.6rem,6vw,3.8rem);
+
+background:linear-gradient(
+90deg,
+#ffd700,
+#fff6a0,
+#ffd700,
+#ffae00
+);
+
+background-size:300%;
+
+-webkit-background-clip:text;
+color:transparent;
+
+animation:logoFlow 6s linear infinite;
+
+letter-spacing:6px;
+
+}
+
+@keyframes logoFlow{
+
+0%{background-position:0%;}
+100%{background-position:300%;}
+
+}
+body.light-theme .logo { color:#333; text-shadow:none; }
+.social-icons { display:flex; gap:2rem; }
+.social-icon { font-size:2.6rem; color:var(--neon-cyan); transition: all 0.5s ease; text-shadow:0 0 20px var(--shadow-neon);}
+body.light-theme .social-icon { color:#007bff; text-shadow:none; }
+.social-icon:hover { transform: translateY(-12px) scale(1.4) rotate(15deg); color: var(--gold); text-shadow: 0 0 40px var(--gold);}
+#theme-toggle { background:none; border:none; font-size:2rem; color:var(--neon-cyan); cursor:pointer; margin-left:1rem;}
+body.light-theme #theme-toggle { color:#ffcc00; }
+
+.container { display:flex; height:100vh; align-items:center; justify-content:space-between; padding:0 120px; padding-top:80px; }
+#wheelArea{ width:800px; height:800px; overflow:hidden; position:relative; border-radius:450px; }
+#wheel { width:100%; height:100%; border-radius:50%; background: radial-gradient(circle,var(--wheel-bg),var(--wheel-alt)); box-shadow:0 0 30px var(--gold),0 0 120px rgba(255,215,0,.4), inset 0 0 80px rgba(0,0,0,.9); transform-style: preserve-3d; filter: drop-shadow(0 0 40px gold); position:absolute; left:-450px; }
+.arrow{
+
+position:absolute;
+left:calc(37%);
+top:50%;
+
+transform:translateX(-50%);
+
+width:0;
+height:0;
+
+border-top:50px solid transparent;
+border-bottom:50px solid transparent;
+border-right:70px solid gold;
+
+filter:
+
+drop-shadow(0 0 20px gold)
+drop-shadow(0 0 40px rgba(255,215,0,0.8));
+
+}
+#buildOverlay { position: fixed; inset:0; background:rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index:200; opacity:0; transition:0.5s; }
+body.light-theme #buildOverlay { background:rgba(255,255,255,0.9);}
+#buildOverlay.visible { display:flex; opacity:1; }
+#buildContent { background:var(--card-bg); padding:40px 60px; border-radius:24px; box-shadow:0 0 60px var(--gold); max-width:90vw; max-height:80vh; overflow-y:auto; color:var(--gold); font-family:'Orbitron',monospace; text-align:center; }
+#closeBuild { position:absolute; top:24px; right:24px; background:none; border:none; font-size:2.4rem; color:var(--gold); cursor:pointer; filter:drop-shadow(0 0 6px var(--gold)); transition:color 0.3s;}
+#closeBuild:hover { color:#fff; }
+#lever { position:absolute; bottom:90px; left:50%; transform:translateX(-50%); width:140px; height:260px; cursor:pointer; display:flex; align-items:flex-end; justify-content:center; }
+.lever-base { position:absolute; bottom:0; width:120px; height:40px; background:linear-gradient(145deg,#444,#111); border-radius:12px; box-shadow:inset 0 0 10px black,0 0 20px rgba(0,0,0,.8);}
+.lever-arm { position:absolute; bottom:40px; display:flex; flex-direction:column; align-items:center; transform-origin:bottom; transition:transform .25s ease;}
+.lever-stick { width:14px; height:160px; background:linear-gradient(180deg,#bbb,#666); border-radius:8px; box-shadow:inset 0 0 6px #000,0 0 10px rgba(255,255,255,.2);}
+.lever-ball { width:50px; height:50px; border-radius:50%; background:radial-gradient(circle at 30% 30%,#ff5555,#8b0000); box-shadow:0 0 20px red,0 0 40px rgba(255,0,0,.7),inset 0 0 8px rgba(0,0,0,.6); margin-top:-8px;}
+#lever.pull .lever-arm{ transform:rotate(45deg);}
+#showBuildBtn{ position:absolute; bottom:20px; left:50%; transform:translateX(-50%); padding:10px 30px; font-family:Orbitron; font-size:20px; border:none; border-radius:12px; cursor:pointer; background:var(--gold); color:#000; box-shadow:0 0 20px var(--gold); transition:.3s;}
+#showBuildBtn:hover{ transform:translateX(-50%) scale(1.05); box-shadow:0 0 40px var(--gold);}
+#wheelMenu{ position:absolute; right:80px; top:200px; display:flex; flex-direction:column; gap:15px;}
+#wheelMenu button{
+
+padding:14px 30px;
+
+font-family:Orbitron;
+font-weight:700;
+
+border-radius:14px;
+
+background:
+
+linear-gradient(
+145deg,
+rgba(40,40,60,0.7),
+rgba(10,10,20,0.9)
+);
+
+border:1px solid rgba(255,215,0,0.4);
+
+color:gold;
+
+backdrop-filter:blur(10px);
+
+transition:all .35s;
+
+box-shadow:
+
+0 0 10px rgba(255,215,0,0.2);
+
+}
+
+#wheelMenu button:hover{
+
+transform:translateY(-5px) scale(1.05);
+
+box-shadow:
+
+0 0 20px gold,
+0 0 40px rgba(255,215,0,0.4);
+
+background:linear-gradient(
+145deg,
+#ffd700,
+#ffae00
+);
+
+color:black;
+
+}
+#centerWinner{ position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; z-index:150; pointer-events:none; opacity:0; transition:opacity 1s ease;}
+#centerWinner img{ width:260px; filter:drop-shadow(0 0 30px gold);}
+#centerWinner h2{ font-size:48px; color:gold; margin-top:15px;}
+@media (max-width:768px){ #wheelArea{ width:100vw; height:100vw; transform:translateX(0); } .container{ flex-direction:column; padding:0 20px; padding-top:100px; } #wheelMenu{ right:20px; top:120px; } }
+#centerWinner video {
+  max-width: 500px;
+  border-radius: 20px;
+  box-shadow: 0 0 40px gold, 0 0 80px #ffdd00;
+  animation: winnerPop 0.8s ease-out;
+}
+
+@keyframes winnerPop {
+  0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+/* ===== GAME LOBBY BACKGROUND ===== */
+
+body{
+
+background:
+radial-gradient(circle at 20% 30%, rgba(0,255,255,0.12), transparent 40%),
+radial-gradient(circle at 80% 70%, rgba(255,215,0,0.12), transparent 40%),
+linear-gradient(160deg,var(--bg-main),var(--bg-secondary));
+
+color:var(--text-main);
+
+transition:background 0.6s,color 0.6s;
+
+}
+
+/* движущаяся дымка */
+body::before{
+content:"";
+position:fixed;
+inset:0;
+
+background:
+url("assets/bg/stars.png"),
+radial-gradient(circle at 20% 30%, rgba(0,255,255,0.1), transparent 40%),
+radial-gradient(circle at 80% 70%, rgba(255,215,0,0.1), transparent 40%);
+
+background-size:cover;
+
+animation: starMove 120s linear infinite;
+
+z-index:-3;
+}
+
+@keyframes starMove{
+0%{transform:translateY(0);}
+100%{transform:translateY(-200px);}
+}
+body::after{
+
+content:"";
+
+position:fixed;
+
+top:-50%;
+left:-50%;
+
+width:200%;
+height:200%;
+
+background:
+
+radial-gradient(circle,rgba(255,215,0,0.05),transparent 60%),
+radial-gradient(circle,rgba(0,255,255,0.05),transparent 60%);
+
+animation:lightMove 20s linear infinite;
+
+pointer-events:none;
+
+z-index:-2;
+
+}
+
+@keyframes lightMove{
+
+0%{transform:rotate(0deg);}
+100%{transform:rotate(360deg);}
+
+}
+#particles{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+pointer-events:none;
+z-index:-1;
+}
+#wheel{
+animation:wheelPulse 4s infinite ease-in-out;
+}
+
+@keyframes wheelPulse{
+0%{filter:drop-shadow(0 0 20px gold);}
+50%{filter:drop-shadow(0 0 60px gold);}
+100%{filter:drop-shadow(0 0 20px gold);}
+}
+</style>
+</head>
+<body>
+
+<header>
+<a href="#"><div class="logo">MOBAHIROSHI</div></a>
+<div class="social-icons">
+<a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
+<a href="#" class="social-icon"><i class="fab fa-telegram-plane"></i></a>
+<a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+<button id="theme-toggle"><i class="fas fa-moon"></i></button>
+</div>
+</header>
+
+<div class="arrow"></div>
+<div class="container">
+  <div id="wheelArea">
+    <canvas id="wheel" width="1400" height="1400"></canvas>
+  </div>
+</div>
+
+<div id="lever" onclick="pullLever()">
+  <div class="lever-base"></div>
+  <div class="lever-arm">
+      <div class="lever-stick"></div>
+      <div class="lever-ball"></div>
+  </div>
+</div>
+
+<div id="wheelMenu">
+<button onclick="setWheel('heroes')">Heroes</button>
+<button onclick="setWheel('spells')">Spells</button>
+<button onclick="setWheel('lanes')">Lanes</button>
+<button onclick="setWheel('emblems')">Emblems</button>
+</div>
+
+<button id="showBuildBtn">Show Build</button>
+
+<div id="buildOverlay">
+<button id="closeBuild"><i class="fas fa-times"></i></button>
+<div id="buildContent"></div>
+</div>
+
+<audio id="tickSound" src="https://assets.codepen.io/605876/tick.mp3"></audio> <!-- замени на свой -->
+<audio id="spinSound" src="sounds/spin.mp3"></audio> <!-- замени на свой -->
+
+<div id="centerWinner"></div>
+
+<script>
+// ----------------------- ВСЁ В ОДНОМ ФАЙЛЕ -----------------------
+
+// Массивы данных
+ const heroes = [
+  { name: "Aamon", rarity: "Epic", img: "assets/heroes/heroes-icons/hero1.png" },
+  { name: "Akai", rarity: "Rare", img: "assets/heroes/heroes-icons/hero2.png" },
+  { name: "Aldous", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero3.png" },
+  { name: "Alice", rarity: "Epic", img: "assets/heroes/heroes-icons/hero4.png", video: "assets/heroes/videos/alice.mp4"},
+  { name: "Alpha", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero5.png" },
+  { name: "Alucard", rarity: "Common", img: "assets/heroes/heroes-icons/hero6.png" },
+  { name: "Angela", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero7.png", video: "assets/heroes/videos/angela.mp4"},
+  { name: "Argus", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero8.png" },
+  { name: "Arlott", rarity: "Epic", img: "assets/heroes/heroes-icons/hero9.png" },
+  { name: "Atlas", rarity: "Epic", img: "assets/heroes/heroes-icons/hero10.png", video: "assets/heroes/videos/atlas.mp4"},
+  { name: "Aulus", rarity: "Rare", img: "assets/heroes/heroes-icons/hero11.png" },
+  { name: "Aurora", rarity: "Epic", img: "assets/heroes/heroes-icons/hero12.png" },
+  { name: "Badang", rarity: "Epic", img: "assets/heroes/heroes-icons/hero13.png" },
+  { name: "Balmond", rarity: "Common", img: "assets/heroes/heroes-icons/hero14.png" },
+  { name: "Bane", rarity: "Rare", img: "assets/heroes/heroes-icons/hero15.png" },
+  { name: "Barats", rarity: "Epic", img: "assets/heroes/heroes-icons/hero16.png" },
+  { name: "Baxia", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero17.png" },
+  { name: "Beatrix", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero18.png" },
+  { name: "Belerick", rarity: "Rare", img: "assets/heroes/heroes-icons/hero19.png" },
+  { name: "Benedetta", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero20.png" },
+  { name: "Brody", rarity: "Epic", img: "assets/heroes/heroes-icons/hero21.png" },
+  { name: "Bruno", rarity: "Rare", img: "assets/heroes/heroes-icons/hero22.png" },
+  { name: "Carmilla", rarity: "Rare", img: "assets/heroes/heroes-icons/hero23.png" },
+  { name: "Cecilion", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero24.png" },
+  { name: "Chang'e", rarity: "Rare", img: "assets/heroes/heroes-icons/hero25.png" },
+  { name: "Chip", rarity: "Epic", img: "assets/heroes/heroes-icons/hero26.png" },
+  { name: "Chou", rarity: "Epic", img: "assets/heroes/heroes-icons/hero27.png" },
+  { name: "Cici", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero28.png" },
+  { name: "Claude", rarity: "Rare", img: "assets/heroes/heroes-icons/hero29.png" },
+  { name: "Clint", rarity: "Epic", img: "assets/heroes/heroes-icons/hero30.png", video: "assets/heroes/videos/clint.mp4"},
+  { name: "Cyclops", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero31.png" },
+  { name: "Diggie", rarity: "Epic", img: "assets/heroes/heroes-icons/hero32.png" },
+  { name: "Dyrroth", rarity: "Epic", img: "assets/heroes/heroes-icons/hero33.png" },
+  { name: "Edith", rarity: "Epic", img: "assets/heroes/heroes-icons/hero34.png" },
+  { name: "Esmeralda", rarity: "Epic", img: "assets/heroes/heroes-icons/hero35.png" },
+  { name: "Estes", rarity: "Rare", img: "assets/heroes/heroes-icons/hero36.png", video: "assets/heroes/videos/estes.mp4"},
+  { name: "Eudora", rarity: "Rare", img: "assets/heroes/heroes-icons/hero37.png" },
+  { name: "Fanny", rarity: "Epic", img: "assets/heroes/heroes-icons/hero38.png" },
+  { name: "Faramis", rarity: "Rare", img: "assets/heroes/heroes-icons/hero39.png" },
+  { name: "Floryn", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero40.png" },
+  { name: "Franco", rarity: "Epic", img: "assets/heroes/heroes-icons/hero41.png" },
+  { name: "Fredrinn", rarity: "Rare", img: "assets/heroes/heroes-icons/hero42.png" },
+  { name: "Freya", rarity: "Rare", img: "assets/heroes/heroes-icons/hero43.png" },
+  { name: "Gatotkaca", rarity: "Epic", img: "assets/heroes/heroes-icons/hero44.png" },
+  { name: "Gloo", rarity: "Epic", img: "assets/heroes/heroes-icons/hero45.png" },
+  { name: "Gord", rarity: "Epic", img: "assets/heroes/heroes-icons/hero46.png" },
+  { name: "Granger", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero47.png" },
+  { name: "Grock", rarity: "Epic", img: "assets/heroes/heroes-icons/hero48.png" },
+  { name: "Guinevere", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero49.png" },
+  { name: "Gusion", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero50.png" },
+  { name: "Hanabi", rarity: "Epic", img: "assets/heroes/heroes-icons/hero51.png" },
+  { name: "Hanzo", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero52.png" },
+  { name: "Harith", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero53.png" },
+  { name: "Harley", rarity: "Epic", img: "assets/heroes/heroes-icons/hero54.png" },
+  { name: "Hayabusa", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero55.png" },
+  { name: "Helcurt", rarity: "Rare", img: "assets/heroes/heroes-icons/hero56.png" },
+  { name: "Hilda", rarity: "Epic", img: "assets/heroes/heroes-icons/hero57.png" },
+  { name: "Hylos", rarity: "Rare", img: "assets/heroes/heroes-icons/hero58.png" },
+  { name: "Irithel", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero59.png" },
+  { name: "Ixia", rarity: "Rare", img: "assets/heroes/heroes-icons/hero60.png" },
+  { name: "Jawhead", rarity: "Epic", img: "assets/heroes/heroes-icons/hero61.png" },
+  { name: "Johnson", rarity: "Common", img: "assets/heroes/heroes-icons/hero62.png" },
+  { name: "Joy", rarity: "Rare", img: "assets/heroes/heroes-icons/hero63.png" },
+  { name: "Julian", rarity: "Epic", img: "assets/heroes/heroes-icons/hero64.png" },
+  { name: "Kadita", rarity: "Epic", img: "assets/heroes/heroes-icons/hero65.png" },
+  { name: "Kagura", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero66.png" },
+  { name: "Kaja", rarity: "Epic", img: "assets/heroes/heroes-icons/hero67.png" },
+  { name: "Kalea", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero68.png" },
+  { name: "Karina", rarity: "Rare", img: "assets/heroes/heroes-icons/hero69.png" },
+  { name: "Karrie", rarity: "Epic", img: "assets/heroes/heroes-icons/hero70.png" },
+  { name: "Khaleed", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero71.png" },
+  { name: "Khufra", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero72.png" },
+  { name: "Kimmy", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero73.png" },
+  { name: "Lancelot", rarity: "Epic", img: "assets/heroes/heroes-icons/hero74.png" },
+  { name: "Lapu-Lapu", rarity: "Epic", img: "assets/heroes/heroes-icons/hero75.png" },
+  { name: "Layla", rarity: "Common", img: "assets/heroes/heroes-icons/hero76.png" },
+  { name: "Leomord", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero77.png" },
+  { name: "Lesley", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero78.png" },
+  { name: "Ling", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero79.png" },
+  { name: "Lolita", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero80.png" },
+  { name: "Lukas", rarity: "Epic", img: "assets/heroes/heroes-icons/hero81.png" },
+  { name: "Lunox", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero82.png" },
+  { name: "Luo Yi", rarity: "Epic", img: "assets/heroes/heroes-icons/hero83.png" },
+  { name: "Lylia", rarity: "Rare", img: "assets/heroes/heroes-icons/hero84.png" },
+  { name: "Marcel", rarity: "Epic", img: "assets/heroes/heroes-icons/hero85.png" },
+  { name: "Martis", rarity: "Epic", img: "assets/heroes/heroes-icons/hero86.png" }, 
+  { name: "Masha", rarity: "Epic", img: "assets/heroes/heroes-icons/hero87.png" },    
+  { name: "Mathilda", rarity: "Rare", img: "assets/heroes/heroes-icons/hero88.png" },
+  { name: "Melissa", rarity: "Epic", img: "assets/heroes/heroes-icons/hero89.png" },
+  { name: "Minotaur", rarity: "Rare", img: "assets/heroes/heroes-icons/hero90.png" },
+  { name: "Minsitthar", rarity: "Rare", img: "assets/heroes/heroes-icons/hero91.png" },
+  { name: "Miya", rarity: "Common", img: "assets/heroes/heroes-icons/hero92.png" },
+  { name: "Moskov", rarity: "Rare", img: "assets/heroes/heroes-icons/hero93.png" },
+  { name: "Nana", rarity: "Common", img: "assets/heroes/heroes-icons/hero94.png" },
+  { name: "Natalia", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero95.png" },
+  { name: "Natan", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero96.png" },
+  { name: "Nolan", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero97.png" },
+  { name: "Novaria", rarity: "Rare", img: "assets/heroes/heroes-icons/hero98.png" },
+  { name: "Obsidia", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero99.png" },
+  { name: "Odette", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero100.png" },
+  { name: "Paquito", rarity: "Epic", img: "assets/heroes/heroes-icons/hero101.png" },
+  { name: "Pharsa", rarity: "Epic", img: "assets/heroes/heroes-icons/hero102.png" },
+  { name: "Phoveus", rarity: "Epic", img: "assets/heroes/heroes-icons/hero103.png" },
+  { name: "Popol and Kupa", rarity: "Rare", img: "assets/heroes/heroes-icons/hero104.png" },
+  { name: "Rafaela", rarity: "Common", img: "assets/heroes/heroes-icons/hero105.png" },
+  { name: "Roger", rarity: "Epic", img: "assets/heroes/heroes-icons/hero106.png" },
+  { name: "Ruby", rarity: "Epic", img: "assets/heroes/heroes-icons/hero107.png" },
+  { name: "Saber", rarity: "Common", img: "assets/heroes/heroes-icons/hero108.png" },
+  { name: "Selena", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero109.png" },
+  { name: "Silvanna", rarity: "Rare", img: "assets/heroes/heroes-icons/hero110.png" },
+  { name: "Sora", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero111.png" },
+  { name: "Sun", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero112.png" },
+  { name: "Suyou", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero113.png" },
+  { name: "Terizla", rarity: "Epic", img: "assets/heroes/heroes-icons/hero114.png" },
+  { name: "Thamuz", rarity: "Epic", img: "assets/heroes/heroes-icons/hero115.png" },
+  { name: "Tigreal", rarity: "Common", img: "assets/heroes/heroes-icons/hero116.png" },
+  { name: "Uranus", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero117.png" },
+  { name: "Vale", rarity: "Rare", img: "assets/heroes/heroes-icons/hero118.png" },
+  { name: "Valentina", rarity: "Epic", img: "assets/heroes/heroes-icons/hero119.png" },
+  { name: "Valir", rarity: "Epic", img: "assets/heroes/heroes-icons/hero120.png" },
+  { name: "Vexana", rarity: "Rare", img: "assets/heroes/heroes-icons/hero121.png" },
+  { name: "Wanwan", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero122.png" },
+  { name: "X.Borg", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero123.png" },
+  { name: "Xavier", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero124.png" },
+  { name: "Yi Sun-shin", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero125.png" },
+  { name: "Yin", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero126.png" },
+  { name: "Yve", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero127.png" },
+  { name: "Yu Zhong", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero128.png" },
+  { name: "Zhask", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero129.png" },
+  { name: "Zhuxin", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero130.png" },
+  { name: "Zilong", rarity: "Common", img: "assets/heroes/heroes-icons/hero131.png" },
+  { name: "Zetian", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero132.png" }
+];
+const spells = [
+      {name: "Flicker", rarity: "Common", img: "assets/spells/Flicker.png"},
+      {name: "Execute", rarity: "Rare", img: "assets/spells/execute.png"},
+      {name: "Retribution", rarity: "Epic", img: "assets/spells/Retribution.png"},
+      {name: "Inspire", rarity: "Legendary", img: "assets/spells/Inspire.png"},
+      {name: "Purify", rarity: "Mythic", img: "assets/spells/purify.png"},
+      {name: "Sprint", rarity: "Common", img: "assets/spells/sprint.png"},
+      {name: "Ice-retribution", rarity: "Epic", img: "assets/spells/ice-retribution.png"},
+      {name: "Aegis", rarity: "Rare", img: "assets/spells/aegis.png"},
+      {name: "Petrify", rarity: "Epic", img: "assets/spells/petrify.png"},
+      {name: "Flame-retribution", rarity: "Epic", img: "assets/spells/flame-retribution.png"},
+      {name: "Flameshot", rarity: "Legendary", img: "assets/spells/flameshot.png"},
+      {name: "Arrival", rarity: "Mythic", img: "assets/spells/arrival.png"},
+     {name: "Bloody-retribution", rarity: "Epic", img: "assets/spells/bloody-retribution.png"},
+      {name: "Vengeance", rarity: "Epic", img: "assets/spells/vengeance.png"}
+    ];
+
+    const lanes = [
+      {name: "Gold Lane", rarity: "Common", img: "assets/lanes/Gold.png"},
+      {name: "EXP Lane", rarity: "Rare", img: "assets/lanes/Exp.png"},
+      {name: "Mid Lane", rarity: "Epic", img: "assets/lanes/Mid.png"},
+      {name: "Jungler", rarity: "Legendary", img: "assets/lanes/Jungler.png"},
+      {name: "Roam", rarity: "Mythic", img: "assets/lanes/Roam.png"}
+    ];
+    const emblems = [
+          {name: "Common", rarity: "Common", img: "assets/emblems/common.png"},
+      {name: "Mage", rarity: "Rare", img: "assets/emblems/mage.png"},
+      {name: "Assassin", rarity: "Epic", img: "assets/emblems/assassin.png"},
+      {name: "Fighter", rarity: "Legendary", img: "assets/emblems/fighter.png"},
+      {name: "Marksman", rarity: "Mythic", img: "assets/emblems/marksman.png"},
+      {name: "Support", rarity: "Legendary", img: "assets/emblems/support.png"},
+      {name: "Tank", rarity: "Mythic", img: "assets/emblems/tank.png"}
+    ]
+
+let items = heroes;
+let visibleItems = [];
+const MAX_VISIBLE = 22;
+
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+const center = canvas.width / 2;
+const radius = canvas.width * 0.48;
+
+let rotation = 0;
+let speed = 0;
+let lastTick = -1;
+let spinning = false;
+let winner = null;
+let buildData = [];
+
+// Кэш изображений
+const imageCache = {};
+function preloadImages(list) {
+  list.forEach(item => {
+    if (!item.img) return;
+    const img = new Image();
+    img.src = item.img;
+    imageCache[item.img] = img;
+  });
+}
+preloadImages(heroes);
+preloadImages(spells);
+preloadImages(lanes);
+preloadImages(emblems);
+
+function generateWheel() {
+  const shuffled = [...items].sort(() => Math.random() - 0.5);
+  visibleItems = shuffled.slice(0, MAX_VISIBLE);
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const sectors = visibleItems.length;
+  if (!sectors) return;
+  const angle = (Math.PI * 2) / sectors;
+  const iconSize = Math.min(120, radius * 1.8 / sectors);
+
+  for (let i = 0; i < sectors; i++) {
+    const a = i * angle + rotation;
+    const item = visibleItems[i];
+
+    ctx.beginPath();
+    ctx.moveTo(center, center);
+    ctx.arc(center, center, radius, a, a + angle);
+    ctx.closePath();
+
+    switch (item.rarity) {
+      case "Common": ctx.fillStyle = "#444"; break;
+      case "Rare": ctx.fillStyle = "#3f6f88"; break;
+      case "Epic": ctx.fillStyle = "#6a4b7a"; break;
+      case "Legendary": ctx.fillStyle = "#8a7a2f"; break;
+      case "Mythic": ctx.fillStyle = "#7a3b3b"; break;
+      default: ctx.fillStyle = "#333";
+    }
+    ctx.fill();
+    ctx.strokeStyle = "gold";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    const icon = imageCache[item.img];
+    if (icon && icon.complete) {
+      ctx.save();
+      ctx.translate(center, center);
+      ctx.rotate(a + angle / 2);
+      const dist = radius * 0.68;
+      ctx.translate(dist, 0);
+      ctx.rotate(-(a + angle / 2));
+      ctx.drawImage(icon, -iconSize / 2, -iconSize / 2, iconSize, iconSize);
+      ctx.restore();
+    }
+  }
+}
+
+function animate() {
+  if (spinning) {
+    if(Math.random()<0.2) spawnSpark();
+    rotation += speed;
+    speed *= 0.982;
+
+    const sectors = visibleItems.length;
+    const angle = (Math.PI * 2) / sectors;
+    const pointerAngle = (Math.PI - rotation + Math.PI * 2) % (Math.PI * 2);
+    const currentSector = Math.floor(pointerAngle / angle);
+
+    if (currentSector !== lastTick && speed > 0.015) {
+      tickSound.currentTime = 0;
+      tickSound.play().catch(() => {});
+      lastTick = currentSector;
+    }
+
+    if (speed < 0.003) {
+  spinning = false;
+
+  // Нормализуем угол поворота колеса
+  let normalizedRotation = rotation % (Math.PI * 2);
+  if (normalizedRotation < 0) normalizedRotation += Math.PI * 2;
+
+  // Стрелка указывает ВЛЕВО (на 0 градусов в canvas-координатах)
+  // Поэтому сектор под стрелкой — это тот, чей центр находится около 0 радиан относительно стрелки
+  const arrowAngle = 0; // стрелка смотрит влево (0 радиан)
+
+  // Угол сектора, на который указывает стрелка после поворота колеса
+  const pointedAngle = (arrowAngle - normalizedRotation + Math.PI * 2) % (Math.PI * 2);
+
+  // Находим индекс сектора (сектор начинается с 0)
+  const winnerSector = Math.floor(pointedAngle / angle) % sectors;
+
+  winner = visibleItems[winnerSector];
+  // Плавный snap к центру сектора под стрелкой
+const targetRotation = normalizedRotation + (pointedAngle - (winnerSector * angle + angle / 2));
+rotation = targetRotation;
+  showWinner();
+}
+  }
+  draw();
+  requestAnimationFrame(animate);
+}
+
+function pullLever() {
+  if (spinning) return;
+  document.getElementById('lever').classList.add('pull');
+  setTimeout(() => document.getElementById('lever').classList.remove('pull'), 400);
+
+  spinning = true;
+  speed = 0.35 + Math.random() * 0.25;
+  lastTick = -1;
+  spinSound.currentTime = 0;
+  spinSound.play().catch(() => {});
+}
+
+function showWinner() {
+  if (!winner) return;
+
+  const centerEl = document.getElementById('centerWinner');
+
+  if (winner.video) {
+
+    centerEl.innerHTML = `
+      <video id="winnerVideo" autoplay playsinline 
+      style="max-width:90vw; max-height:70vh; border-radius:20px; box-shadow:0 0 40px gold;">
+        <source src="${winner.video}" type="video/mp4">
+      </video>
+      <h2>${winner.name}</h2>
+    `;
+
+    const video = document.getElementById("winnerVideo");
+
+    video.addEventListener("loadedmetadata", () => {
+
+      const duration = video.duration * 1000;
+
+      setTimeout(nextStage, duration);
+
+    });
+
+  } else {
+
+    centerEl.innerHTML = `
+      <img src="${winner.img}" alt="${winner.name}">
+      <h2>${winner.name}</h2>
+    `;
+
+    setTimeout(nextStage, 5000); // картинка показывается 5 сек
+  }
+
+  centerEl.style.opacity = '1';
+
+
+  function nextStage(){
+    centerEl.style.opacity = '0';
+    stage = (stage + 1) % 4;
+    setWheel(wheelOrder[stage]);
+  }
+
+
+  // Сохранение билда
+  let currentBuild = {};
+
+  if (items === heroes) currentBuild.hero = winner;
+  else if (items === spells) currentBuild.spell = winner;
+  else if (items === lanes) currentBuild.lane = winner;
+  else if (items === emblems) currentBuild.emblem = winner;
+
+  if (!Array.isArray(buildData)) buildData = [];
+
+  if (
+    buildData.length === 0 ||
+    (buildData[buildData.length-1].hero &&
+     buildData[buildData.length-1].spell &&
+     buildData[buildData.length-1].lane &&
+     buildData[buildData.length-1].emblem)
+  ) {
+    buildData.push({});
+  }
+
+  Object.assign(buildData[buildData.length-1], currentBuild);
+  localStorage.setItem("mlbb_builds", JSON.stringify(buildData));
+}
+function setWheel(type) {
+  if (type === "heroes") items = heroes;
+  else if (type === "spells") items = spells;
+  else if (type === "lanes") items = lanes;
+  else if (type === "emblems") items = emblems;
+
+  localStorage.setItem('wheelType', type);
+  generateWheel();
+  rotation = 0;
+  draw();
+}
+
+function loadBuild() {
+  const saved = localStorage.getItem("mlbb_builds");
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      buildData = Array.isArray(parsed) ? parsed : [];  // если не массив — сбрасываем
+    } catch (e) {
+      console.error("Ошибка парсинга билдов:", e);
+      buildData = [];
+    }
+  } else {
+    buildData = [];
+  }
+
+  let tableHTML = `
+    <h2 style="margin-bottom:20px;">Твои билды</h2>
+    <table style="width:100%; border-collapse:collapse; color:gold; font-size:1.1rem;">
+      <thead>
+        <tr style="border-bottom:2px solid gold;">
+          <th style="padding:12px; text-align:center;">№</th>
+          <th style="padding:12px; text-align:left;">Герой</th>
+          <th style="padding:12px; text-align:left;">Спелл</th>
+          <th style="padding:12px; text-align:left;">Линия</th>
+          <th style="padding:12px; text-align:left;">Эмблема</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  if (buildData.length === 0) {
+    tableHTML += `<tr><td colspan="5" style="padding:20px; text-align:center;">Пока нет билдов. Крути колесо!</td></tr>`;
+  } else {
+    buildData.forEach((build, index) => {
+      tableHTML += `
+        <tr style="border-bottom:1px solid rgba(255,215,0,0.2);">
+          <td style="padding:12px; text-align:center;">${index + 1}</td>
+          <td style="padding:12px;">
+            ${build.hero ? `<img src="${build.hero.img}" style="width:50px; vertical-align:middle; margin-right:10px;">${build.hero.name}` : '-'}
+          </td>
+          <td style="padding:12px;">
+            ${build.spell ? `<img src="${build.spell.img}" style="width:50px; vertical-align:middle; margin-right:10px;">${build.spell.name}` : '-'}
+          </td>
+          <td style="padding:12px;">
+            ${build.lane ? `<img src="${build.lane.img}" style="width:50px; vertical-align:middle; margin-right:10px;">${build.lane.name}` : '-'}
+          </td>
+          <td style="padding:12px;">
+            ${build.emblem ? `<img src="${build.emblem.img}" style="width:50px; vertical-align:middle; margin-right:10px;">${build.emblem.name}` : '-'}
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  tableHTML += `</tbody></table>`;
+
+  document.getElementById('buildContent').innerHTML = tableHTML;
+  document.getElementById('buildOverlay').classList.add('visible');
+}
+// События
+document.getElementById('showBuildBtn').onclick = loadBuild;
+document.getElementById('closeBuild').onclick = () => {
+  document.getElementById('buildOverlay').classList.remove('visible');
+};
+
+const themeToggle = document.getElementById("theme-toggle");
+themeToggle.addEventListener("click", () => {
+  document.body.classList.toggle("light-theme");
+  const icon = themeToggle.querySelector("i");
+  icon.classList.toggle("fa-moon");
+  icon.classList.toggle("fa-sun");
+});
+
+// Старт
+window.addEventListener('load', () => {
+  const savedType = localStorage.getItem('wheelType') || 'heroes';
+  setWheel(savedType);
+  requestAnimationFrame(animate);
+
+  const savedBuilds = localStorage.getItem("mlbb_builds");
+if (savedBuilds) {
+  buildData = JSON.parse(savedBuilds);
+}
+});
+// ===== PARTICLES BACKGROUND =====
+
+const particleCanvas = document.getElementById("particles");
+const pctx = particleCanvas.getContext("2d");
+
+particleCanvas.width = window.innerWidth;
+particleCanvas.height = window.innerHeight;
+
+let particles = [];
+
+for(let i=0;i<120;i++){
+particles.push({
+x:Math.random()*particleCanvas.width,
+y:Math.random()*particleCanvas.height,
+size:Math.random()*2+1,
+speed:Math.random()*0.3+0.1
+});
+}
+
+function animateParticles(){
+
+pctx.clearRect(0,0,particleCanvas.width,particleCanvas.height);
+
+particles.forEach(p=>{
+p.y -= p.speed;
+
+if(p.y < 0){
+p.y = particleCanvas.height;
+p.x = Math.random()*particleCanvas.width;
+}
+
+pctx.beginPath();
+pctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+pctx.fillStyle="rgba(0,255,255,0.6)";
+pctx.fill();
+});
+
+requestAnimationFrame(animateParticles);
+}
+
+animateParticles();
+function spawnSpark(){
+
+const spark=document.createElement("div");
+
+const wheelRect=document.getElementById("wheelArea").getBoundingClientRect();
+
+spark.style.position="absolute";
+spark.style.width="5px";
+spark.style.height="5px";
+spark.style.background="gold";
+spark.style.borderRadius="50%";
+
+spark.style.left = wheelRect.left + Math.random()*wheelRect.width + "px";
+spark.style.top = wheelRect.top + Math.random()*wheelRect.height + "px";
+
+spark.style.boxShadow="0 0 15px gold";
+
+spark.style.pointerEvents="none";
+
+document.body.appendChild(spark);
+
+spark.animate([
+{transform:"scale(1)",opacity:1},
+{transform:"scale(0)",opacity:0}
+],{duration:600});
+
+setTimeout(()=>spark.remove(),600);
+
+}
+</script>
+<canvas id="particles"></canvas>
+</body>
+</html>

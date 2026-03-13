@@ -1,0 +1,191 @@
+ <!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Выбор режима</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap" rel="stylesheet">
+
+<style>
+:root{
+
+/* NIGHT THEME */
+
+--bg-main:#030714;
+--bg-secondary:#050d22;
+
+--neon-cyan:#00fff5;
+--neon-purple:#a855ff;
+--gold:#ffd700;
+
+--text-main:#e0ffff;
+--text-dim:#7aa5ff;
+
+--glow-cyan:0 0 20px #00fff5,0 0 60px rgba(0,255,245,0.5);
+--glow-gold:0 0 20px #ffd700,0 0 60px rgba(255,215,0,0.4);
+
+--card-bg:#0b0f1d;
+
+--wheel-dark:#0d1225;
+--wheel-light:#02040a;
+
+}
+
+/* ===== LIGHT THEME ===== */
+
+body.light-theme{
+
+--bg-main:#f4f7ff;
+--bg-secondary:#ffffff;
+
+--neon-cyan:#0096ff;
+--neon-purple:#7a5cff;
+--gold:#c89b3c;
+
+--text-main:#1c1c1c;
+--text-dim:#555;
+
+--glow-cyan:0 0 15px #4db8ff;
+--glow-gold:0 0 20px #c89b3c;
+
+--card-bg:#ffffff;
+
+--wheel-dark:#e8ecff;
+--wheel-light:#ffffff;
+
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body{
+background: var(--bg-main);
+color: var(--text-main);
+font-family:'Orbitron',sans-serif;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+height:100vh;
+}
+header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: rgba(3,7,20,0.88);
+  backdrop-filter: blur(14px);
+  padding: 1.2rem 3rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
+  border-bottom: 1px solid rgba(0,255,245,0.2);
+}
+body.light-theme header { background: rgba(255,255,255,0.9); border-bottom: 1px solid rgba(0,0,0,0.1);}
+.logo{
+
+font-size:clamp(2.6rem,6vw,3.8rem);
+
+background:linear-gradient(90deg,#ffd700,#fff6a0,#ffd700);
+
+-webkit-background-clip:text;
+color:transparent;
+
+text-shadow:var(--glow-gold);
+
+letter-spacing:6px;
+
+}
+body.light-theme .logo { color:#333; text-shadow:none; }
+.social-icons { display:flex; gap:2rem; }
+.social-icon { font-size:2.6rem; color:var(--neon-cyan); transition: all 0.5s ease; text-shadow:0 0 20px var(--shadow-neon);}
+body.light-theme .social-icon { color:#007bff; text-shadow:none; }
+.social-icon:hover { transform: translateY(-12px) scale(1.4) rotate(15deg); color: var(--gold); text-shadow: 0 0 40px var(--gold);}
+#theme-toggle { background:none; border:none; font-size:2rem; color:var(--neon-cyan); cursor:pointer; margin-left:1rem;}
+body.light-theme #theme-toggle { color:#ffcc00; }
+
+body{
+background:#030714;
+color:white;
+font-family:'Orbitron',sans-serif;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+height:100vh;
+}
+
+.title{
+font-size:60px;
+margin-bottom:60px;
+text-shadow:0 0 40px gold;
+}
+
+.menu{
+display:flex;
+gap:40px;
+}
+
+.card{
+
+width:280px;
+height:180px;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+font-size:28px;
+font-weight:900;
+
+border-radius:20px;
+
+cursor:pointer;
+
+background:linear-gradient(145deg,#0a0f20,#02040a);
+
+border:2px solid gold;
+
+box-shadow:0 0 30px rgba(255,215,0,0.4);
+
+transition:0.4s;
+}
+
+.card:hover{
+
+transform:scale(1.1);
+
+box-shadow:0 0 80px gold;
+
+}
+
+</style>
+</head>
+
+<body>
+<header>
+<a href="#"><div class="logo">MOBAHIROSHI</div></a>
+<div class="social-icons">
+<a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
+<a href="#" class="social-icon"><i class="fab fa-telegram-plane"></i></a>
+<a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+<button id="theme-toggle"><i class="fas fa-moon"></i></button>
+</div>
+</header>
+<div class="title">SELECT MODE</div>
+
+<div class="menu">
+
+<div class="card" onclick="location.href='cases.html'">
+CASES
+</div>
+
+<div class="card" onclick="location.href='wheel.html'">
+WHEEL
+</div>
+
+<div class="card" onclick="location.href='randomizer.html'">
+RANDOMIZER
+</div>
+
+</div>
+
+</body>
+</html>
