@@ -4,188 +4,176 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MLBB Stream Wheel — MOBAHIROSHI</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&display=swap" rel="stylesheet">
-<style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
+<style>
 /* ===== RESET ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ===== DARK THEME (default) ===== */
+/* ===== ROOT VARS ===== */
 :root {
-  --bg-main: #030714;
-  --bg-card: #0d1225;
-  --text-main: #e0ffff;
-  --text-dim: #7aa5cc;
-  --gold: #ffd700;
+  --cyan:   #00fff5;
+  --gold:   #ffd700;
+  --purple: #a855ff;
+  --orange: #ff4500;
+  --dark:   #030714;
+  --glow-c: rgba(0,255,245,0.8);
+  --glow-g: rgba(255,215,0,0.8);
   --gold-dim: rgba(255,215,0,0.35);
-  --cyan: #00e5ff;
-  --border: rgba(0,255,245,0.15);
+  --text-dim: #7aa5cc;
+  --border: rgba(0,255,245,0.18);
+  --bg-card: rgba(8,12,35,0.88);
   --btn-bg: rgba(15,20,45,0.85);
-  --btn-active-bg: linear-gradient(135deg, #ffd700, #ffaa00);
-  --btn-active-color: #000;
-  --overlay-bg: rgba(0,0,0,0.88);
-  --key-bg: rgba(10,15,40,0.95);
-  --lever-base: linear-gradient(145deg,#555,#111);
-  --lever-stick: linear-gradient(180deg,#ddd,#777);
-  --arena-border: rgba(255,215,0,0.35);
-  --arena-shadow: 0 0 40px rgba(255,215,0,0.5), 0 0 100px rgba(255,215,0,0.15);
-  --wheel-glow: drop-shadow(0 0 22px rgba(255,215,0,0.7)) drop-shadow(0 0 55px rgba(255,215,0,0.25));
-  --spotlight-color: linear-gradient(to bottom, rgba(255,240,150,0.18), rgba(255,240,150,0.04), transparent);
-}
-
-/* ===== LIGHT THEME ===== */
-body.light {
-  --bg-main: #eef2ff;
-  --bg-card: #ffffff;
-  --text-main: #1a1a2e;
-  --text-dim: #4a5580;
-  --gold: #b88a00;
-  --gold-dim: rgba(184,138,0,0.3);
-  --cyan: #0055cc;
-  --border: rgba(0,80,200,0.15);
-  --btn-bg: rgba(215,222,255,0.85);
-  --btn-active-bg: linear-gradient(135deg,#1a3a8f,#2a55cc);
-  --btn-active-color: #fff;
-  --overlay-bg: rgba(10,20,80,0.72);
-  --key-bg: rgba(220,228,255,0.97);
-  --lever-base: linear-gradient(145deg,#b0b8d0,#8090b0);
-  --lever-stick: linear-gradient(180deg,#ccd0e0,#909ab8);
-  --arena-border: rgba(184,138,0,0.45);
-  --arena-shadow: 0 0 30px rgba(184,138,0,0.35), 0 0 60px rgba(184,138,0,0.12);
-  --wheel-glow: drop-shadow(0 0 16px rgba(184,138,0,0.5)) drop-shadow(0 0 35px rgba(184,138,0,0.18));
-  --spotlight-color: linear-gradient(to bottom, rgba(255,220,80,0.12), transparent);
 }
 
 /* ===== BODY ===== */
 body {
   font-family: 'Orbitron', sans-serif;
-  min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
-  color: var(--text-main);
-  transition: color 0.4s;
+  background: var(--dark);
+  color: #e0ffff;
+  opacity: 0;
+  transition: opacity 0.9s ease;
 }
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  transition: background 0.5s;
+body.loaded { opacity: 1; }
+
+/* ===== FIXED LAYERS ===== */
+#bg-video {
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0.09; z-index: 0; pointer-events: none;
+  animation: bgScale 25s ease-in-out infinite alternate;
 }
-body:not(.light)::before {
-  background:
-    radial-gradient(circle at 50% 35%, rgba(0,120,220,0.22), transparent 45%),
-    radial-gradient(circle at 15% 75%, rgba(0,200,200,0.12), transparent 50%),
-    radial-gradient(circle at 85% 20%, rgba(255,215,0,0.10), transparent 50%),
-    linear-gradient(175deg, #0d1433 0%, #04081a 55%, #02040c 100%);
+@keyframes bgScale { from { transform: scale(1.05); } to { transform: scale(1.18); } }
+
+#grid-canvas {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.22;
 }
-body.light::before {
-  background:
-    radial-gradient(circle at 50% 35%, rgba(100,160,255,0.2), transparent 45%),
-    radial-gradient(circle at 15% 75%, rgba(100,200,255,0.1), transparent 50%),
-    radial-gradient(circle at 85% 20%, rgba(255,200,0,0.08), transparent 50%),
-    linear-gradient(175deg, #dde5ff 0%, #eef2ff 55%, #f0f4ff 100%);
+#particle-canvas {
+  position: fixed; inset: 0; z-index: 2; pointer-events: none;
 }
 
-/* ===== PARTICLES ===== */
-#particles {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
+.bg-glow {
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 0%, rgba(0,255,245,0.16) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(168,85,255,0.1) 0%, transparent 60%);
+  pointer-events: none; z-index: 3;
 }
-body.light #particles { opacity: 0.3; }
+.scanlines {
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 3px,
+    rgba(0,0,0,0.055) 3px, rgba(0,0,0,0.055) 4px
+  );
+  pointer-events: none; z-index: 4;
+}
+.vignette {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at center, transparent 48%, rgba(0,0,0,0.75) 100%);
+  pointer-events: none; z-index: 5;
+}
+
+/* ===== HUD CORNERS ===== */
+.hud-corner {
+  position: fixed; width: 80px; height: 80px;
+  z-index: 50; pointer-events: none;
+  opacity: 0; animation: hudFade 1s ease-out forwards 1.5s;
+}
+@keyframes hudFade { to { opacity: 1; } }
+.hud-corner::before, .hud-corner::after {
+  content: ""; position: absolute;
+  background: var(--cyan); box-shadow: 0 0 10px var(--cyan);
+}
+.hud-corner::before { width: 2px; height: 30px; }
+.hud-corner::after  { width: 30px; height: 2px; }
+.hud-tl { top:16px; left:16px; } .hud-tl::before,.hud-tl::after { top:0; left:0; }
+.hud-tr { top:16px; right:16px; transform:scaleX(-1); } .hud-tr::before,.hud-tr::after { top:0; left:0; }
+.hud-bl { bottom:16px; left:16px; transform:scaleY(-1); } .hud-bl::before,.hud-bl::after { top:0; left:0; }
+.hud-br { bottom:16px; right:16px; transform:scale(-1); } .hud-br::before,.hud-br::after { top:0; left:0; }
+
+/* ===== FLOATING RUNES ===== */
+.rune {
+  position: fixed; font-family: 'Orbitron', sans-serif;
+  font-size: 0.78rem; font-weight: 900; letter-spacing: 2px;
+  color: rgba(0,255,245,0.09); pointer-events: none; z-index: 6;
+  animation: runeFloat linear infinite; white-space: nowrap;
+}
+@keyframes runeFloat {
+  0%   { transform: translateY(0); opacity: 0.07; }
+  50%  { opacity: 0.13; }
+  100% { transform: translateY(-100px); opacity: 0.03; }
+}
 
 /* ===== HEADER ===== */
 header {
   position: fixed;
   top: 0;
+  left: 0;
   width: 100%;
-  z-index: 200;
+  padding: calc(1rem + env(safe-area-inset-top)) 2.5rem 1rem;
+  background: rgba(3,7,20,0.9);
+  backdrop-filter: blur(16px);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.85rem 2rem;
-  backdrop-filter: blur(16px);
-  transition: background 0.4s, border-color 0.4s;
-}
-body:not(.light) header {
-  background: rgba(3,7,20,0.88);
+  z-index: 200;
   border-bottom: 1px solid var(--border);
 }
-body.light header {
-  background: rgba(238,242,255,0.92);
-  border-bottom: 1px solid rgba(0,80,200,0.12);
-  box-shadow: 0 1px 12px rgba(0,50,200,0.07);
-}
-
 .logo {
-  font-size: clamp(1.2rem, 3.5vw, 2.5rem);
-  font-weight: 800;
-  letter-spacing: 5px;
+  font-size: clamp(1.4rem, 3.5vw, 2.6rem);
+  font-weight: 900; letter-spacing: 5px;
   text-decoration: none;
-  background: linear-gradient(90deg, #ffd700, #fffaaa, #ffd700, #ffaa00);
+  background: linear-gradient(90deg, #ffae00, #fffde0, #ffd700, #ffae00);
   background-size: 300%;
-  -webkit-background-clip: text;
+  -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
-  background-clip: text;
   animation: logoFlow 7s linear infinite;
 }
-body.light .logo {
-  background: linear-gradient(90deg, #b88a00, #7a60d0, #b88a00);
-  background-size: 300%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-@keyframes logoFlow {
-  0%   { background-position: 0%; }
-  100% { background-position: 300%; }
-}
+@keyframes logoFlow { 0% { background-position: 0%; } 100% { background-position: 300%; } }
 
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 1.1rem;
-}
+.header-right { display: flex; align-items: center; gap: 1.1rem; }
 .social-icon {
-  font-size: 1.4rem;
-  color: var(--cyan);
-  text-decoration: none;
-  transition: color 0.3s, transform 0.3s, filter 0.3s;
+  font-size: 1.5rem; color: var(--cyan);
+  text-decoration: none; transition: all 0.3s;
+  text-shadow: 0 0 14px var(--glow-c);
 }
 .social-icon:hover {
-  color: var(--gold);
-  transform: translateY(-3px) scale(1.2);
-  filter: drop-shadow(0 0 8px var(--gold));
+  color: var(--gold); transform: translateY(-4px) scale(1.22);
+  text-shadow: 0 0 25px var(--glow-g);
 }
-
 .icon-btn {
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  color: var(--cyan);
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 6px;
-  transition: color 0.3s, transform 0.2s;
-  line-height: 1;
+  background: none; border: none;
+  font-size: 1.2rem; color: var(--cyan);
+  cursor: pointer; padding: 4px 7px; border-radius: 7px;
+  transition: color 0.3s, transform 0.25s; line-height: 1;
 }
-.icon-btn:hover { color: var(--gold); transform: scale(1.15); }
+.icon-btn:hover { color: var(--gold); transform: scale(1.2); }
+.back-link {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 0.72rem; letter-spacing: 2px;
+  color: rgba(0,255,245,0.6); text-decoration: none;
+  border: 1px solid rgba(0,255,245,0.3);
+  padding: 5px 13px; border-radius: 999px;
+  transition: all 0.3s; white-space: nowrap;
+}
+.back-link:hover { color: var(--gold); border-color: var(--gold); background: rgba(255,215,0,0.07); }
 
 /* ===== KEYBOARD HINTS PANEL ===== */
 #keyHints {
-  position: fixed;
-  top: 64px;
-  right: 1.4rem;
+  position: fixed; top: 68px; right: 1.4rem;
   z-index: 300;
-  background: var(--key-bg);
+  background: rgba(8,12,38,0.97);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 14px 18px;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
-  min-width: 210px;
-  display: none;
+  border-radius: 14px;
+  padding: 14px 18px; backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  min-width: 215px; display: none;
   animation: fadeDown 0.2s ease-out;
 }
 #keyHints.show { display: block; }
@@ -194,57 +182,32 @@ body.light .logo {
   to   { opacity: 1; transform: translateY(0); }
 }
 .hints-title {
-  font-size: 0.6rem;
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  margin-bottom: 10px;
-  font-weight: 700;
+  font-size: 0.58rem; letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 10px; font-weight: 700;
 }
 .hint-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 7px;
-  font-size: 0.72rem;
-  color: var(--text-main);
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 7px; font-size: 0.72rem; color: #c8d8ff;
+  font-family: 'Exo 2', sans-serif;
 }
 .hint-row:last-child { margin-bottom: 0; }
 kbd {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 28px;
-  height: 22px;
-  padding: 0 7px;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 28px; height: 22px; padding: 0 7px;
   border-radius: 5px;
-  font-family: 'Orbitron', monospace;
-  font-size: 0.62rem;
-  font-weight: 700;
-}
-body:not(.light) kbd {
-  background: rgba(0,180,255,0.13);
-  border: 1px solid rgba(0,180,255,0.3);
-  color: #7ad4ff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
-}
-body.light kbd {
-  background: rgba(50,100,220,0.09);
-  border: 1px solid rgba(50,100,220,0.22);
-  color: #334499;
-  box-shadow: 0 2px 4px rgba(0,0,50,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+  font-family: 'Orbitron', monospace; font-size: 0.62rem; font-weight: 700;
+  background: rgba(0,180,255,0.12);
+  border: 1px solid rgba(0,180,255,0.3); color: #7ad4ff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
 /* ===== MAIN LAYOUT ===== */
 .container {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative; z-index: 10;
+  display: flex; align-items: center; justify-content: center;
   gap: clamp(1.5rem, 4vw, 5rem);
-  min-height: 100vh;
-  padding: 80px clamp(1rem, 4vw, 4rem) 1.5rem;
+  min-height: 100dvh;
+  padding: 90px clamp(1rem, 4vw, 4rem) 2rem;
   flex-wrap: wrap;
 }
 
@@ -256,31 +219,47 @@ body.light kbd {
   flex-shrink: 0;
 }
 
+/* Outer rotating ring */
 .arena-ring {
-  position: absolute;
-  inset: -14px;
-  border-radius: 50%;
-  pointer-events: none;
-  border: 3px solid var(--arena-border);
-  box-shadow: var(--arena-shadow);
-  animation: arenaRotate 40s linear infinite;
+  position: absolute; inset: -16px;
+  border-radius: 50%; pointer-events: none;
+  border: 2px solid rgba(255,215,0,0.3);
+  box-shadow: 0 0 40px rgba(255,215,0,0.5), 0 0 100px rgba(255,215,0,0.14);
+  animation: arenaRotate 38s linear infinite;
 }
-@keyframes arenaRotate {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+.arena-ring::before {
+  content: '';
+  position: absolute; inset: 6px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,255,245,0.1);
+}
+@keyframes arenaRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* Tick marks on ring */
+.arena-ticks {
+  position: absolute; inset: -20px;
+  border-radius: 50%; pointer-events: none;
+  animation: arenaRotate 38s linear infinite;
+}
+.arena-ticks::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    rgba(255,215,0,0.25) 0deg 1deg,
+    transparent 1deg 10deg
+  );
 }
 
+/* Spotlight */
 .spotlight {
-  position: absolute;
-  top: -60%;
-  left: 50%;
+  position: absolute; top: -60%; left: 50%;
   transform: translateX(-50%);
-  width: 120%;
-  height: 120%;
+  width: 120%; height: 120%;
   pointer-events: none;
-  background: var(--spotlight-color);
+  background: linear-gradient(to bottom, rgba(255,240,150,0.18), rgba(255,240,150,0.04), transparent);
   clip-path: polygon(40% 0%, 60% 0%, 100% 100%, 0% 100%);
-  filter: blur(30px);
+  filter: blur(28px);
   animation: spotlightMove 9s ease-in-out infinite;
 }
 @keyframes spotlightMove {
@@ -289,449 +268,318 @@ body.light kbd {
 }
 
 #wheel {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  display: block;
+  width: 100%; height: 100%; border-radius: 50%; display: block;
   animation: wheelGlow 4s ease-in-out infinite;
 }
 @keyframes wheelGlow {
-  0%,100% { filter: var(--wheel-glow); }
+  0%,100% { filter: drop-shadow(0 0 22px rgba(255,215,0,0.7)) drop-shadow(0 0 55px rgba(255,215,0,0.25)); }
   50%     { filter: drop-shadow(0 0 40px rgba(255,215,0,0.95)) drop-shadow(0 0 70px rgba(255,215,0,0.3)); }
 }
 
-.arrow {
-  position: absolute;
-  left: -28px;
-  top: 50%;
+/* Arrow pointer */
+.arrow-wrap {
+  position: absolute; left: -42px; top: 50%;
   transform: translateY(-50%);
-  width: 0;
-  height: 0;
-  border-top: 22px solid transparent;
-  border-bottom: 22px solid transparent;
-  border-left: 32px solid var(--gold);
-  filter: drop-shadow(0 0 8px var(--gold));
+  display: flex; align-items: center; gap: 4px;
   z-index: 10;
 }
+.arrow {
+  width: 0; height: 0;
+  border-top: 22px solid transparent;
+  border-bottom: 22px solid transparent;
+  border-left: 34px solid var(--gold);
+  filter: drop-shadow(0 0 10px var(--gold)) drop-shadow(0 0 22px rgba(255,215,0,0.6));
+  animation: arrowPulse 2s ease-in-out infinite;
+}
+@keyframes arrowPulse {
+  0%,100% { filter: drop-shadow(0 0 10px var(--gold)) drop-shadow(0 0 22px rgba(255,215,0,0.5)); }
+  50%     { filter: drop-shadow(0 0 20px var(--gold)) drop-shadow(0 0 40px rgba(255,215,0,0.9)); }
+}
 
-/* ===== RIGHT CONTROLS ===== */
+/* ===== CONTROLS ===== */
 .controls {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.1rem;
-  min-width: 170px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 1.1rem; min-width: 175px;
 }
 
-.wheel-label {
-  text-align: center;
-}
+.wheel-label { text-align: center; }
 .wheel-label-name {
   display: block;
   font-size: clamp(0.9rem, 2.5vw, 1.35rem);
-  font-weight: 800;
-  color: var(--gold);
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  text-shadow: 0 0 14px var(--gold-dim);
+  font-weight: 900; color: var(--gold);
+  letter-spacing: 3px; text-transform: uppercase;
+  text-shadow: 0 0 18px rgba(255,215,0,0.55);
 }
 .wheel-label-step {
-  display: block;
-  font-size: 0.6rem;
-  color: var(--text-dim);
-  letter-spacing: 2px;
-  margin-top: 2px;
+  display: block; font-size: 0.6rem;
+  color: var(--text-dim); letter-spacing: 2px; margin-top: 3px;
+  font-family: 'Exo 2', sans-serif;
 }
 
 /* Category buttons */
-.wheel-menu {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  width: 100%;
-}
+.wheel-menu { display: flex; flex-direction: column; gap: 7px; width: 100%; }
 .menu-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: flex; align-items: center; gap: 8px;
   padding: 9px 16px;
   font-family: 'Orbitron', sans-serif;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  text-transform: uppercase;
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 1.5px;
+  border-radius: 10px; cursor: pointer;
+  transition: all 0.25s ease; text-transform: uppercase;
   background: var(--btn-bg);
-  border: 1px solid var(--gold-dim);
-  color: var(--gold);
-  backdrop-filter: blur(10px);
-  width: 100%;
+  border: 1px solid var(--gold-dim); color: var(--gold);
+  backdrop-filter: blur(10px); width: 100%;
 }
 .menu-btn:hover, .menu-btn.active {
-  background: var(--btn-active-bg);
-  color: var(--btn-active-color);
-  border-color: transparent;
+  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  color: #000; border-color: transparent;
   transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 0 18px var(--gold-dim);
-}
-body.light .menu-btn {
-  background: rgba(215,222,255,0.8);
-  border-color: rgba(100,130,220,0.28);
-  color: #1a3a8f;
-}
-body.light .menu-btn:hover, body.light .menu-btn.active {
-  box-shadow: 0 4px 16px rgba(26,58,143,0.22);
+  box-shadow: 0 0 22px rgba(255,215,0,0.5), 0 4px 16px rgba(255,215,0,0.2);
 }
 .btn-key {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 17px;
-  height: 17px;
-  border-radius: 4px;
-  font-size: 0.58rem;
-  opacity: 0.6;
-  border: 1px solid currentColor;
-  background: rgba(0,0,0,0.2);
-  flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 17px; height: 17px; border-radius: 4px;
+  font-size: 0.58rem; opacity: 0.6; border: 1px solid currentColor;
+  background: rgba(0,0,0,0.2); flex-shrink: 0;
 }
-.menu-btn.active .btn-key,
-.menu-btn:hover .btn-key { opacity: 0.75; }
+.menu-btn.active .btn-key, .menu-btn:hover .btn-key { opacity: 0.8; }
 
 /* ===== LEVER ===== */
 .lever-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  position: relative;
-  height: 130px;
-  width: 75px;
-  user-select: none;
+  display: flex; flex-direction: column; align-items: center;
+  cursor: pointer; position: relative;
+  height: 130px; width: 75px; user-select: none;
 }
 .lever-base {
-  position: absolute;
-  bottom: 0;
-  width: 68px;
-  height: 22px;
-  border-radius: 8px;
-  background: var(--lever-base);
-  box-shadow: inset 0 0 8px rgba(0,0,0,0.6);
+  position: absolute; bottom: 0;
+  width: 68px; height: 22px; border-radius: 8px;
+  background: linear-gradient(145deg, #555, #111);
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.7), 0 0 14px rgba(0,255,245,0.12);
 }
 .lever-arm {
-  position: absolute;
-  bottom: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  position: absolute; bottom: 12px;
+  display: flex; flex-direction: column; align-items: center;
   transform-origin: bottom center;
 }
-.lever-arm.pull {
-  animation: leverPull 0.65s ease;
-}
+.lever-arm.pull { animation: leverPull 0.65s ease; }
 @keyframes leverPull {
-  0%   { transform: rotate(0deg); }
-  20%  { transform: rotate(52deg); }
-  40%  { transform: rotate(28deg); }
-  60%  { transform: rotate(44deg); }
-  80%  { transform: rotate(32deg); }
-  100% { transform: rotate(0deg); }
+  0%  { transform:rotate(0deg); }
+  20% { transform:rotate(52deg); }
+  40% { transform:rotate(28deg); }
+  60% { transform:rotate(44deg); }
+  80% { transform:rotate(32deg); }
+  100%{ transform:rotate(0deg); }
 }
 .lever-knob {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+  width: 26px; height: 26px; border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, #ff7070, #b30000);
-  box-shadow: 0 0 16px rgba(255,60,60,0.8), 0 0 32px rgba(255,0,0,0.35);
+  box-shadow: 0 0 18px rgba(255,60,60,0.85), 0 0 36px rgba(255,0,0,0.4);
   transition: box-shadow 0.3s;
 }
 .lever-wrap:hover .lever-knob {
-  box-shadow: 0 0 28px red, 0 0 55px rgba(255,50,50,0.65);
+  box-shadow: 0 0 32px red, 0 0 60px rgba(255,50,50,0.7);
 }
 .lever-stick {
-  width: 11px;
-  height: 74px;
-  border-radius: 4px;
-  background: var(--lever-stick);
-  box-shadow: inset 0 0 4px rgba(0,0,0,0.4);
+  width: 12px; height: 76px; border-radius: 4px;
+  background: linear-gradient(180deg, #ddd, #777);
+  box-shadow: inset 0 0 4px rgba(0,0,0,0.5);
 }
 
 /* ===== BOTTOM BUTTONS ===== */
-.bottom-btns {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  width: 100%;
-}
+.bottom-btns { display: flex; flex-direction: column; gap: 7px; width: 100%; }
 .action-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 14px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 9px 14px;
   font-family: 'Orbitron', sans-serif;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.25s;
-  text-transform: uppercase;
-  width: 100%;
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 1.5px;
+  border-radius: 9px; cursor: pointer;
+  transition: all 0.25s; text-transform: uppercase; width: 100%;
 }
 .reshuffle-btn {
   background: rgba(0,200,255,0.07);
-  border: 1px solid rgba(0,200,255,0.28);
-  color: var(--cyan);
+  border: 1px solid rgba(0,200,255,0.3); color: var(--cyan);
 }
 .reshuffle-btn:hover {
   background: rgba(0,200,255,0.18);
-  box-shadow: 0 0 14px rgba(0,200,255,0.28);
-  transform: translateY(-1px);
-}
-body.light .reshuffle-btn {
-  background: rgba(0,80,200,0.06);
-  border-color: rgba(0,80,200,0.22);
-}
-body.light .reshuffle-btn:hover {
-  background: rgba(0,80,200,0.13);
+  box-shadow: 0 0 18px rgba(0,200,255,0.3);
+  transform: translateY(-2px);
 }
 .build-btn {
-  background: rgba(255,215,0,0.09);
-  border: 1px solid rgba(255,215,0,0.35);
-  color: var(--gold);
+  background: rgba(255,215,0,0.08);
+  border: 1px solid rgba(255,215,0,0.35); color: var(--gold);
 }
 .build-btn:hover {
-  background: linear-gradient(135deg, #ffd700, #ffaa00);
-  color: #000;
+  background: linear-gradient(135deg, #ffd700, #ffaa00); color: #000;
   border-color: transparent;
-  box-shadow: 0 0 18px rgba(255,215,0,0.45);
-  transform: translateY(-1px);
+  box-shadow: 0 0 20px rgba(255,215,0,0.5);
+  transform: translateY(-2px);
 }
-body.light .build-btn { color: #8a6800; background: rgba(184,138,0,0.09); border-color: rgba(184,138,0,0.3); }
-body.light .build-btn:hover { background: linear-gradient(135deg,#b88a00,#a07a00); color:#fff; border-color:transparent; box-shadow:0 4px 16px rgba(184,138,0,0.28); }
 
 /* ===== WINNER OVERLAY ===== */
 #winnerOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 500;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: var(--overlay-bg);
-  backdrop-filter: blur(7px);
-  cursor: pointer;
-  animation: fadeIn 0.35s ease-out;
+  position: fixed; inset: 0; z-index: 500;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.92); backdrop-filter: blur(10px);
+  cursor: pointer; animation: fadeIn 0.35s ease-out;
 }
 #winnerOverlay.show { display: flex; }
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
 .winner-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  animation: winnerPop 0.55s cubic-bezier(0.34,1.56,0.64,1);
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  animation: winnerPop 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative;
 }
 @keyframes winnerPop {
-  0%   { transform: scale(0.35) rotate(-8deg); opacity: 0; }
+  0%   { transform: scale(0.3) rotate(-10deg); opacity: 0; }
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
+
+/* Rarity-specific ring behind winner image */
+.winner-ring {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.winner-ring::before {
+  content: '';
+  position: absolute;
+  inset: -12px; border-radius: 22px;
+  animation: ringGlow 1.5s ease-in-out infinite;
+}
+.ring-Common::before    { box-shadow: 0 0 40px rgba(170,170,170,0.5); border: 2px solid rgba(170,170,170,0.4); }
+.ring-Rare::before      { box-shadow: 0 0 40px rgba(91,196,255,0.6); border: 2px solid rgba(91,196,255,0.5); }
+.ring-Epic::before      { box-shadow: 0 0 50px rgba(168,85,255,0.7); border: 2px solid rgba(168,85,255,0.55); }
+.ring-Legendary::before { box-shadow: 0 0 60px rgba(255,215,0,0.8); border: 2px solid rgba(255,215,0,0.6); }
+.ring-Mythic::before    { box-shadow: 0 0 70px rgba(255,69,0,0.85); border: 2px solid rgba(255,69,0,0.65); }
+@keyframes ringGlow {
+  0%,100% { transform: scale(1); opacity: 0.8; }
+  50%     { transform: scale(1.04); opacity: 1; }
+}
+
 #winnerImg {
   width: clamp(140px, 24vw, 260px);
   height: clamp(140px, 24vw, 260px);
-  object-fit: contain;
-  border-radius: 16px;
+  object-fit: contain; border-radius: 18px;
 }
-#winnerVideo {
-  max-width: min(90vw, 500px);
-  border-radius: 20px;
-  box-shadow: 0 0 40px rgba(255,215,0,0.55);
-}
+
 #winnerName {
-  font-size: clamp(1.3rem, 3.5vw, 2.3rem);
-  font-weight: 800;
-  letter-spacing: 3px;
-  color: var(--gold);
-  text-shadow: 0 0 28px var(--gold-dim);
+  font-size: clamp(1.4rem, 3.5vw, 2.6rem);
+  font-weight: 900; letter-spacing: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--cyan));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
 }
+
 #winnerRarity {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  padding: 4px 14px;
-  border-radius: 20px;
+  font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase;
+  padding: 5px 18px; border-radius: 999px;
 }
-.r-common    { background:rgba(100,100,120,0.5); color:#ccc;    border:1px solid #888; }
-.r-rare      { background:rgba(50,100,160,0.5);  color:#7ec8e3; border:1px solid #4a90c8; }
-.r-epic      { background:rgba(120,50,180,0.5);  color:#d480ff; border:1px solid #9040cc; }
-.r-legendary { background:rgba(180,150,0,0.5);   color:#ffd700; border:1px solid #ccaa00; }
-.r-mythic    { background:rgba(200,30,30,0.5);   color:#ff9090; border:1px solid #cc3333; }
+.r-common    { background:rgba(100,100,120,0.4); color:#ccc;    border:1px solid #888; }
+.r-rare      { background:rgba(50,100,160,0.4);  color:#7ec8e3; border:1px solid #4a90c8; }
+.r-epic      { background:rgba(120,50,180,0.4);  color:#d480ff; border:1px solid #9040cc; }
+.r-legendary { background:rgba(180,150,0,0.4);   color:#ffd700; border:1px solid #ccaa00; }
+.r-mythic    { background:rgba(200,30,30,0.4);   color:#ff9090; border:1px solid #cc3333; }
+
 .winner-hint {
-  font-size: 0.58rem;
-  letter-spacing: 2px;
-  color: rgba(255,255,255,0.35);
-  text-transform: uppercase;
+  font-size: 0.58rem; letter-spacing: 2.5px;
+  color: rgba(255,255,255,0.3); text-transform: uppercase;
+  font-family: 'Exo 2', sans-serif;
 }
 
 /* ===== BUILD OVERLAY ===== */
 #buildOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 400;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: var(--overlay-bg);
-  backdrop-filter: blur(8px);
+  position: fixed; inset: 0; z-index: 400;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.92); backdrop-filter: blur(10px);
 }
 #buildOverlay.show { display: flex; }
 #buildPanel {
   position: relative;
-  max-width: min(92vw, 820px);
-  max-height: 80vh;
-  width: 100%;
-  border-radius: 20px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  max-width: min(92vw, 820px); max-height: 80vh;
+  width: 100%; border-radius: 22px;
+  overflow: hidden; display: flex; flex-direction: column;
   animation: winnerPop 0.4s ease-out;
-}
-body:not(.light) #buildPanel {
-  background: #0b1028;
+  background: rgba(6,10,28,0.98);
   border: 1px solid rgba(255,215,0,0.22);
-  box-shadow: 0 0 60px rgba(255,215,0,0.18), 0 20px 60px rgba(0,0,0,0.8);
-}
-body.light #buildPanel {
-  background: #fff;
-  border: 1px solid rgba(100,130,220,0.18);
-  box-shadow: 0 8px 40px rgba(0,30,120,0.14);
+  box-shadow: 0 0 70px rgba(255,215,0,0.16), 0 20px 60px rgba(0,0,0,0.85);
 }
 .panel-header {
-  padding: 18px 20px 12px;
-  text-align: center;
-  font-size: clamp(0.8rem, 2vw, 1.1rem);
-  font-weight: 800;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--gold);
-  border-bottom: 1px solid var(--gold-dim);
+  padding: 18px 20px 14px; text-align: center;
+  font-size: clamp(0.8rem, 2vw, 1.1rem); font-weight: 900;
+  letter-spacing: 4px; text-transform: uppercase;
+  background: linear-gradient(90deg, var(--gold), var(--cyan));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  border-bottom: 1px solid rgba(255,215,0,0.18);
 }
-body.light .panel-header { color: #1a3a8f; border-bottom-color: rgba(100,130,220,0.15); }
 .panel-close {
-  position: absolute;
-  top: 12px;
-  right: 14px;
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  color: var(--gold);
-  transition: background 0.2s;
-  line-height: 1;
+  position: absolute; top: 12px; right: 14px;
+  background: none; border: none; font-size: 1.2rem;
+  cursor: pointer; padding: 4px 8px; border-radius: 7px;
+  color: var(--gold); transition: background 0.2s; line-height: 1;
 }
 .panel-close:hover { background: rgba(255,215,0,0.12); }
-body.light .panel-close { color: #555; }
-body.light .panel-close:hover { background: rgba(0,0,0,0.06); }
-.table-wrap {
-  overflow: auto;
-  flex: 1;
-  padding: 0 14px;
-}
+.table-wrap { overflow: auto; flex: 1; padding: 0 14px; }
 .builds-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.7rem;
+  width: 100%; border-collapse: collapse; font-size: 0.72rem;
+  font-family: 'Exo 2', sans-serif;
 }
 .builds-table th {
-  padding: 8px 10px;
-  text-align: left;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  font-weight: 700;
-  position: sticky;
-  top: 0;
-}
-body:not(.light) .builds-table th {
+  padding: 9px 10px; text-align: left;
+  letter-spacing: 2px; text-transform: uppercase; font-weight: 700;
+  position: sticky; top: 0;
   color: rgba(255,215,0,0.7);
-  border-bottom: 1px solid rgba(255,215,0,0.18);
-  background: #0b1028;
-}
-body.light .builds-table th {
-  color: #4060aa;
-  border-bottom: 1px solid rgba(60,100,220,0.13);
-  background: #fff;
+  border-bottom: 1px solid rgba(255,215,0,0.16);
+  background: rgba(6,10,28,0.98);
 }
 .builds-table td {
-  padding: 8px 10px;
-  vertical-align: middle;
+  padding: 9px 10px; vertical-align: middle;
+  border-bottom: 1px solid rgba(255,255,255,0.04); color: #c8d8ff;
 }
-body:not(.light) .builds-table td { border-bottom: 1px solid rgba(255,255,255,0.04); color: #c8d8ff; }
-body.light .builds-table td { border-bottom: 1px solid rgba(0,0,0,0.05); color: #2a3a6a; }
-.builds-table tr:hover td { background: rgba(128,128,255,0.04); }
+.builds-table tr:hover td { background: rgba(128,128,255,0.05); }
 .cell-num { text-align: center; color: var(--text-dim); font-weight: 700; }
-.cell-item { display: flex; align-items: center; gap: 8px; }
-.cell-item img { width: 34px; height: 34px; object-fit: contain; border-radius: 6px; }
-.cell-dash { color: #666; }
+.cell-item { display: flex; align-items: center; gap: 9px; }
+.cell-item img { width: 36px; height: 36px; object-fit: contain; border-radius: 7px; }
+.cell-dash { color: #555; }
 .empty-msg {
-  padding: 32px 20px;
-  text-align: center;
-  font-size: 0.78rem;
-  color: var(--text-dim);
-  letter-spacing: 1px;
+  padding: 36px 20px; text-align: center;
+  font-size: 0.82rem; color: var(--text-dim); letter-spacing: 1px;
 }
 .clear-btn {
-  margin: 10px 14px 14px;
-  padding: 7px 18px;
+  margin: 10px 14px 14px; padding: 7px 18px;
   font-family: 'Orbitron', sans-serif;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.25s;
-  background: rgba(255,50,50,0.09);
-  border: 1px solid rgba(255,50,50,0.28);
-  color: #ff7070;
+  font-size: 0.62rem; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  border-radius: 9px; cursor: pointer; transition: all 0.25s;
+  background: rgba(255,50,50,0.08);
+  border: 1px solid rgba(255,50,50,0.3); color: #ff7070;
   align-self: flex-start;
 }
-.clear-btn:hover { background: rgba(255,50,50,0.22); box-shadow: 0 0 10px rgba(255,50,50,0.25); }
-body.light .clear-btn { color: #cc3333; background: rgba(200,50,50,0.06); border-color: rgba(200,50,50,0.22); }
+.clear-btn:hover { background: rgba(255,50,50,0.22); box-shadow: 0 0 12px rgba(255,50,50,0.3); }
+
+/* ===== WIN PARTICLES ===== */
+.win-particle {
+  position: fixed; border-radius: 50%; pointer-events: none; z-index: 9999;
+  animation: winParticleFall linear forwards;
+}
+@keyframes winParticleFall {
+  0%   { transform: translateY(-60px) scale(1); opacity: 1; }
+  100% { transform: translateY(110vh) scale(0); opacity: 0; }
+}
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 680px) {
   .container {
-    flex-direction: column;
-    padding: 72px 1rem 1.5rem;
-    gap: 1rem;
-    align-items: center;
+    flex-direction: column; padding: 82px 1rem 2rem;
+    gap: 1rem; align-items: center;
   }
-  #wheelArea {
-    width: min(84vw, 310px);
-    height: min(84vw, 310px);
-  }
-  .arrow {
-    left: -22px;
-    border-top: 17px solid transparent;
-    border-bottom: 17px solid transparent;
-    border-left: 25px solid var(--gold);
-  }
+  #wheelArea { width: min(84vw, 320px); height: min(84vw, 320px); }
+  .arrow { border-top: 17px solid transparent; border-bottom: 17px solid transparent; border-left: 25px solid var(--gold); }
+  .arrow-wrap { left: -30px; }
   .controls {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.6rem;
-    width: 100%;
-    min-width: unset;
+    flex-direction: row; flex-wrap: wrap;
+    justify-content: center; gap: 0.6rem; width: 100%; min-width: unset;
   }
   .wheel-label { width: 100%; text-align: center; }
   .wheel-menu { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 6px; }
@@ -739,13 +587,14 @@ body.light .clear-btn { color: #cc3333; background: rgba(200,50,50,0.06); border
   .btn-key { display: none; }
   .lever-wrap { height: 98px; width: 58px; }
   .lever-stick { height: 52px; }
-  .lever-knob { width: 19px; height: 19px; }
+  .lever-knob { width: 20px; height: 20px; }
   .bottom-btns { flex-direction: row; width: auto; gap: 6px; }
   .action-btn { width: auto; padding: 7px 11px; font-size: 0.6rem; }
   .logo { font-size: 1.05rem; letter-spacing: 3px; }
   .social-icon { display: none; }
   .header-right { gap: 0.5rem; }
-  #keyHints { right: 0.5rem; min-width: 185px; }
+  .hud-corner { display: none; }
+  .rune { display: none; }
 }
 @media (max-width: 380px) {
   #wheelArea { width: 80vw; height: 80vw; }
@@ -755,26 +604,41 @@ body.light .clear-btn { color: #cc3333; background: rgba(200,50,50,0.06); border
 </head>
 <body>
 
-<canvas id="particles"></canvas>
+<!-- BG LAYERS -->
+<video id="bg-video" autoplay loop muted playsinline>
+  <source src="assets/videos/fire-sparks.mp4" type="video/mp4">
+</video>
+<canvas id="grid-canvas"></canvas>
+<canvas id="particle-canvas"></canvas>
+<div class="bg-glow"></div>
+<div class="scanlines"></div>
+<div class="vignette"></div>
 
+<!-- HUD CORNERS -->
+<div class="hud-corner hud-tl"></div>
+<div class="hud-corner hud-tr"></div>
+<div class="hud-corner hud-bl"></div>
+<div class="hud-corner hud-br"></div>
+
+<!-- FLOATING RUNES -->
+<div class="rune" style="left:5%;  top:66%; animation-duration:14s;">MLBB • RANK • MVP</div>
+<div class="rune" style="left:68%; top:58%; animation-duration:18s; animation-delay:3s">LEGENDARY • MYTHIC</div>
+<div class="rune" style="left:18%; top:78%; animation-duration:12s; animation-delay:6s">MOBAHIROSHI</div>
+<div class="rune" style="left:55%; top:72%; animation-duration:16s; animation-delay:2s">⬡ ◈ ✦ ◈ ⬡</div>
+
+<!-- HEADER -->
 <header>
-  <a href="#" class="logo">MOBAHIROSHI</a>
+  <a href="index.html" class="logo">MOBAHIROSHI</a>
   <div class="header-right">
-    <a href="https://youtube.com" class="social-icon" title="YouTube">
-      <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M23.5 6.2s-.2-1.7-1-2.4c-.9-1-1.9-1-2.4-1.1C17.1 2.5 12 2.5 12 2.5s-5.1 0-8.1.2c-.5.1-1.5.1-2.4 1.1-.7.7-1 2.4-1 2.4S.2 8.1.2 10v1.8c0 1.9.3 3.8.3 3.8s.2 1.7 1 2.4c.9 1 2.1.9 2.7 1C6.1 19.2 12 19.2 12 19.2s5.1 0 8.1-.3c.5-.1 1.5-.1 2.4-1.1.7-.7 1-2.4 1-2.4s.3-1.9.3-3.8V10c0-1.9-.3-3.8-.3-3.8zM9.7 14.7V8.5l6.5 3.1-6.5 3.1z"/></svg>
-    </a>
-    <a href="https://t.me/" class="social-icon" title="Telegram">
-      <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.9 8.2l-2 9.4c-.1.5-.5.7-.9.4l-2.5-1.9-1.2 1.1c-.1.1-.3.2-.6.2l.2-2.7 5.1-4.6c.2-.2 0-.3-.3-.1L6.1 14.3l-2.4-.8c-.5-.2-.5-.5.1-.7l11.1-4.3c.5-.2.9.1.8.7h.2z"/></svg>
-    </a>
-    <a href="https://instagram.com" class="social-icon" title="Instagram">
-      <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 3.3.1 4.8 1.7 4.9 4.9.1 1.3.1 1.6.1 4.8 0 3.2 0 3.6-.1 4.8-.1 3.2-1.7 4.8-4.9 4.9-1.3.1-1.6.1-4.9.1-3.2 0-3.6 0-4.8-.1-3.3-.1-4.8-1.7-4.9-4.9C2.2 15.6 2.2 15.2 2.2 12c0-3.2 0-3.6.1-4.8C2.4 3.9 4 2.3 7.2 2.3c1.2-.1 1.6-.1 4.8-.1zM12 0C8.7 0 8.3 0 7.1.1 2.7.3.3 2.7.1 7.1.0 8.3 0 8.7 0 12c0 3.3 0 3.7.1 4.9.2 4.4 2.6 6.8 7 7C8.3 24 8.7 24 12 24c3.3 0 3.7 0 4.9-.1 4.4-.2 6.8-2.6 7-7 .1-1.2.1-1.6.1-4.9 0-3.3 0-3.7-.1-4.9C23.7 2.7 21.3.3 16.9.1 15.7 0 15.3 0 12 0zm0 5.8a6.2 6.2 0 1 0 0 12.4A6.2 6.2 0 0 0 12 5.8zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.4-11.8a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z"/></svg>
-    </a>
-    <button class="icon-btn" id="themeBtn" title="Toggle theme">🌙</button>
-    <button class="icon-btn" id="keyBtn" title="Keyboard shortcuts">⌨️</button>
+    <a href="linkforall.html" class="back-link"><i class="fas fa-arrow-left"></i> Назад</a>
+    <a href="https://www.youtube.com/@Mobahiroshi" target="_blank" class="social-icon"><i class="fab fa-youtube"></i></a>
+    <a href="https://t.me/mobahiroshi" target="_blank" class="social-icon"><i class="fab fa-telegram-plane"></i></a>
+    <a href="https://www.instagram.com/mobahiroshi" target="_blank" class="social-icon"><i class="fab fa-instagram"></i></a>
+    <button class="icon-btn" id="keyBtn" title="Keyboard shortcuts"><i class="fas fa-keyboard"></i></button>
   </div>
 </header>
 
-<!-- Keyboard hints panel -->
+<!-- KEYBOARD HINTS -->
 <div id="keyHints">
   <div class="hints-title">Keyboard Shortcuts</div>
   <div class="hint-row"><kbd>Space</kbd><span>Spin the wheel</span></div>
@@ -785,16 +649,18 @@ body.light .clear-btn { color: #cc3333; background: rgba(200,50,50,0.06); border
   <div class="hint-row"><kbd>4</kbd><span>Emblems wheel</span></div>
 </div>
 
+<!-- MAIN -->
 <div class="container">
-  <!-- Wheel -->
   <div id="wheelArea">
     <div class="arena-ring"></div>
+    <div class="arena-ticks"></div>
     <div class="spotlight"></div>
     <canvas id="wheel" width="700" height="700"></canvas>
-    <div class="arrow"></div>
+    <div class="arrow-wrap">
+      <div class="arrow"></div>
+    </div>
   </div>
 
-  <!-- Controls -->
   <div class="controls">
     <div class="wheel-label">
       <span class="wheel-label-name" id="labelName">Heroes</span>
@@ -808,7 +674,6 @@ body.light .clear-btn { color: #cc3333; background: rgba(200,50,50,0.06); border
       <button class="menu-btn" data-type="emblems" onclick="setWheel('emblems')"><span class="btn-key">4</span>Emblems</button>
     </div>
 
-    <!-- Lever -->
     <div class="lever-wrap" id="lever" onclick="pullLever()" title="Spin (Space)">
       <div class="lever-base"></div>
       <div class="lever-arm" id="leverArm">
@@ -819,525 +684,578 @@ body.light .clear-btn { color: #cc3333; background: rgba(200,50,50,0.06); border
 
     <div class="bottom-btns">
       <button class="action-btn reshuffle-btn" onclick="reshuffleWheel()" title="Reshuffle (R)">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4C7.58 4 4 7.58 4 12s3.58 8 8 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-        Reshuffle
+        <i class="fas fa-shuffle"></i> Reshuffle
       </button>
-      <button class="action-btn build-btn" onclick="openBuild()">Show Build</button>
+      <button class="action-btn build-btn" onclick="openBuild()">
+        <i class="fas fa-layer-group"></i> Show Build
+      </button>
     </div>
   </div>
 </div>
 
-<!-- Winner overlay -->
+<!-- WINNER OVERLAY -->
 <div id="winnerOverlay" onclick="closeWinner()">
   <div class="winner-card" id="winnerCard">
-    <img id="winnerImg" src="" alt="" style="display:none">
-    <video id="winnerVideo" autoplay playsinline style="display:none"></video>
+    <div class="winner-ring" id="winnerRing">
+      <img id="winnerImg" src="" alt="">
+    </div>
     <div id="winnerName"></div>
     <div id="winnerRarity"></div>
-    <div class="winner-hint">Click to dismiss</div>
+    <div class="winner-hint">Нажми чтобы закрыть</div>
   </div>
 </div>
 
-<!-- Build overlay -->
+<!-- BUILD OVERLAY -->
 <div id="buildOverlay">
   <div id="buildPanel">
-    <div class="panel-header">Your Builds</div>
+    <div class="panel-header">Your Build</div>
     <button class="panel-close" onclick="closeBuild()">✕</button>
     <div id="buildBody"></div>
   </div>
 </div>
 
-<audio id="tickSound" src="sounds/tick.mp3"></audio>
-<audio id="spinSound" src="sounds/spin.mp3"></audio>
+<audio id="tickSound" src="sounds/tick.mp3" preload="auto"></audio>
+<audio id="spinSound" src="sounds/spin.mp3" preload="auto"></audio>
+<audio id="winSound"  src="sounds/win.mp3"  preload="auto"></audio>
 
 <script>
-// ==================== DATA ====================
+/* ========== PERSPECTIVE GRID ========== */
+(function(){
+  const c = document.getElementById('grid-canvas');
+  const ctx = c.getContext('2d');
+  function resize(){ c.width=innerWidth; c.height=innerHeight; draw(); }
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    const w=c.width,h=c.height,hz=h*.55,vp={x:w/2,y:hz};
+    const cols=18,rows=12,bot=h+40,sp=w*1.4;
+    ctx.strokeStyle='rgba(0,220,255,0.18)'; ctx.lineWidth=0.8;
+    for(let i=0;i<=cols;i++){const bx=(w/2-sp/2)+(sp/cols)*i;ctx.beginPath();ctx.moveTo(vp.x,vp.y);ctx.lineTo(bx,bot);ctx.stroke();}
+    for(let j=0;j<=rows;j++){const t=j/rows,e=t*t,y=hz+(bot-hz)*e,xl=vp.x+(-sp/2)*e,xr=vp.x+(sp/2)*e;ctx.beginPath();ctx.moveTo(xl,y);ctx.lineTo(xr,y);ctx.stroke();}
+    const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'rgba(3,7,20,1)');g.addColorStop(.45,'rgba(3,7,20,0)');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+  }
+  window.addEventListener('resize',resize); resize();
+})();
+
+/* ========== INTERACTIVE PARTICLES ========== */
+(function(){
+  const c=document.getElementById('particle-canvas'),ctx=c.getContext('2d');
+  let W,H,mouse={x:-9999,y:-9999};
+  function resize(){W=c.width=innerWidth;H=c.height=innerHeight;}
+  resize(); window.addEventListener('resize',resize);
+  window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
+  const pts=Array.from({length:70},()=>({
+    x:Math.random()*innerWidth,y:Math.random()*innerHeight,
+    vx:(Math.random()-.5)*.4,vy:-(Math.random()*.5+.1),
+    size:Math.random()*1.8+.4,life:Math.random(),maxLife:.6+Math.random()*.4,
+    color:Math.random()<.5?'0,255,245':'255,215,0'
+  }));
+  function loop(){
+    ctx.clearRect(0,0,W,H);
+    if(mouse.x>0){const g=ctx.createRadialGradient(mouse.x,mouse.y,0,mouse.x,mouse.y,120);g.addColorStop(0,'rgba(0,255,245,0.06)');g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
+    pts.forEach(p=>{
+      const dx=p.x-mouse.x,dy=p.y-mouse.y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<120){const f=(120-d)/120;p.vx+=(dx/d)*f*.55;p.vy+=(dy/d)*f*.55;}
+      p.vx*=.97;p.vy*=.97;p.x+=p.vx;p.y+=p.vy;p.life-=.003;
+      if(p.life<=0||p.y<-10){p.x=Math.random()*W;p.y=H+10;p.vx=(Math.random()-.5)*.4;p.vy=-(Math.random()*.5+.1);p.life=p.maxLife;p.color=Math.random()<.5?'0,255,245':'255,215,0';}
+      ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fillStyle=`rgba(${p.color},${(p.life/p.maxLife)*.7})`;ctx.fill();
+    });
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+
+/* ========== WHEEL DATA ========== */
 const heroes = [
-  { name:"Aamon", rarity:"Epic", img:"assets/heroes/heroes-icons/hero1.png" },
-  { name:"Akai", rarity:"Rare", img:"assets/heroes/heroes-icons/hero2.png" },
-  { name:"Aldous", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero3.png" },
-  { name:"Alice", rarity:"Epic", img:"assets/heroes/heroes-icons/hero4.png" },
-  { name:"Alpha", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero5.png" },
-  { name:"Alucard", rarity:"Common", img:"assets/heroes/heroes-icons/hero6.png" },
-  { name:"Angela", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero7.png" },
-  { name:"Argus", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero8.png" },
-  { name:"Arlott", rarity:"Epic", img:"assets/heroes/heroes-icons/hero9.png" },
-  { name:"Atlas", rarity:"Epic", img:"assets/heroes/heroes-icons/hero10.png" },
-  { name:"Aulus", rarity:"Rare", img:"assets/heroes/heroes-icons/hero11.png" },
-  { name:"Aurora", rarity:"Epic", img:"assets/heroes/heroes-icons/hero12.png" },
-  { name:"Badang", rarity:"Epic", img:"assets/heroes/heroes-icons/hero13.png" },
-  { name:"Balmond", rarity:"Common", img:"assets/heroes/heroes-icons/hero14.png" },
-  { name:"Bane", rarity:"Rare", img:"assets/heroes/heroes-icons/hero15.png" },
-  { name:"Barats", rarity:"Epic", img:"assets/heroes/heroes-icons/hero16.png" },
-  { name:"Baxia", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero17.png" },
-  { name:"Beatrix", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero18.png" },
-  { name:"Belerick", rarity:"Rare", img:"assets/heroes/heroes-icons/hero19.png" },
-  { name:"Benedetta", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero20.png" },
-  { name:"Brody", rarity:"Epic", img:"assets/heroes/heroes-icons/hero21.png" },
-  { name:"Bruno", rarity:"Rare", img:"assets/heroes/heroes-icons/hero22.png" },
-  { name:"Carmilla", rarity:"Rare", img:"assets/heroes/heroes-icons/hero23.png" },
-  { name:"Cecilion", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero24.png" },
-  { name:"Chang'e", rarity:"Rare", img:"assets/heroes/heroes-icons/hero25.png" },
-  { name:"Chip", rarity:"Epic", img:"assets/heroes/heroes-icons/hero26.png" },
-  { name:"Chou", rarity:"Epic", img:"assets/heroes/heroes-icons/hero27.png" },
-  { name:"Cici", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero28.png" },
-  { name:"Claude", rarity:"Rare", img:"assets/heroes/heroes-icons/hero29.png" },
-  { name:"Clint", rarity:"Epic", img:"assets/heroes/heroes-icons/hero30.png" },
-  { name:"Cyclops", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero31.png" },
-  { name:"Diggie", rarity:"Epic", img:"assets/heroes/heroes-icons/hero32.png" },
-  { name:"Dyrroth", rarity:"Epic", img:"assets/heroes/heroes-icons/hero33.png" },
-  { name:"Edith", rarity:"Epic", img:"assets/heroes/heroes-icons/hero34.png" },
-  { name:"Esmeralda", rarity:"Epic", img:"assets/heroes/heroes-icons/hero35.png" },
-  { name:"Estes", rarity:"Rare", img:"assets/heroes/heroes-icons/hero36.png" },
-  { name:"Eudora", rarity:"Rare", img:"assets/heroes/heroes-icons/hero37.png" },
-  { name:"Fanny", rarity:"Epic", img:"assets/heroes/heroes-icons/hero38.png" },
-  { name:"Faramis", rarity:"Rare", img:"assets/heroes/heroes-icons/hero39.png" },
-  { name:"Floryn", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero40.png" },
-  { name:"Franco", rarity:"Epic", img:"assets/heroes/heroes-icons/hero41.png" },
-  { name:"Fredrinn", rarity:"Rare", img:"assets/heroes/heroes-icons/hero42.png" },
-  { name:"Freya", rarity:"Rare", img:"assets/heroes/heroes-icons/hero43.png" },
-  { name:"Gatotkaca", rarity:"Epic", img:"assets/heroes/heroes-icons/hero44.png" },
-  { name:"Gloo", rarity:"Epic", img:"assets/heroes/heroes-icons/hero45.png" },
-  { name:"Gord", rarity:"Epic", img:"assets/heroes/heroes-icons/hero46.png" },
-  { name:"Granger", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero47.png" },
-  { name:"Grock", rarity:"Epic", img:"assets/heroes/heroes-icons/hero48.png" },
-  { name:"Guinevere", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero49.png" },
-  { name:"Gusion", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero50.png" },
-  { name:"Hanabi", rarity:"Epic", img:"assets/heroes/heroes-icons/hero51.png" },
-  { name:"Hanzo", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero52.png" },
-  { name:"Harith", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero53.png" },
-  { name:"Harley", rarity:"Epic", img:"assets/heroes/heroes-icons/hero54.png" },
-  { name:"Hayabusa", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero55.png" },
-  { name:"Helcurt", rarity:"Rare", img:"assets/heroes/heroes-icons/hero56.png" },
-  { name:"Hilda", rarity:"Epic", img:"assets/heroes/heroes-icons/hero57.png" },
-  { name:"Hylos", rarity:"Rare", img:"assets/heroes/heroes-icons/hero58.png" },
-  { name:"Irithel", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero59.png" },
-  { name:"Ixia", rarity:"Rare", img:"assets/heroes/heroes-icons/hero60.png" },
-  { name:"Jawhead", rarity:"Epic", img:"assets/heroes/heroes-icons/hero61.png" },
-  { name:"Johnson", rarity:"Common", img:"assets/heroes/heroes-icons/hero62.png" },
-  { name:"Joy", rarity:"Rare", img:"assets/heroes/heroes-icons/hero63.png" },
-  { name:"Julian", rarity:"Epic", img:"assets/heroes/heroes-icons/hero64.png" },
-  { name:"Kadita", rarity:"Epic", img:"assets/heroes/heroes-icons/hero65.png" },
-  { name:"Kagura", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero66.png" },
-  { name:"Kaja", rarity:"Epic", img:"assets/heroes/heroes-icons/hero67.png" },
-  { name:"Kalea", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero68.png" },
-  { name:"Karina", rarity:"Rare", img:"assets/heroes/heroes-icons/hero69.png" },
-  { name:"Karrie", rarity:"Epic", img:"assets/heroes/heroes-icons/hero70.png" },
-  { name:"Khaleed", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero71.png" },
-  { name:"Khufra", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero72.png" },
-  { name:"Kimmy", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero73.png" },
-  { name:"Lancelot", rarity:"Epic", img:"assets/heroes/heroes-icons/hero74.png" },
-  { name:"Lapu-Lapu", rarity:"Epic", img:"assets/heroes/heroes-icons/hero75.png" },
-  { name:"Layla", rarity:"Common", img:"assets/heroes/heroes-icons/hero76.png" },
-  { name:"Leomord", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero77.png" },
-  { name:"Lesley", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero78.png" },
-  { name:"Ling", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero79.png" },
-  { name:"Lolita", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero80.png" },
-  { name:"Lukas", rarity:"Epic", img:"assets/heroes/heroes-icons/hero81.png" },
-  { name:"Lunox", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero82.png" },
-  { name:"Luo Yi", rarity:"Epic", img:"assets/heroes/heroes-icons/hero83.png" },
-  { name:"Lylia", rarity:"Rare", img:"assets/heroes/heroes-icons/hero84.png" },
-  { name:"Marcel", rarity:"Epic", img:"assets/heroes/heroes-icons/hero85.png" },
-  { name:"Martis", rarity:"Epic", img:"assets/heroes/heroes-icons/hero86.png" },
-  { name:"Masha", rarity:"Epic", img:"assets/heroes/heroes-icons/hero87.png" },
-  { name:"Mathilda", rarity:"Rare", img:"assets/heroes/heroes-icons/hero88.png" },
-  { name:"Melissa", rarity:"Epic", img:"assets/heroes/heroes-icons/hero89.png" },
-  { name:"Minotaur", rarity:"Rare", img:"assets/heroes/heroes-icons/hero90.png" },
-  { name:"Minsitthar", rarity:"Rare", img:"assets/heroes/heroes-icons/hero91.png" },
-  { name:"Miya", rarity:"Common", img:"assets/heroes/heroes-icons/hero92.png" },
-  { name:"Moskov", rarity:"Rare", img:"assets/heroes/heroes-icons/hero93.png" },
-  { name:"Nana", rarity:"Common", img:"assets/heroes/heroes-icons/hero94.png" },
-  { name:"Natalia", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero95.png" },
-  { name:"Natan", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero96.png" },
-  { name:"Nolan", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero97.png" },
-  { name:"Novaria", rarity:"Rare", img:"assets/heroes/heroes-icons/hero98.png" },
-  { name:"Obsidia", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero99.png" },
-  { name:"Odette", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero100.png" },
-  { name:"Paquito", rarity:"Epic", img:"assets/heroes/heroes-icons/hero101.png" },
-  { name:"Pharsa", rarity:"Epic", img:"assets/heroes/heroes-icons/hero102.png" },
-  { name:"Phoveus", rarity:"Epic", img:"assets/heroes/heroes-icons/hero103.png" },
-  { name:"Popol and Kupa", rarity:"Rare", img:"assets/heroes/heroes-icons/hero104.png" },
-  { name:"Rafaela", rarity:"Common", img:"assets/heroes/heroes-icons/hero105.png" },
-  { name:"Roger", rarity:"Epic", img:"assets/heroes/heroes-icons/hero106.png" },
-  { name:"Ruby", rarity:"Epic", img:"assets/heroes/heroes-icons/hero107.png" },
-  { name:"Saber", rarity:"Common", img:"assets/heroes/heroes-icons/hero108.png" },
-  { name:"Selena", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero109.png" },
-  { name:"Silvanna", rarity:"Rare", img:"assets/heroes/heroes-icons/hero110.png" },
-  { name:"Sora", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero111.png" },
-  { name:"Sun", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero112.png" },
-  { name:"Suyou", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero113.png" },
-  { name:"Terizla", rarity:"Epic", img:"assets/heroes/heroes-icons/hero114.png" },
-  { name:"Thamuz", rarity:"Epic", img:"assets/heroes/heroes-icons/hero115.png" },
-  { name:"Tigreal", rarity:"Common", img:"assets/heroes/heroes-icons/hero116.png" },
-  { name:"Uranus", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero117.png" },
-  { name:"Vale", rarity:"Rare", img:"assets/heroes/heroes-icons/hero118.png" },
-  { name:"Valentina", rarity:"Epic", img:"assets/heroes/heroes-icons/hero119.png" },
-  { name:"Valir", rarity:"Epic", img:"assets/heroes/heroes-icons/hero120.png" },
-  { name:"Vexana", rarity:"Rare", img:"assets/heroes/heroes-icons/hero121.png" },
-  { name:"Wanwan", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero122.png" },
-  { name:"X.Borg", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero123.png" },
-  { name:"Xavier", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero124.png" },
-  { name:"Yi Sun-shin", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero125.png" },
-  { name:"Yin", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero126.png" },
-  { name:"Yve", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero127.png" },
-  { name:"Yu Zhong", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero128.png" },
-  { name:"Zhask", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero129.png" },
-  { name:"Zhuxin", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero130.png" },
-  { name:"Zilong", rarity:"Common", img:"assets/heroes/heroes-icons/hero131.png" },
-  { name:"Zetian", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero132.png" },
+  {name:"Aamon",rarity:"Epic",img:"assets/heroes/heroes-icons/hero1.png"},
+  {name:"Akai",rarity:"Rare",img:"assets/heroes/heroes-icons/hero2.png"},
+  {name:"Aldous",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero3.png"},
+  {name:"Alice",rarity:"Epic",img:"assets/heroes/heroes-icons/hero4.png"},
+  {name:"Alpha",rarity:"Mythic",img:"assets/heroes/heroes-icons/hero5.png"},
+  {name:"Alucard",rarity:"Common",img:"assets/heroes/heroes-icons/hero6.png"},
+  {name:"Angela",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero7.png"},
+  {name:"Argus",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero8.png"},
+  {name:"Arlott",rarity:"Epic",img:"assets/heroes/heroes-icons/hero9.png"},
+  {name:"Atlas",rarity:"Epic",img:"assets/heroes/heroes-icons/hero10.png"},
+  {name:"Aulus",rarity:"Rare",img:"assets/heroes/heroes-icons/hero11.png"},
+  {name:"Aurora",rarity:"Epic",img:"assets/heroes/heroes-icons/hero12.png"},
+  {name:"Badang",rarity:"Epic",img:"assets/heroes/heroes-icons/hero13.png"},
+  {name:"Balmond",rarity:"Common",img:"assets/heroes/heroes-icons/hero14.png"},
+  {name:"Bane",rarity:"Rare",img:"assets/heroes/heroes-icons/hero15.png"},
+  {name:"Barats",rarity:"Epic",img:"assets/heroes/heroes-icons/hero16.png"},
+  {name:"Baxia",rarity:"Mythic",img:"assets/heroes/heroes-icons/hero17.png"},
+  {name:"Beatrix",rarity:"Mythic",img:"assets/heroes/heroes-icons/hero18.png"},
+  {name:"Belerick",rarity:"Rare",img:"assets/heroes/heroes-icons/hero19.png"},
+  {name:"Benedetta",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero20.png"},
+  {name:"Brody",rarity:"Epic",img:"assets/heroes/heroes-icons/hero21.png"},
+  {name:"Bruno",rarity:"Rare",img:"assets/heroes/heroes-icons/hero22.png"},
+  {name:"Carmilla",rarity:"Rare",img:"assets/heroes/heroes-icons/hero23.png"},
+  {name:"Cecilion",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero24.png"},
+  {name:"Chang'e",rarity:"Rare",img:"assets/heroes/heroes-icons/hero25.png"},
+  {name:"Chip",rarity:"Epic",img:"assets/heroes/heroes-icons/hero26.png"},
+  {name:"Chou",rarity:"Epic",img:"assets/heroes/heroes-icons/hero27.png"},
+  {name:"Cici",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero28.png"},
+  {name:"Claude",rarity:"Rare",img:"assets/heroes/heroes-icons/hero29.png"},
+  {name:"Clint",rarity:"Epic",img:"assets/heroes/heroes-icons/hero30.png"},
+  {name:"Cyclops",rarity:"Mythic",img:"assets/heroes/heroes-icons/hero31.png"},
+  {name:"Diggie",rarity:"Epic",img:"assets/heroes/heroes-icons/hero32.png"},
+  {name:"Dyrroth",rarity:"Epic",img:"assets/heroes/heroes-icons/hero33.png"},
+  {name:"Edith",rarity:"Epic",img:"assets/heroes/heroes-icons/hero34.png"},
+  {name:"Esmeralda",rarity:"Epic",img:"assets/heroes/heroes-icons/hero35.png"},
+  {name:"Estes",rarity:"Rare",img:"assets/heroes/heroes-icons/hero36.png"},
+  {name:"Eudora",rarity:"Rare",img:"assets/heroes/heroes-icons/hero37.png"},
+  {name:"Fanny",rarity:"Epic",img:"assets/heroes/heroes-icons/hero38.png"},
+  {name:"Faramis",rarity:"Rare",img:"assets/heroes/heroes-icons/hero39.png"},
+  {name:"Floryn",rarity:"Mythic",img:"assets/heroes/heroes-icons/hero40.png"},
+  {name:"Franco",rarity:"Epic",img:"assets/heroes/heroes-icons/hero41.png"},
+  {name:"Fredrinn",rarity:"Rare",img:"assets/heroes/heroes-icons/hero42.png"},
+  {name:"Freya",rarity:"Rare",img:"assets/heroes/heroes-icons/hero43.png"},
+  {name:"Gatotkaca",rarity:"Epic",img:"assets/heroes/heroes-icons/hero44.png"},
+  {name:"Gloo",rarity:"Epic",img:"assets/heroes/heroes-icons/hero45.png"},
+  {name:"Gord",rarity:"Epic",img:"assets/heroes/heroes-icons/hero46.png"},
+  {name:"Granger",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero47.png"},
+  {name:"Grock",rarity:"Epic",img:"assets/heroes/heroes-icons/hero48.png"},
+  {name:"Guinevere",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero49.png"},
+  {name:"Gusion",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero50.png"},
+  {name:"Hanabi",rarity:"Epic",img:"assets/heroes/heroes-icons/hero51.png"},
+  {name:"Hanzo",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero52.png"},
+  {name:"Harith",rarity:"Mythic",img:"assets/heroes/heroes-icons/hero53.png"},
+  {name:"Harley",rarity:"Epic",img:"assets/heroes/heroes-icons/hero54.png"},
+  {name:"Hayabusa",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero55.png"},
+  {name:"Helcurt",rarity:"Rare",img:"assets/heroes/heroes-icons/hero56.png"},
+  {name:"Hilda",rarity:"Epic",img:"assets/heroes/heroes-icons/hero57.png"},
+  {name:"Hylos",rarity:"Rare",img:"assets/heroes/heroes-icons/hero58.png"},
+  {name:"Irithel",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero59.png"},
+  {name:"Ixia",rarity:"Rare",img:"assets/heroes/heroes-icons/hero60.png"},
+  {name:"Jawhead",rarity:"Epic",img:"assets/heroes/heroes-icons/hero61.png"},
+  {name:"Johnson",rarity:"Common",img:"assets/heroes/heroes-icons/hero62.png"},
+  {name:"Joy",rarity:"Rare",img:"assets/heroes/heroes-icons/hero63.png"},
+  {name:"Julian",rarity:"Epic",img:"assets/heroes/heroes-icons/hero64.png"},
+  {name:"Kadita",rarity:"Epic",img:"assets/heroes/heroes-icons/hero65.png"},
+  {name:"Kagura",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero66.png"},
+  {name:"Kaja",rarity:"Epic",img:"assets/heroes/heroes-icons/hero67.png"},
+  {name:"Kalea",rarity:"Mythic",img:"assets/heroes/heroes-icons/hero68.png"},
+  {name:"Karina",rarity:"Rare",img:"assets/heroes/heroes-icons/hero69.png"},
+  {name:"Karrie",rarity:"Epic",img:"assets/heroes/heroes-icons/hero70.png"},
+  {name:"Khaleed",rarity:"Mythic",img:"assets/heroes/heroes-icons/hero71.png"},
+  {name:"Khufra",rarity:"Mythic",img:"assets/heroes/heroes-icons/hero72.png"},
+  {name:"Kimmy",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero73.png"},
+  {name:"Lancelot",rarity:"Epic",img:"assets/heroes/heroes-icons/hero74.png"},
+  {name:"Lapu-Lapu",rarity:"Epic",img:"assets/heroes/heroes-icons/hero75.png"},
+  {name:"Layla",rarity:"Common",img:"assets/heroes/heroes-icons/hero76.png"},
+  {name:"Leomord",rarity:"Mythic",img:"assets/heroes/heroes-icons/hero77.png"},
+  {name:"Lesley",rarity:"Mythic",img:"assets/heroes/heroes-icons/hero78.png"},
+  {name:"Ling",rarity:"Mythic",img:"assets/heroes/heroes-icons/hero79.png"},
+  {name:"Lolita",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero80.png"},
+  {name:"Lukas",rarity:"Epic",img:"assets/heroes/heroes-icons/hero81.png"},
+  {name:"Lunox",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero82.png"},
+  {name:"Luo Yi",rarity:"Epic",img:"assets/heroes/heroes-icons/hero83.png"},
+  {name:"Lylia",rarity:"Rare",img:"assets/heroes/heroes-icons/hero84.png"},
+  {name:"Marcel",rarity:"Epic",img:"assets/heroes/heroes-icons/hero85.png"},
+  {name:"Martis",rarity:"Epic",img:"assets/heroes/heroes-icons/hero86.png"},
+  {name:"Masha",rarity:"Epic",img:"assets/heroes/heroes-icons/hero87.png"},
+  {name:"Mathilda",rarity:"Rare",img:"assets/heroes/heroes-icons/hero88.png"},
+  {name:"Melissa",rarity:"Epic",img:"assets/heroes/heroes-icons/hero89.png"},
+  {name:"Minotaur",rarity:"Rare",img:"assets/heroes/heroes-icons/hero90.png"},
+  {name:"Minsitthar",rarity:"Rare",img:"assets/heroes/heroes-icons/hero91.png"},
+  {name:"Miya",rarity:"Common",img:"assets/heroes/heroes-icons/hero92.png"},
+  {name:"Moskov",rarity:"Rare",img:"assets/heroes/heroes-icons/hero93.png"},
+  {name:"Nana",rarity:"Common",img:"assets/heroes/heroes-icons/hero94.png"},
+  {name:"Natalia",rarity:"Mythic",img:"assets/heroes/heroes-icons/hero95.png"},
+  {name:"Natan",rarity:"Mythic",img:"assets/heroes/heroes-icons/hero96.png"},
+  {name:"Nolan",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero97.png"},
+  {name:"Novaria",rarity:"Rare",img:"assets/heroes/heroes-icons/hero98.png"},
+  {name:"Obsidia",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero99.png"},
+  {name:"Odette",rarity:"Mythic",img:"assets/heroes/heroes-icons/hero100.png"},
+  {name:"Paquito",rarity:"Epic",img:"assets/heroes/heroes-icons/hero101.png"},
+  {name:"Pharsa",rarity:"Epic",img:"assets/heroes/heroes-icons/hero102.png"},
+  {name:"Phoveus",rarity:"Epic",img:"assets/heroes/heroes-icons/hero103.png"},
+  {name:"Popol and Kupa",rarity:"Rare",img:"assets/heroes/heroes-icons/hero104.png"},
+  {name:"Rafaela",rarity:"Common",img:"assets/heroes/heroes-icons/hero105.png"},
+  {name:"Roger",rarity:"Epic",img:"assets/heroes/heroes-icons/hero106.png"},
+  {name:"Ruby",rarity:"Epic",img:"assets/heroes/heroes-icons/hero107.png"},
+  {name:"Saber",rarity:"Common",img:"assets/heroes/heroes-icons/hero108.png"},
+  {name:"Selena",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero109.png"},
+  {name:"Silvanna",rarity:"Rare",img:"assets/heroes/heroes-icons/hero110.png"},
+  {name:"Sora",rarity:"Mythic",img:"assets/heroes/heroes-icons/hero111.png"},
+  {name:"Sun",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero112.png"},
+  {name:"Suyou",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero113.png"},
+  {name:"Terizla",rarity:"Epic",img:"assets/heroes/heroes-icons/hero114.png"},
+  {name:"Thamuz",rarity:"Epic",img:"assets/heroes/heroes-icons/hero115.png"},
+  {name:"Tigreal",rarity:"Common",img:"assets/heroes/heroes-icons/hero116.png"},
+  {name:"Uranus",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero117.png"},
+  {name:"Vale",rarity:"Rare",img:"assets/heroes/heroes-icons/hero118.png"},
+  {name:"Valentina",rarity:"Epic",img:"assets/heroes/heroes-icons/hero119.png"},
+  {name:"Valir",rarity:"Epic",img:"assets/heroes/heroes-icons/hero120.png"},
+  {name:"Vexana",rarity:"Rare",img:"assets/heroes/heroes-icons/hero121.png"},
+  {name:"Wanwan",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero122.png"},
+  {name:"X.Borg",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero123.png"},
+  {name:"Xavier",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero124.png"},
+  {name:"Yi Sun-shin",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero125.png"},
+  {name:"Yin",rarity:"Mythic",img:"assets/heroes/heroes-icons/hero126.png"},
+  {name:"Yve",rarity:"Mythic",img:"assets/heroes/heroes-icons/hero127.png"},
+  {name:"Yu Zhong",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero128.png"},
+  {name:"Zhask",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero129.png"},
+  {name:"Zhuxin",rarity:"Legendary",img:"assets/heroes/heroes-icons/hero130.png"},
+  {name:"Zilong",rarity:"Common",img:"assets/heroes/heroes-icons/hero131.png"},
+  {name:"Zetian",rarity:"Mythic",img:"assets/heroes/heroes-icons/hero132.png"}
 ];
 const spells = [
-  { name:"Flicker", rarity:"Common", img:"assets/spells/Flicker.png" },
-  { name:"Execute", rarity:"Rare", img:"assets/spells/execute.png" },
-  { name:"Retribution", rarity:"Epic", img:"assets/spells/Retribution.png" },
-  { name:"Inspire", rarity:"Legendary", img:"assets/spells/Inspire.png" },
-  { name:"Purify", rarity:"Mythic", img:"assets/spells/purify.png" },
-  { name:"Sprint", rarity:"Common", img:"assets/spells/sprint.png" },
-  { name:"Aegis", rarity:"Rare", img:"assets/spells/aegis.png" },
-  { name:"Petrify", rarity:"Epic", img:"assets/spells/petrify.png" },
-  { name:"Flameshot", rarity:"Legendary", img:"assets/spells/flameshot.png" },
-  { name:"Arrival", rarity:"Mythic", img:"assets/spells/arrival.png" },
-  { name:"Vengeance", rarity:"Epic", img:"assets/spells/vengeance.png" },
+  {name:"Flicker",rarity:"Common",img:"assets/spells/Flicker.png"},
+  {name:"Execute",rarity:"Rare",img:"assets/spells/execute.png"},
+  {name:"Retribution",rarity:"Epic",img:"assets/spells/Retribution.png"},
+  {name:"Inspire",rarity:"Legendary",img:"assets/spells/Inspire.png"},
+  {name:"Purify",rarity:"Mythic",img:"assets/spells/purify.png"},
+  {name:"Sprint",rarity:"Common",img:"assets/spells/sprint.png"},
+  {name:"Ice-retribution",rarity:"Epic",img:"assets/spells/ice-retribution.png"},
+  {name:"Aegis",rarity:"Rare",img:"assets/spells/aegis.png"},
+  {name:"Petrify",rarity:"Epic",img:"assets/spells/petrify.png"},
+  {name:"Flame-retribution",rarity:"Epic",img:"assets/spells/flame-retribution.png"},
+  {name:"Flameshot",rarity:"Legendary",img:"assets/spells/flameshot.png"},
+  {name:"Arrival",rarity:"Mythic",img:"assets/spells/arrival.png"},
+  {name:"Bloody-retribution",rarity:"Epic",img:"assets/spells/bloody-retribution.png"},
+  {name:"Vengeance",rarity:"Epic",img:"assets/spells/vengeance.png"}
 ];
 const lanes = [
-  { name:"Gold Lane", rarity:"Common", img:"assets/lanes/Gold.png" },
-  { name:"EXP Lane", rarity:"Rare", img:"assets/lanes/Exp.png" },
-  { name:"Mid Lane", rarity:"Epic", img:"assets/lanes/Mid.png" },
-  { name:"Jungler", rarity:"Legendary", img:"assets/lanes/Jungler.png" },
-  { name:"Roam", rarity:"Mythic", img:"assets/lanes/Roam.png" },
+  {name:"Gold Lane",rarity:"Common",img:"assets/lanes/Gold.png"},
+  {name:"EXP Lane",rarity:"Rare",img:"assets/lanes/Exp.png"},
+  {name:"Mid Lane",rarity:"Epic",img:"assets/lanes/Mid.png"},
+  {name:"Jungler",rarity:"Legendary",img:"assets/lanes/Jungler.png"},
+  {name:"Roam",rarity:"Mythic",img:"assets/lanes/Roam.png"}
 ];
 const emblems = [
-  { name:"Common", rarity:"Common", img:"assets/emblems/common.png" },
-  { name:"Mage", rarity:"Rare", img:"assets/emblems/mage.png" },
-  { name:"Assassin", rarity:"Epic", img:"assets/emblems/assassin.png" },
-  { name:"Fighter", rarity:"Legendary", img:"assets/emblems/fighter.png" },
-  { name:"Marksman", rarity:"Mythic", img:"assets/emblems/marksman.png" },
-  { name:"Support", rarity:"Legendary", img:"assets/emblems/support.png" },
-  { name:"Tank", rarity:"Mythic", img:"assets/emblems/tank.png" },
+  {name:"Common",rarity:"Common",img:"assets/emblems/common.png"},
+  {name:"Mage",rarity:"Rare",img:"assets/emblems/mage.png"},
+  {name:"Assassin",rarity:"Epic",img:"assets/emblems/assassin.png"},
+  {name:"Fighter",rarity:"Legendary",img:"assets/emblems/fighter.png"},
+  {name:"Marksman",rarity:"Mythic",img:"assets/emblems/marksman.png"},
+  {name:"Support",rarity:"Legendary",img:"assets/emblems/support.png"},
+  {name:"Tank",rarity:"Mythic",img:"assets/emblems/tank.png"}
 ];
 
-const wheelData = { heroes, spells, lanes, emblems };
-const wheelOrder = ["heroes","spells","lanes","emblems"];
-const wheelLabels = { heroes:"Heroes", spells:"Spells", lanes:"Lanes", emblems:"Emblems" };
-const rarityColors = { Common:"#4a4a5a", Rare:"#2a5a7a", Epic:"#5a3a7a", Legendary:"#8a7a2f", Mythic:"#7a2a2a" };
+const DATASETS = { heroes, spells, lanes, emblems };
+const STEP_NAMES = { heroes:'Heroes', spells:'Spells', lanes:'Lanes', emblems:'Emblems' };
+const STEP_ORDER = ['heroes','spells','lanes','emblems'];
 
-const MAX_VISIBLE = 22;
-let currentType = "heroes";
-let stage = 0;
-let visibleItems = [];
-let rotation = 0;
-let speed = 0;
-let spinning = false;
-let lastTick = -1;
-let buildData = [];
-const imgCache = {};
+const RARITY_COLORS = {
+  Common:    ['#aaaaaa','#cccccc'],
+  Rare:      ['#1a4e8c','#4a90c8'],
+  Epic:      ['#6a1a9a','#a855f7'],
+  Legendary: ['#9a7500','#ffd700'],
+  Mythic:    ['#8a1515','#ff4500']
+};
+const PARTICLE_COLORS = {
+  Common:    ['#aaa','#ccc','#999'],
+  Rare:      ['#5bc4ff','#4a90c8','#7ec8e3'],
+  Epic:      ['#a855ff','#d480ff','#c07aff'],
+  Legendary: ['#ffd700','#ffae00','#ffe066'],
+  Mythic:    ['#ff4500','#ff6a2a','#ff9060']
+};
 
-// ==================== CANVAS ====================
-const canvas = document.getElementById("wheel");
-const ctx = canvas.getContext("2d");
+/* ========== WHEEL ENGINE ========== */
+const canvas = document.getElementById('wheel');
+const ctx = canvas.getContext('2d');
 
-function preload(list) {
-  list.forEach(item => {
-    if (!item.img || imgCache[item.img]) return;
-    const img = new Image(); img.src = item.img; imgCache[item.img] = img;
-  });
+let currentType  = 'heroes';
+let items        = [...heroes];
+let rotation     = 0;
+let spinning     = false;
+let spinVel      = 0;
+let raf          = null;
+let lastTick     = -1;
+let builds       = JSON.parse(localStorage.getItem('wheel_builds') || '[]');
+
+const sounds = {
+  tick: document.getElementById('tickSound'),
+  spin: document.getElementById('spinSound'),
+  win:  document.getElementById('winSound'),
+};
+function playSound(id) {
+  try { sounds[id].currentTime = 0; sounds[id].volume = id === 'tick' ? 0.35 : 0.8; sounds[id].play(); } catch(e){}
 }
-preload(heroes); preload(spells); preload(lanes); preload(emblems);
 
-function generateWheel(type) {
-  const shuffled = [...wheelData[type]].sort(() => Math.random() - 0.5);
-  visibleItems = shuffled.slice(0, MAX_VISIBLE);
-}
-
+/* Draw wheel */
 function drawWheel() {
   const size = canvas.width;
-  const center = size / 2;
-  const radius = size * 0.46;
-  ctx.clearRect(0, 0, size, size);
-  const sectors = visibleItems.length;
-  if (!sectors) return;
-  const angle = (Math.PI * 2) / sectors;
+  const cx = size/2, cy = size/2, R = size/2 - 6;
+  const n = items.length;
+  const arc = (Math.PI*2)/n;
+  ctx.clearRect(0,0,size,size);
 
-  for (let i = 0; i < sectors; i++) {
-    const a = i * angle + rotation;
-    const item = visibleItems[i];
+  items.forEach((item, i) => {
+    const start = rotation + i*arc - Math.PI/2;
+    const end   = start + arc;
+    const [c1,c2] = RARITY_COLORS[item.rarity] || RARITY_COLORS.Common;
+
+    /* Slice */
+    const grad = ctx.createRadialGradient(cx,cy,R*0.15,cx,cy,R);
+    grad.addColorStop(0, c1);
+    grad.addColorStop(1, c2);
     ctx.beginPath();
-    ctx.moveTo(center, center);
-    ctx.arc(center, center, radius, a, a + angle);
-    ctx.closePath();
-    ctx.fillStyle = rarityColors[item.rarity] || "#333";
-    ctx.fill();
-    ctx.strokeStyle = "rgba(255,215,0,0.65)";
-    ctx.lineWidth = 2;
+    ctx.moveTo(cx,cy); ctx.arc(cx,cy,R,start,end); ctx.closePath();
+    ctx.fillStyle = grad; ctx.fill();
+
+    /* Border */
+    ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1.2;
     ctx.stroke();
 
-    const icon = imgCache[item.img];
-    if (icon && icon.complete && icon.naturalWidth > 0) {
-      const iconSize = Math.min(78, (radius * 1.6) / sectors);
+    /* Icon */
+    const mid = start + arc/2;
+    const iconDist = R*0.68;
+    const ix = cx + Math.cos(mid)*iconDist;
+    const iy = cy + Math.sin(mid)*iconDist;
+    const iconSize = Math.max(16, Math.min(36, (R*2*Math.PI/n)*0.42));
+
+    ctx.save();
+    ctx.translate(ix,iy); ctx.rotate(mid + Math.PI/2);
+    const img = imageCache[item.img];
+    if(img && img.complete && img.naturalWidth > 0) {
+      ctx.drawImage(img, -iconSize/2, -iconSize/2, iconSize, iconSize);
+    }
+    ctx.restore();
+
+    /* Name (only if slices are large enough) */
+    if(n <= 20) {
+      const textDist = R*0.38;
+      const tx = cx + Math.cos(mid)*textDist;
+      const ty = cy + Math.sin(mid)*textDist;
       ctx.save();
-      ctx.translate(center, center);
-      ctx.rotate(a + angle / 2);
-      ctx.translate(radius * 0.7, 0);
-      ctx.rotate(-(a + angle / 2));
-      ctx.drawImage(icon, -iconSize/2, -iconSize/2, iconSize, iconSize);
+      ctx.translate(tx,ty); ctx.rotate(mid + Math.PI/2);
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.font = `bold ${Math.max(8, Math.min(14, R*0.045))}px Orbitron, sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 4;
+      const label = item.name.length > 10 ? item.name.slice(0,9)+'…' : item.name;
+      ctx.fillText(label, 0, 0);
       ctx.restore();
     }
-  }
+  });
 
-  // Center dot
-  const grad = ctx.createRadialGradient(center,center,0,center,center,radius*0.14);
-  const isDark = !document.body.classList.contains("light");
-  grad.addColorStop(0, isDark ? "#1a1f3a" : "#e0e8ff");
-  grad.addColorStop(1, isDark ? "#0d1225" : "#c8d4f0");
-  ctx.beginPath();
-  ctx.arc(center, center, radius * 0.11, 0, Math.PI*2);
-  ctx.fillStyle = grad;
-  ctx.fill();
-  ctx.strokeStyle = "rgba(255,215,0,0.85)";
-  ctx.lineWidth = 3;
-  ctx.stroke();
+  /* Centre hub */
+  const hub = ctx.createRadialGradient(cx,cy,0,cx,cy,R*0.14);
+  hub.addColorStop(0,'#ffe86a'); hub.addColorStop(0.6,'#ffd700'); hub.addColorStop(1,'#b38800');
+  ctx.beginPath(); ctx.arc(cx,cy,R*0.14,0,Math.PI*2);
+  ctx.fillStyle = hub; ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 2; ctx.stroke();
+
+  /* Centre shine */
+  const shine = ctx.createRadialGradient(cx-R*.04,cy-R*.04,0,cx,cy,R*.14);
+  shine.addColorStop(0,'rgba(255,255,255,0.5)'); shine.addColorStop(1,'transparent');
+  ctx.beginPath(); ctx.arc(cx,cy,R*0.14,0,Math.PI*2);
+  ctx.fillStyle = shine; ctx.fill();
+
+  /* Ring shadow */
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2);
+  const ringGrad = ctx.createRadialGradient(cx,cy,R-8,cx,cy,R+2);
+  ringGrad.addColorStop(0,'rgba(255,215,0,0.08)'); ringGrad.addColorStop(1,'transparent');
+  ctx.fillStyle = ringGrad; ctx.fill();
 }
 
-function animate() {
-  if (spinning) {
-    rotation += speed;
-    speed *= 0.982;
-    const sectors = visibleItems.length;
-    if (sectors > 0) {
-      const angle = (Math.PI*2) / sectors;
-      const pointerAngle = (Math.PI - rotation + Math.PI*4) % (Math.PI*2);
-      const sector = Math.floor(pointerAngle / angle);
-      if (sector !== lastTick && speed > 0.015) lastTick = sector;
-      if (speed < 0.003) {
-        spinning = false;
-        let norm = rotation % (Math.PI*2);
-        if (norm < 0) norm += Math.PI*2;
-       const pointerAngle = Math.PI; // стрелка слева
-        const pointed = (pointerAngle - norm + Math.PI * 2) % (Math.PI * 2);
-        const winnerIdx = Math.floor(pointed / angle) % sectors;
-        onWinner(visibleItems[winnerIdx]);
-      }
-    }
+/* Image cache */
+const imageCache = {};
+function preloadImages(callback) {
+  const allImgs = [...heroes,...spells,...lanes,...emblems].map(i=>i.img);
+  const unique = [...new Set(allImgs)];
+  let loaded = 0;
+  unique.forEach(src => {
+    const img = new Image();
+    img.onload = img.onerror = () => { if(++loaded >= unique.length) callback(); };
+    img.src = src;
+    imageCache[src] = img;
+  });
+  if(unique.length === 0) callback();
+}
+
+/* Tick detection */
+function getPointerItem() {
+  const n = items.length;
+  const arc = (Math.PI*2)/n;
+  // Arrow points left (at -π), so the selected slice is at rotation mod arc
+  let angle = ((-Math.PI/2) - rotation % (Math.PI*2) + Math.PI*4) % (Math.PI*2);
+  const idx = Math.floor(angle / arc) % n;
+  return idx;
+}
+
+/* Spin loop */
+function spinLoop() {
+  rotation += spinVel;
+  spinVel  *= 0.988;
+
+  // Tick sound
+  const current = getPointerItem();
+  if(current !== lastTick) {
+    playSound('tick');
+    lastTick = current;
+  }
+
+  drawWheel();
+
+  if(spinVel > 0.001) {
+    raf = requestAnimationFrame(spinLoop);
+  } else {
+    spinning = false;
+    const winner = items[getPointerItem()];
+    setTimeout(() => showWinner(winner), 350);
+  }
+}
+
+/* Pull lever — spin */
+function pullLever() {
+  if(spinning) return;
+  const arm = document.getElementById('leverArm');
+  arm.classList.remove('pull');
+  void arm.offsetWidth;
+  arm.classList.add('pull');
+
+  playSound('spin');
+  spinVel = 0.38 + Math.random()*0.28;
+  spinning = true;
+  lastTick = -1;
+  cancelAnimationFrame(raf);
+  raf = requestAnimationFrame(spinLoop);
+}
+
+/* Set wheel category */
+function setWheel(type) {
+  currentType = type;
+  items = [...DATASETS[type]];
+  rotation = 0;
+  drawWheel();
+  document.querySelectorAll('.menu-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.type === type);
+  });
+  const idx = STEP_ORDER.indexOf(type)+1;
+  document.getElementById('labelName').textContent = STEP_NAMES[type];
+  document.getElementById('labelStep').textContent = `Step ${idx} / 4`;
+}
+
+/* Reshuffle */
+function reshuffleWheel() {
+  for(let i=items.length-1;i>0;i--) {
+    const j=Math.floor(Math.random()*(i+1));
+    [items[i],items[j]]=[items[j],items[i]];
   }
   drawWheel();
-  requestAnimationFrame(animate);
 }
 
-// ==================== WINNER ====================
-function onWinner(item) {
-  // Save build
-  if (
-    buildData.length === 0 ||
-    (buildData[buildData.length-1].hero &&
-     buildData[buildData.length-1].spell &&
-     buildData[buildData.length-1].lane &&
-     buildData[buildData.length-1].emblem)
-  ) buildData.push({});
-  const last = buildData[buildData.length-1];
-  const key = { heroes:"hero", spells:"spell", lanes:"lane", emblems:"emblem" }[currentType];
-  last[key] = item;
-  localStorage.setItem("mlbb_builds", JSON.stringify(buildData));
+/* Show winner */
+function showWinner(item) {
+  playSound('win');
+  document.getElementById('winnerImg').src = item.img;
+  document.getElementById('winnerName').textContent = item.name;
+  const badge = document.getElementById('winnerRarity');
+  badge.textContent = item.rarity;
+  badge.className = 'r-'+item.rarity.toLowerCase();
+  const ring = document.getElementById('winnerRing');
+  ring.className = 'winner-ring ring-'+item.rarity;
+  document.getElementById('winnerOverlay').classList.add('show');
+  spawnWinParticles(item.rarity);
 
-  // Show winner
-  const overlay = document.getElementById("winnerOverlay");
-  const winImg = document.getElementById("winnerImg");
-  const winVid = document.getElementById("winnerVideo");
-  const winName = document.getElementById("winnerName");
-  const winRarity = document.getElementById("winnerRarity");
-
-  winName.textContent = item.name;
-  winRarity.textContent = item.rarity;
-  winRarity.className = "r-" + item.rarity.toLowerCase();
-
-  if (item.video) {
-    winImg.style.display = "none";
-    winVid.style.display = "block";
-    winVid.src = item.video;
-    winVid.load(); winVid.play().catch(() => {});
-    const glow = getRarityGlow(item.rarity);
-    winVid.style.filter = glow;
-  } else {
-    winVid.style.display = "none";
-    winVid.src = "";
-    winImg.style.display = "block";
-    winImg.src = item.img;
-    winImg.style.filter = getRarityGlow(item.rarity);
-  }
-  overlay.classList.add("show");
-
-  const delay = item.video ? 6000 : 4000;
-  setTimeout(() => {
-    closeWinner();
-    nextStage();
-  }, delay);
-}
-
-function getRarityGlow(r) {
-  switch(r) {
-    case "Mythic":    return "drop-shadow(0 0 22px #ff4444) drop-shadow(0 0 44px rgba(255,50,50,0.6))";
-    case "Legendary": return "drop-shadow(0 0 22px #ffd700) drop-shadow(0 0 44px rgba(255,215,0,0.55))";
-    case "Epic":      return "drop-shadow(0 0 18px #b44fff) drop-shadow(0 0 32px rgba(180,79,255,0.5))";
-    case "Rare":      return "drop-shadow(0 0 15px #4fc3f7)";
-    default:          return "none";
-  }
+  // Save to builds
+  const build = builds.find(b=>b.type===currentType);
+  if(build) build.item = item; else builds.push({type:currentType, item});
+  localStorage.setItem('wheel_builds', JSON.stringify(builds));
 }
 
 function closeWinner() {
-  document.getElementById("winnerOverlay").classList.remove("show");
+  document.getElementById('winnerOverlay').classList.remove('show');
 }
 
-function nextStage() {
-  stage = (stage + 1) % 4;
-  setWheel(wheelOrder[stage]);
+/* Win particle explosion — rarity-specific colors */
+function spawnWinParticles(rarity) {
+  const colors = PARTICLE_COLORS[rarity] || PARTICLE_COLORS.Common;
+  const count = rarity === 'Mythic' ? 80 : rarity === 'Legendary' ? 65 : rarity === 'Epic' ? 50 : 35;
+  for(let i=0;i<count;i++){
+    setTimeout(()=>{
+      const p = document.createElement('div');
+      p.className = 'win-particle';
+      const sz = 5 + Math.random()*12;
+      const color = colors[Math.floor(Math.random()*colors.length)];
+      p.style.cssText = `
+        left:${10+Math.random()*80}%;
+        top:0; width:${sz}px; height:${sz}px;
+        background:${color};
+        box-shadow:0 0 ${sz}px ${color};
+        border-radius:${Math.random()>.4?'50%':'3px'};
+        animation-duration:${2+Math.random()*3}s;
+        animation-delay:${Math.random()*.6}s;
+      `;
+      document.body.appendChild(p);
+      setTimeout(()=>p.remove(), 5000);
+    }, i * 35);
+  }
 }
 
-// ==================== WHEEL CONTROL ====================
-function setWheel(type) {
-  currentType = type;
-  stage = wheelOrder.indexOf(type);
-  generateWheel(type);
-  rotation = 0;
-  localStorage.setItem("wheelType", type);
-  document.getElementById("labelName").textContent = wheelLabels[type];
-  document.getElementById("labelStep").textContent = "Step " + (stage+1) + " / 4";
-  document.querySelectorAll(".menu-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.type === type);
-  });
-}
-
-function reshuffleWheel() {
-  if (spinning) return;
-  generateWheel(currentType);
-  rotation = 0;
-}
-
-function pullLever() {
-  if (spinning) return;
-  const arm = document.getElementById("leverArm");
-  arm.classList.remove("pull");
-  void arm.offsetWidth;
-  arm.classList.add("pull");
-  spinning = true;
-  speed = 0.32 + Math.random() * 0.22;
-  lastTick = -1;
-  const snd = document.getElementById("spinSound");
-  if (snd) { snd.currentTime = 0; snd.play().catch(() => {}); }
-}
-
-// ==================== BUILD ====================
+/* Build overlay */
 function openBuild() {
-  const body = document.getElementById("buildBody");
-  if (buildData.length === 0) {
-    body.innerHTML = '<p class="empty-msg">No builds yet — spin the wheel to get started!</p>';
+  const body = document.getElementById('buildBody');
+  if(builds.length === 0){
+    body.innerHTML='<p class="empty-msg">Spin the wheel at least once to build your loadout!</p>';
   } else {
-    let rows = buildData.map((b, i) => `
-      <tr>
+    const types = ['heroes','spells','lanes','emblems'];
+    const headers = {heroes:'Hero',spells:'Spell',lanes:'Lane',emblems:'Emblem'};
+    let rows = '';
+    types.forEach((t,i) => {
+      const b = builds.find(x=>x.type===t);
+      rows += `<tr>
         <td class="cell-num">${i+1}</td>
-        <td>${b.hero ? `<div class="cell-item"><img src="${b.hero.img}" alt="${b.hero.name}"><span>${b.hero.name}</span></div>` : '<span class="cell-dash">—</span>'}</td>
-        <td>${b.spell ? `<div class="cell-item"><img src="${b.spell.img}" alt="${b.spell.name}"><span>${b.spell.name}</span></div>` : '<span class="cell-dash">—</span>'}</td>
-        <td>${b.lane ? `<div class="cell-item"><img src="${b.lane.img}" alt="${b.lane.name}"><span>${b.lane.name}</span></div>` : '<span class="cell-dash">—</span>'}</td>
-        <td>${b.emblem ? `<div class="cell-item"><img src="${b.emblem.img}" alt="${b.emblem.name}"><span>${b.emblem.name}</span></div>` : '<span class="cell-dash">—</span>'}</td>
-      </tr>`).join("");
+        <td class="cell-num" style="color:rgba(0,255,245,0.6);font-size:.62rem;letter-spacing:1.5px;">${headers[t]}</td>
+        <td>${b
+          ? `<div class="cell-item"><img src="${b.item.img}" alt="${b.item.name}"><span>${b.item.name}</span></div>`
+          : '<span class="cell-dash">—</span>'}</td>
+        <td>${b ? `<span class="r-${b.item.rarity.toLowerCase()}" style="padding:3px 10px;border-radius:999px;font-size:.6rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;">${b.item.rarity}</span>` : ''}</td>
+      </tr>`;
+    });
     body.innerHTML = `
       <div class="table-wrap">
         <table class="builds-table">
-          <thead><tr><th>#</th><th>Hero</th><th>Spell</th><th>Lane</th><th>Emblem</th></tr></thead>
+          <thead><tr>
+            <th>#</th><th>Type</th><th>Pick</th><th>Rarity</th>
+          </tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
-      <button class="clear-btn action-btn" onclick="clearBuilds()">Clear All</button>`;
+      <button class="clear-btn" onclick="clearBuilds()">Clear Builds</button>
+    `;
   }
-  document.getElementById("buildOverlay").classList.add("show");
+  document.getElementById('buildOverlay').classList.add('show');
 }
-
 function closeBuild() {
-  document.getElementById("buildOverlay").classList.remove("show");
+  document.getElementById('buildOverlay').classList.remove('show');
 }
-
 function clearBuilds() {
-  buildData = [];
-  localStorage.removeItem("mlbb_builds");
-  openBuild();
+  builds = []; localStorage.removeItem('wheel_builds');
+  closeBuild();
 }
 
-document.getElementById("buildOverlay").addEventListener("click", function(e) {
-  if (e.target === this) closeBuild();
+/* Keyboard */
+document.addEventListener('keydown', e => {
+  if(e.code === 'Space' && !e.repeat){ e.preventDefault(); pullLever(); }
+  if(e.key === 'r' || e.key === 'R') reshuffleWheel();
+  if(e.key === '1') setWheel('heroes');
+  if(e.key === '2') setWheel('spells');
+  if(e.key === '3') setWheel('lanes');
+  if(e.key === '4') setWheel('emblems');
+  if(e.key === 'Escape'){ closeWinner(); closeBuild(); }
 });
 
-// ==================== THEME ====================
-const themeBtn = document.getElementById("themeBtn");
-function applyTheme(t) {
-  document.body.classList.toggle("light", t === "light");
-  themeBtn.textContent = t === "light" ? "🌙" : "☀️";
-  localStorage.setItem("mlbb-theme", t);
-}
-themeBtn.addEventListener("click", () => {
-  const next = document.body.classList.contains("light") ? "dark" : "light";
-  applyTheme(next);
+/* Key hints toggle */
+document.getElementById('keyBtn').addEventListener('click', () => {
+  document.getElementById('keyHints').classList.toggle('show');
+});
+document.addEventListener('click', e => {
+  if(!e.target.closest('#keyHints') && !e.target.closest('#keyBtn'))
+    document.getElementById('keyHints').classList.remove('show');
 });
 
-// ==================== KEYBOARD SHORTCUTS ====================
-const keyHints = document.getElementById("keyHints");
-document.getElementById("keyBtn").addEventListener("click", () => {
-  keyHints.classList.toggle("show");
-});
-document.addEventListener("click", e => {
-  if (!keyHints.contains(e.target) && e.target.id !== "keyBtn") {
-    keyHints.classList.remove("show");
-  }
+/* Init */
+preloadImages(() => {
+  drawWheel();
+  document.body.classList.add('loaded');
 });
 
-document.addEventListener("keydown", e => {
-  const tag = e.target.tagName;
-  if (tag === "INPUT" || tag === "TEXTAREA") return;
-  switch (e.code) {
-    case "Space": e.preventDefault(); pullLever(); break;
-    case "KeyR":  reshuffleWheel(); break;
-    case "Digit1": setWheel("heroes");  break;
-    case "Digit2": setWheel("spells");  break;
-    case "Digit3": setWheel("lanes");   break;
-    case "Digit4": setWheel("emblems"); break;
-  }
-});
-
-// ==================== PARTICLES ====================
-const pc = document.getElementById("particles");
-const pctx = pc.getContext("2d");
-function resizeParticles() { pc.width = innerWidth; pc.height = innerHeight; }
-resizeParticles();
-window.addEventListener("resize", resizeParticles);
-
-const particles = Array.from({length:100}, () => ({
-  x: Math.random() * innerWidth,
-  y: Math.random() * innerHeight,
-  size: Math.random() * 1.8 + 0.5,
-  speed: Math.random() * 0.28 + 0.08
-}));
-
-function animateParticles() {
-  pctx.clearRect(0, 0, pc.width, pc.height);
-  particles.forEach(p => {
-    p.y -= p.speed;
-    if (p.y < 0) { p.y = pc.height; p.x = Math.random() * pc.width; }
-    pctx.beginPath();
-    pctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
-    pctx.fillStyle = "rgba(0,220,255,0.55)";
-    pctx.fill();
-  });
-  requestAnimationFrame(animateParticles);
-}
-animateParticles();
-
-// ==================== INIT ====================
-window.addEventListener("load", () => {
-  const savedTheme = localStorage.getItem("mlbb-theme") || "dark";
-  applyTheme(savedTheme);
-  const savedType = localStorage.getItem("wheelType") || "heroes";
-  const savedBuilds = localStorage.getItem("mlbb_builds");
-  if (savedBuilds) { try { buildData = JSON.parse(savedBuilds); } catch { buildData = []; } }
-  setWheel(savedType);
-  requestAnimationFrame(animate);
-});
+document.addEventListener('click', () => {
+  document.querySelectorAll('video').forEach(v => { if(v.paused) v.play().catch(()=>{}); });
+}, { once: true });
 </script>
 </body>
 </html>
