@@ -1112,7 +1112,8 @@ function animate() {
         spinning = false;
         let norm = rotation % (Math.PI*2);
         if (norm < 0) norm += Math.PI*2;
-        const pointed = (0 - norm + Math.PI*4) % (Math.PI*2);
+       const pointerAngle = Math.PI; // стрелка слева
+        const pointed = (pointerAngle - norm + Math.PI * 2) % (Math.PI * 2);
         const winnerIdx = Math.floor(pointed / angle) % sectors;
         onWinner(visibleItems[winnerIdx]);
       }
