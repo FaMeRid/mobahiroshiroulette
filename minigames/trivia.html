@@ -1,49 +1,256 @@
-<h1>MLBB Trivia</h1>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MLBB Trivia — MOBAHIROSHI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --cyan:#00fff5; --gold:#ffd700; --purple:#a855ff; --orange:#ff4500;
+      --dark:#030714; --glow-c:rgba(0,255,245,0.8); --glow-g:rgba(255,215,0,0.8);
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    body{
+      min-height:100dvh;overflow-x:hidden;background:var(--dark);color:#e0ffff;
+      font-family:'Exo 2',sans-serif;opacity:0;transition:opacity 0.9s ease;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+    }
+    body.loaded{opacity:1;}
+    #bg-video{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;opacity:.08;z-index:0;pointer-events:none;animation:bgScale 25s ease-in-out infinite alternate;}
+    @keyframes bgScale{from{transform:scale(1.05);}to{transform:scale(1.18);}}
+    #grid-canvas{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.22;}
+    #particle-canvas{position:fixed;inset:0;z-index:2;pointer-events:none;}
+    .bg-glow{position:fixed;inset:0;background:radial-gradient(ellipse 80% 55% at 50% 0%,rgba(0,255,245,.16) 0%,transparent 65%),radial-gradient(ellipse 60% 40% at 50% 100%,rgba(168,85,255,.1) 0%,transparent 60%);pointer-events:none;z-index:3;}
+    .scanlines{position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.06) 3px,rgba(0,0,0,.06) 4px);pointer-events:none;z-index:4;}
+    .vignette{position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,.72) 100%);pointer-events:none;z-index:5;}
+    .hud-corner{position:fixed;width:80px;height:80px;z-index:50;pointer-events:none;opacity:0;animation:hudFade 1s ease-out forwards 1.5s;}
+    @keyframes hudFade{to{opacity:1;}}
+    .hud-corner::before,.hud-corner::after{content:"";position:absolute;background:var(--cyan);box-shadow:0 0 10px var(--cyan);}
+    .hud-corner::before{width:2px;height:30px;}.hud-corner::after{width:30px;height:2px;}
+    .hud-tl{top:16px;left:16px;}.hud-tl::before,.hud-tl::after{top:0;left:0;}
+    .hud-tr{top:16px;right:16px;transform:scaleX(-1);}.hud-tr::before,.hud-tr::after{top:0;left:0;}
+    .hud-bl{bottom:16px;left:16px;transform:scaleY(-1);}.hud-bl::before,.hud-bl::after{top:0;left:0;}
+    .hud-br{bottom:16px;right:16px;transform:scale(-1);}.hud-br::before,.hud-br::after{top:0;left:0;}
 
-<h2 id="question"></h2>
+    header{position:fixed;top:0;width:100%;background:rgba(3,7,20,.88);backdrop-filter:blur(14px);padding:1.2rem 3rem;display:flex;justify-content:space-between;align-items:center;z-index:100;border-bottom:1px solid rgba(0,255,245,.2);}
+    .logo{font-family:'Orbitron',sans-serif;font-size:clamp(1.6rem,4.5vw,2.6rem);font-weight:900;letter-spacing:5px;background:linear-gradient(90deg,#ffae00,#fffde0,#ffd700,#ffae00);background-size:300%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:logoFlow 7s linear infinite;text-decoration:none;}
+    @keyframes logoFlow{0%{background-position:0%;}100%{background-position:300%;}}
+    .header-right{display:flex;gap:1.5rem;align-items:center;}
+    .social-icon{font-size:2rem;color:var(--cyan);transition:all .4s ease;text-shadow:0 0 18px var(--glow-c);}
+    .social-icon:hover{transform:translateY(-8px) scale(1.3) rotate(12deg);color:var(--gold);}
+    .back-link{font-family:'Orbitron',sans-serif;font-size:.75rem;letter-spacing:2px;color:rgba(0,255,245,.6);text-decoration:none;border:1px solid rgba(0,255,245,.3);padding:6px 14px;border-radius:999px;transition:all .3s;}
+    .back-link:hover{color:var(--gold);border-color:var(--gold);background:rgba(255,215,0,.06);}
 
-<button onclick="showAnswer()">Show Answer</button>
+    .container{position:relative;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:110px 1.5rem 3rem;text-align:center;gap:2rem;}
 
-<h3 id="answer"></h3>
+    .page-title-wrap{opacity:0;transform:translateY(36px);animation:revealUp 1.4s cubic-bezier(.16,1,.3,1) forwards .5s;}
+    @keyframes revealUp{to{opacity:1;transform:translateY(0);}}
+    .page-title{font-family:'Orbitron',sans-serif;font-size:clamp(2.2rem,6vw,4.5rem);font-weight:900;letter-spacing:4px;background:linear-gradient(90deg,#ffae00 0%,#fffde0 45%,#ffd700 55%,#ffae00 100%);background-size:300%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:titleShine 10s linear infinite 1s;}
+    @keyframes titleShine{0%{background-position:0%;}100%{background-position:300%;}}
+    .title-bar{height:3px;width:0;background:linear-gradient(90deg,transparent,var(--gold),var(--cyan),var(--gold),transparent);margin:10px auto 0;border-radius:2px;animation:barExpand 1s ease-out forwards 1.7s;box-shadow:0 0 12px var(--gold);}
+    @keyframes barExpand{to{width:100%;}}
+    .page-sub{font-size:clamp(.9rem,2vw,1.1rem);color:rgba(200,240,255,.5);letter-spacing:2px;margin-top:.6rem;}
+
+    /* TRIVIA CARD */
+    .trivia-card{
+      background:rgba(8,12,35,.82);border:2px solid rgba(0,255,245,.3);border-radius:26px;
+      padding:3rem 2.5rem;
+      box-shadow:0 20px 70px rgba(0,0,0,.7),inset 0 0 40px rgba(0,255,245,.05);
+      backdrop-filter:blur(10px);
+      display:flex;flex-direction:column;align-items:center;gap:2rem;
+      max-width:600px;width:100%;
+      opacity:0;animation:revealUp 1.2s ease-out forwards .8s;
+    }
+
+    .question-label{
+      font-size:.72rem;letter-spacing:3px;color:rgba(0,255,245,.5);text-transform:uppercase;font-weight:700;
+    }
+    #question{
+      font-family:'Orbitron',sans-serif;
+      font-size:clamp(1.2rem,3.5vw,1.8rem);font-weight:900;line-height:1.45;
+      color:#e0ffff;min-height:3em;display:flex;align-items:center;justify-content:center;
+    }
+
+    /* ANSWER BOX */
+    .answer-wrap{
+      width:100%;
+      background:rgba(0,255,245,.04);
+      border:1px solid rgba(0,255,245,.2);
+      border-radius:16px;
+      padding:1.2rem 2rem;
+      min-height:60px;
+      display:flex;align-items:center;justify-content:center;
+      transition:all .5s;
+    }
+    .answer-wrap.revealed{
+      border-color:var(--gold);
+      background:rgba(255,215,0,.06);
+      box-shadow:0 0 30px rgba(255,215,0,.25);
+    }
+    #answer{
+      font-family:'Orbitron',sans-serif;
+      font-size:clamp(1.4rem,3.5vw,2rem);font-weight:900;
+      background:linear-gradient(90deg,var(--gold),var(--cyan));
+      -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+      opacity:0;transition:opacity .6s;
+    }
+    #answer.show{opacity:1;}
+
+    /* BUTTONS */
+    .btn-row{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;}
+    .btn-reveal{
+      position:relative;
+      padding:clamp(12px,2.5vw,18px) clamp(30px,7vw,80px);
+      font-family:'Orbitron',sans-serif;
+      font-size:clamp(1rem,2.5vw,1.5rem);font-weight:900;letter-spacing:2px;
+      color:#030714;
+      background:linear-gradient(90deg,#ffb300,#ffe066,#ffd700,#ffb300);
+      background-size:300% 100%;border:none;border-radius:999px;cursor:pointer;
+      box-shadow:0 0 50px rgba(255,215,0,.7);
+      transition:transform .4s cubic-bezier(.175,.885,.32,1.275),box-shadow .4s;
+      animation:btnGlow 3.5s ease-in-out infinite;overflow:hidden;
+    }
+    @keyframes btnGlow{0%,100%{box-shadow:0 0 50px rgba(255,215,0,.7);}50%{box-shadow:0 0 90px rgba(255,215,0,1);}}
+    .btn-reveal::before{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(110deg,transparent,rgba(255,255,255,.4),transparent);animation:btnSweep 4s ease-in-out infinite;}
+    @keyframes btnSweep{0%,100%{left:-100%;}50%{left:150%;}}
+    .btn-reveal:hover{transform:translateY(-10px) scale(1.06);box-shadow:0 0 100px rgba(255,215,0,1);}
+
+    .btn-next{
+      padding:clamp(12px,2.5vw,18px) clamp(30px,7vw,80px);
+      font-family:'Orbitron',sans-serif;
+      font-size:clamp(1rem,2.5vw,1.5rem);font-weight:900;letter-spacing:2px;
+      color:#fff;
+      background:linear-gradient(90deg,#00c6ff,#007bff);
+      border:none;border-radius:999px;cursor:pointer;
+      box-shadow:0 0 50px rgba(0,198,255,.5);
+      transition:transform .4s cubic-bezier(.175,.885,.32,1.275),box-shadow .4s;
+    }
+    .btn-next:hover{transform:translateY(-10px) scale(1.06);box-shadow:0 0 90px rgba(0,198,255,1);}
+
+    /* SCORE ROW */
+    .score-row{display:flex;gap:2rem;align-items:center;}
+    .score-item{display:flex;flex-direction:column;align-items:center;gap:3px;}
+    .score-num{font-family:'Orbitron',sans-serif;font-size:clamp(1.5rem,4vw,2.2rem);font-weight:900;color:var(--gold);text-shadow:0 0 18px rgba(255,215,0,.6);}
+    .score-label{font-size:.62rem;letter-spacing:2.5px;text-transform:uppercase;color:rgba(200,240,255,.45);font-weight:700;}
+    .score-divider{width:1px;height:40px;background:linear-gradient(to bottom,transparent,rgba(0,255,245,.3),transparent);}
+
+    @media(max-width:768px){
+      header{padding:1rem 1.5rem;}
+      .logo{font-size:clamp(1.4rem,5vw,1.9rem);letter-spacing:3px;}
+      .hud-corner{display:none;}
+      .trivia-card{padding:2rem 1.5rem;}
+    }
+  </style>
+</head>
+<body>
+
+<video id="bg-video" autoplay loop muted playsinline>
+  <source src="../assets/videos/fire-sparks.mp4" type="video/mp4">
+</video>
+<canvas id="grid-canvas"></canvas>
+<canvas id="particle-canvas"></canvas>
+<div class="bg-glow"></div>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+<div class="hud-corner hud-tl"></div>
+<div class="hud-corner hud-tr"></div>
+<div class="hud-corner hud-bl"></div>
+<div class="hud-corner hud-br"></div>
+
+<header>
+  <a href="../index.html" class="logo">MOBAHIROSHI</a>
+  <div class="header-right">
+    <a href="minigames.html" class="back-link"><i class="fas fa-arrow-left"></i> Назад</a>
+    <a href="https://www.youtube.com/@Mobahiroshi" target="_blank" class="social-icon"><i class="fab fa-youtube"></i></a>
+    <a href="https://t.me/mobahiroshi" target="_blank" class="social-icon"><i class="fab fa-telegram-plane"></i></a>
+  </div>
+</header>
+
+<div class="container">
+  <div class="page-title-wrap">
+    <div class="page-title">MLBB TRIVIA</div>
+    <div class="title-bar"></div>
+    <p class="page-sub">Проверь свои знания об игровой вселенной</p>
+  </div>
+
+  <div class="score-row">
+    <div class="score-item">
+      <span class="score-num" id="scoreCorrect">0</span>
+      <span class="score-label">Правильно</span>
+    </div>
+    <div class="score-divider"></div>
+    <div class="score-item">
+      <span class="score-num" id="scoreTotal">0</span>
+      <span class="score-label">Вопросов</span>
+    </div>
+  </div>
+
+  <div class="trivia-card">
+    <span class="question-label">Вопрос</span>
+    <div id="question">Нажми "Следующий" чтобы начать</div>
+    <div class="answer-wrap" id="answerWrap">
+      <div id="answer"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-reveal" onclick="showAnswer()">ПОКАЗАТЬ ОТВЕТ</button>
+      <button class="btn-next" onclick="newQuestion()">СЛЕДУЮЩИЙ</button>
+    </div>
+  </div>
+</div>
 
 <script>
+(function(){const c=document.getElementById('grid-canvas'),ctx=c.getContext('2d');function r(){c.width=innerWidth;c.height=innerHeight;d();}function d(){ctx.clearRect(0,0,c.width,c.height);const w=c.width,h=c.height,hz=h*.55,vp={x:w/2,y:hz},cols=18,rows=12,bot=h+40,sp=w*1.4;ctx.strokeStyle='rgba(0,220,255,0.2)';ctx.lineWidth=0.8;for(let i=0;i<=cols;i++){const bx=(w/2-sp/2)+(sp/cols)*i;ctx.beginPath();ctx.moveTo(vp.x,vp.y);ctx.lineTo(bx,bot);ctx.stroke();}for(let j=0;j<=rows;j++){const t=j/rows,e=t*t,y=hz+(bot-hz)*e,xl=vp.x+(-sp/2)*e,xr=vp.x+(sp/2)*e;ctx.beginPath();ctx.moveTo(xl,y);ctx.lineTo(xr,y);ctx.stroke();}const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'rgba(3,7,20,1)');g.addColorStop(.45,'rgba(3,7,20,0)');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);}window.addEventListener('resize',r);r();})();
+(function(){const c=document.getElementById('particle-canvas'),ctx=c.getContext('2d');let W,H,mouse={x:-9999,y:-9999};function r(){W=c.width=innerWidth;H=c.height=innerHeight;}r();window.addEventListener('resize',r);window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});const pts=Array.from({length:60},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.4,vy:-(Math.random()*.5+.1),size:Math.random()*1.8+.4,life:Math.random(),maxLife:.6+Math.random()*.4,color:Math.random()<.5?'0,255,245':'255,215,0'}));function loop(){ctx.clearRect(0,0,W,H);if(mouse.x>0){const g=ctx.createRadialGradient(mouse.x,mouse.y,0,mouse.x,mouse.y,110);g.addColorStop(0,'rgba(0,255,245,0.06)');g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}pts.forEach(p=>{const dx=p.x-mouse.x,dy=p.y-mouse.y,d=Math.sqrt(dx*dx+dy*dy);if(d<110){const f=(110-d)/110;p.vx+=(dx/d)*f*.5;p.vy+=(dy/d)*f*.5;}p.vx*=.97;p.vy*=.97;p.x+=p.vx;p.y+=p.vy;p.life-=.003;if(p.life<=0||p.y<-10){p.x=Math.random()*W;p.y=H+10;p.vx=(Math.random()-.5)*.4;p.vy=-(Math.random()*.5+.1);p.life=p.maxLife;p.color=Math.random()<.5?'0,255,245':'255,215,0';}ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fillStyle=`rgba(${p.color},${(p.life/p.maxLife)*.7})`;ctx.fill();});requestAnimationFrame(loop);}loop();})();
 
-const questions=[
+const questions = [
+  {q:"Какой герой ворует ультимейты у других?", a:"Valentina"},
+  {q:"Кто самый быстрый ассасин по подвижности?", a:"Fanny"},
+  {q:"Какой герой превращается в машину?", a:"Johnson"},
+  {q:"Кто является единственным Marksman с пассивным режимом ультимейта?", a:"Beatrix"},
+  {q:"Какой герой использует тени-клоны для атаки?", a:"Hanzo"},
+  {q:"Кто из героев является кошкой?", a:"Nana"},
+  {q:"Какой герой называется 'Алмазный Дракон'?", a:"Yu Zhong"},
+  {q:"Кто первым получил скин Collector?", a:"Granger"},
+  {q:"Какой герой контролирует льды и метели?", a:"Aurora"},
+  {q:"Кто является богиней луны в MLBB?", a:"Chang'e"},
+  {q:"Какой лейн занимает Jungler в начале игры?", a:"Лес (Jungle)"},
+  {q:"Кто такой 'Красный Демон'?", a:"Alucard"},
+  {q:"Какой предмет даёт больше всего HP?", a:"Immortality (раньше Blood Wings)"},
+  {q:"Сколько секунд длится матч до первого уровня?", a:"60 секунд (крипы появляются на 1:10)"},
+  {q:"Какой герой держит братьев-близнецов в качестве оружия?", a:"Alpha"},
+  {q:"Кто из поддержек может воскресить союзника?", a:"Faramis"},
+  {q:"Какой герой управляет временем?", a:"Diggie"},
+  {q:"Что означает аббревиатура MLBB?", a:"Mobile Legends: Bang Bang"},
+];
 
-{
-q:"Какой герой ворует ультимейты?",
-a:"Valentina"
-},
+let current = null, scoreCorrect = 0, scoreTotal = 0;
 
-{
-q:"Кто самый быстрый ассасин?",
-a:"Fanny"
-},
-
-{
-q:"Кто превращается в машину?",
-a:"Johnson"
+function newQuestion() {
+  current = questions[Math.floor(Math.random() * questions.length)];
+  document.getElementById('question').textContent = current.q;
+  const ansEl = document.getElementById('answer');
+  ansEl.textContent = '';
+  ansEl.classList.remove('show');
+  document.getElementById('answerWrap').classList.remove('revealed');
+  scoreTotal++;
+  document.getElementById('scoreTotal').textContent = scoreTotal;
 }
 
-]
-
-let current
-
-function newQuestion(){
-
-current=questions[Math.floor(Math.random()*questions.length)]
-
-document.getElementById("question").innerText=current.q
-document.getElementById("answer").innerText=""
-
+function showAnswer() {
+  if (!current) { newQuestion(); return; }
+  const ansEl = document.getElementById('answer');
+  ansEl.textContent = current.a;
+  ansEl.classList.add('show');
+  document.getElementById('answerWrap').classList.add('revealed');
 }
 
-function showAnswer(){
-
-document.getElementById("answer").innerText=current.a
-
-}
-
-newQuestion()
-
+newQuestion();
+document.body.classList.add('loaded');
+document.addEventListener('click',()=>{document.querySelectorAll('video').forEach(v=>{if(v.paused)v.play().catch(()=>{});});},{once:true});
 </script>
+</body>
+</html>

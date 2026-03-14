@@ -1,333 +1,416 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guess the Hero — MOBAHIROSHI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --cyan:   #00fff5;
+      --gold:   #ffd700;
+      --purple: #a855ff;
+      --orange: #ff4500;
+      --dark:   #030714;
+      --glow-c: rgba(0,255,245,0.8);
+      --glow-g: rgba(255,215,0,0.8);
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      min-height: 100dvh; overflow-x: hidden;
+      background: var(--dark); color: #e0ffff;
+      font-family: 'Exo 2', sans-serif;
+      opacity: 0; transition: opacity 0.9s ease;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    body.loaded { opacity: 1; }
 
-<meta charset="UTF-8">
-<title>Guess the Hero</title>
+    #bg-video {
+      position: fixed; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; opacity: 0.08; z-index: 0; pointer-events: none;
+      animation: bgScale 25s ease-in-out infinite alternate;
+    }
+    @keyframes bgScale { from { transform: scale(1.05); } to { transform: scale(1.18); } }
+    #grid-canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.22; }
+    #particle-canvas { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
+    .bg-glow {
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse 80% 55% at 50% 0%, rgba(0,255,245,0.16) 0%, transparent 65%),
+                  radial-gradient(ellipse 60% 40% at 50% 100%, rgba(168,85,255,0.1) 0%, transparent 60%);
+      pointer-events: none; z-index: 3;
+    }
+    .scanlines {
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px);
+      pointer-events: none; z-index: 4;
+    }
+    .vignette {
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.72) 100%);
+      pointer-events: none; z-index: 5;
+    }
 
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800&display=swap" rel="stylesheet">
+    .hud-corner {
+      position: fixed; width: 80px; height: 80px;
+      z-index: 50; pointer-events: none;
+      opacity: 0; animation: hudFade 1s ease-out forwards 1.5s;
+    }
+    @keyframes hudFade { to { opacity: 1; } }
+    .hud-corner::before, .hud-corner::after {
+      content: ""; position: absolute;
+      background: var(--cyan); box-shadow: 0 0 10px var(--cyan);
+    }
+    .hud-corner::before { width: 2px; height: 30px; }
+    .hud-corner::after  { width: 30px; height: 2px; }
+    .hud-tl { top:16px; left:16px; } .hud-tl::before,.hud-tl::after { top:0; left:0; }
+    .hud-tr { top:16px; right:16px; transform: scaleX(-1); } .hud-tr::before,.hud-tr::after { top:0; left:0; }
+    .hud-bl { bottom:16px; left:16px; transform: scaleY(-1); } .hud-bl::before,.hud-bl::after { top:0; left:0; }
+    .hud-br { bottom:16px; right:16px; transform: scale(-1); } .hud-br::before,.hud-br::after { top:0; left:0; }
 
-<style>
+    header {
+      position: fixed; top: 0; width: 100%;
+      background: rgba(3,7,20,0.88); backdrop-filter: blur(14px);
+      padding: 1.2rem 3rem;
+      display: flex; justify-content: space-between; align-items: center;
+      z-index: 100; border-bottom: 1px solid rgba(0,255,245,0.2);
+    }
+    .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.6rem, 4.5vw, 2.6rem); font-weight: 900; letter-spacing: 5px;
+      background: linear-gradient(90deg, #ffae00, #fffde0, #ffd700, #ffae00);
+      background-size: 300%; -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent; animation: logoFlow 7s linear infinite;
+      text-decoration: none;
+    }
+    @keyframes logoFlow { 0% { background-position: 0%; } 100% { background-position: 300%; } }
+    .header-right { display: flex; gap: 1.5rem; align-items: center; }
+    .social-icon {
+      font-size: 2rem; color: var(--cyan);
+      transition: all 0.4s ease; text-shadow: 0 0 18px var(--glow-c);
+    }
+    .social-icon:hover { transform: translateY(-8px) scale(1.3) rotate(12deg); color: var(--gold); }
+    .back-link {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.75rem; letter-spacing: 2px;
+      color: rgba(0,255,245,0.6); text-decoration: none;
+      border: 1px solid rgba(0,255,245,0.3);
+      padding: 6px 14px; border-radius: 999px;
+      transition: all 0.3s;
+    }
+    .back-link:hover { color: var(--gold); border-color: var(--gold); background: rgba(255,215,0,0.06); }
 
-body{
+    .container {
+      position: relative; z-index: 20;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 100dvh;
+      padding: 110px 1.5rem 3rem;
+      text-align: center; gap: 2rem;
+    }
 
-background:
-radial-gradient(circle at 20% 30%, rgba(0,255,255,0.12), transparent 40%),
-radial-gradient(circle at 80% 70%, rgba(255,215,0,0.12), transparent 40%),
-linear-gradient(160deg,#030714,#050d22);
+    .page-title-wrap {
+      opacity: 0; transform: translateY(36px);
+      animation: revealUp 1.4s cubic-bezier(0.16,1,0.3,1) forwards 0.5s;
+    }
+    @keyframes revealUp { to { opacity: 1; transform: translateY(0); } }
+    .page-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2.2rem, 6vw, 4.5rem); font-weight: 900; letter-spacing: 4px;
+      background: linear-gradient(90deg, #ffae00 0%, #fffde0 45%, #ffd700 55%, #ffae00 100%);
+      background-size: 300%; -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent; animation: titleShine 10s linear infinite 1s;
+    }
+    @keyframes titleShine { 0% { background-position: 0%; } 100% { background-position: 300%; } }
+    .title-bar {
+      height: 3px; width: 0;
+      background: linear-gradient(90deg, transparent, var(--gold), var(--cyan), var(--gold), transparent);
+      margin: 10px auto 0; border-radius: 2px;
+      animation: barExpand 1s ease-out forwards 1.7s;
+      box-shadow: 0 0 12px var(--gold);
+    }
+    @keyframes barExpand { to { width: 100%; } }
+    .page-sub { font-size: clamp(0.9rem, 2vw, 1.1rem); color: rgba(200,240,255,0.5); letter-spacing: 2px; margin-top: 0.6rem; }
 
-font-family:Orbitron;
-color:#e0ffff;
-text-align:center;
+    /* HERO CARD */
+    .hero-card {
+      background: rgba(8,12,35,0.82);
+      border: 2px solid rgba(0,255,245,0.3);
+      border-radius: 26px;
+      padding: 2.5rem;
+      box-shadow: 0 20px 70px rgba(0,0,0,0.7), inset 0 0 40px rgba(0,255,245,0.06);
+      backdrop-filter: blur(10px);
+      display: flex; flex-direction: column; align-items: center; gap: 1.5rem;
+      max-width: 480px; width: 100%;
+      opacity: 0; animation: revealUp 1.2s ease-out forwards 0.8s;
+    }
 
-height:100vh;
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:center;
+    #heroImage {
+      width: clamp(240px, 55vw, 320px);
+      height: clamp(240px, 55vw, 320px);
+      object-fit: contain;
+      border-radius: 18px;
+      box-shadow: 0 0 40px rgba(0,255,245,0.4);
+      transition: filter 1.2s ease, box-shadow 0.5s;
+      background: rgba(0,255,245,0.03);
+    }
 
-}
+    /* TIMER */
+    .timer-wrap {
+      display: flex; align-items: center; gap: 0.8rem;
+    }
+    .timer-label {
+      font-size: 0.72rem; letter-spacing: 3px; color: rgba(0,255,245,0.5); text-transform: uppercase; font-weight: 700;
+    }
+    #timer {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2rem, 5vw, 3rem); font-weight: 900;
+      color: var(--cyan);
+      text-shadow: 0 0 30px var(--glow-c);
+      min-width: 60px;
+      transition: color 0.3s;
+    }
+    #timer.danger { color: var(--orange); text-shadow: 0 0 30px rgba(255,69,0,0.8); animation: timerPulse 0.5s ease-in-out infinite; }
+    @keyframes timerPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
 
-/* заголовок */
+    /* ANSWER */
+    #answer {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.6rem, 4vw, 2.8rem); font-weight: 900;
+      background: linear-gradient(90deg, var(--gold), var(--cyan));
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      opacity: 0; transition: opacity 0.8s ease;
+      min-height: 2em;
+    }
+    #answer.show { opacity: 1; }
 
-h1{
+    /* START BUTTON */
+    .start-btn {
+      position: relative;
+      padding: clamp(14px,3vw,20px) clamp(40px,9vw,100px);
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.1rem, 2.5vw, 1.7rem);
+      font-weight: 900; letter-spacing: 3px;
+      color: #030714;
+      background: linear-gradient(90deg, #ffb300, #ffe066, #ffd700, #ffb300);
+      background-size: 300% 100%;
+      border: none; border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 0 50px rgba(255,215,0,0.7);
+      transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275), box-shadow 0.4s;
+      animation: btnGlow 3.5s ease-in-out infinite; overflow: hidden;
+    }
+    @keyframes btnGlow {
+      0%,100% { box-shadow: 0 0 50px rgba(255,215,0,0.7); }
+      50%     { box-shadow: 0 0 90px rgba(255,215,0,1); }
+    }
+    .start-btn::before {
+      content:''; position:absolute; top:0; left:-100%; width:60%; height:100%;
+      background: linear-gradient(110deg, transparent, rgba(255,255,255,0.4), transparent);
+      animation: btnSweep 4s ease-in-out infinite;
+    }
+    @keyframes btnSweep { 0%,100%{left:-100%;} 50%{left:150%;} }
+    .start-btn:hover { transform: translateY(-10px) scale(1.06); box-shadow: 0 0 100px rgba(255,215,0,1); }
 
-font-size:60px;
-color:#ffd700;
-text-shadow:0 0 30px gold;
+    /* SCORE */
+    .score-row {
+      display: flex; gap: 2rem; align-items: center;
+    }
+    .score-item {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+    }
+    .score-num {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.5rem, 4vw, 2.2rem); font-weight: 900;
+      color: var(--gold); text-shadow: 0 0 18px rgba(255,215,0,0.6);
+    }
+    .score-label {
+      font-size: 0.62rem; letter-spacing: 2.5px; text-transform: uppercase;
+      color: rgba(200,240,255,0.45); font-weight: 700;
+    }
+    .score-divider {
+      width: 1px; height: 40px;
+      background: linear-gradient(to bottom, transparent, rgba(0,255,245,0.3), transparent);
+    }
 
-}
-
-/* карточка героя */
-
-.heroCard{
-
-background:#0b0f1d;
-
-padding:40px;
-border-radius:20px;
-
-box-shadow:
-0 0 30px gold,
-0 0 60px rgba(255,215,0,0.3);
-
-}
-
-#heroImage{
-
-width:320px;
-border-radius:16px;
-
-box-shadow:
-0 0 30px rgba(255,215,0,0.5);
-
-transition:all 1s;
-
-}
-
-/* кнопка */
-
-button{
-
-margin-top:20px;
-
-padding:15px 40px;
-
-font-size:22px;
-font-family:Orbitron;
-
-border:none;
-border-radius:12px;
-
-background:linear-gradient(145deg,#ffd700,#ffae00);
-
-color:black;
-
-cursor:pointer;
-
-box-shadow:0 0 20px gold;
-
-transition:0.3s;
-
-}
-
-button:hover{
-
-transform:scale(1.05);
-
-box-shadow:
-0 0 40px gold;
-
-}
-
-/* таймер */
-
-#timer{
-
-font-size:40px;
-margin-top:20px;
-color:#00fff5;
-
-}
-
-/* ответ */
-
-#answer{
-
-font-size:50px;
-color:gold;
-margin-top:20px;
-
-opacity:0;
-transition:opacity 1s;
-
-}
-
-.show{
-
-opacity:1;
-
-}
-
-</style>
+    @media (max-width: 768px) {
+      header { padding: 1rem 1.5rem; }
+      .logo { font-size: clamp(1.4rem, 5vw, 1.9rem); letter-spacing: 3px; }
+      .hud-corner { display: none; }
+    }
+  </style>
 </head>
-
 <body>
 
-<h1>Guess the Hero</h1>
+<video id="bg-video" autoplay loop muted playsinline>
+  <source src="../assets/videos/fire-sparks.mp4" type="video/mp4">
+</video>
+<canvas id="grid-canvas"></canvas>
+<canvas id="particle-canvas"></canvas>
+<div class="bg-glow"></div>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+<div class="hud-corner hud-tl"></div>
+<div class="hud-corner hud-tr"></div>
+<div class="hud-corner hud-bl"></div>
+<div class="hud-corner hud-br"></div>
 
-<div class="heroCard">
+<header>
+  <a href="../index.html" class="logo">MOBAHIROSHI</a>
+  <div class="header-right">
+    <a href="minigames.html" class="back-link"><i class="fas fa-arrow-left"></i> Назад</a>
+    <a href="https://www.youtube.com/@Mobahiroshi" target="_blank" class="social-icon"><i class="fab fa-youtube"></i></a>
+    <a href="https://t.me/mobahiroshi" target="_blank" class="social-icon"><i class="fab fa-telegram-plane"></i></a>
+  </div>
+</header>
 
-<img id="heroImage">
+<div class="container">
+  <div class="page-title-wrap">
+    <div class="page-title">GUESS THE HERO</div>
+    <div class="title-bar"></div>
+    <p class="page-sub">Угадай героя по силуэту за 15 секунд</p>
+  </div>
 
-<div id="timer"></div>
+  <div class="score-row">
+    <div class="score-item">
+      <span class="score-num" id="scoreCorrect">0</span>
+      <span class="score-label">Угадал</span>
+    </div>
+    <div class="score-divider"></div>
+    <div class="score-item">
+      <span class="score-num" id="scoreTotal">0</span>
+      <span class="score-label">Всего</span>
+    </div>
+  </div>
 
-<button onclick="startGame()">Start</button>
+  <div class="hero-card">
+    <img id="heroImage" src="" alt="Hero">
 
-<h2 id="answer"></h2>
+    <div class="timer-wrap">
+      <span class="timer-label">Время</span>
+      <div id="timer">—</div>
+    </div>
 
+    <div id="answer"></div>
+
+    <button class="start-btn" onclick="startGame()">СТАРТ</button>
+  </div>
 </div>
 
 <script>
+/* GRID */
+(function(){const c=document.getElementById('grid-canvas'),ctx=c.getContext('2d');function r(){c.width=innerWidth;c.height=innerHeight;d();}function d(){ctx.clearRect(0,0,c.width,c.height);const w=c.width,h=c.height,hz=h*.55,vp={x:w/2,y:hz},cols=18,rows=12,bot=h+40,sp=w*1.4;ctx.strokeStyle='rgba(0,220,255,0.2)';ctx.lineWidth=0.8;for(let i=0;i<=cols;i++){const bx=(w/2-sp/2)+(sp/cols)*i;ctx.beginPath();ctx.moveTo(vp.x,vp.y);ctx.lineTo(bx,bot);ctx.stroke();}for(let j=0;j<=rows;j++){const t=j/rows,e=t*t,y=hz+(bot-hz)*e,xl=vp.x+(-sp/2)*e,xr=vp.x+(sp/2)*e;ctx.beginPath();ctx.moveTo(xl,y);ctx.lineTo(xr,y);ctx.stroke();}const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'rgba(3,7,20,1)');g.addColorStop(.45,'rgba(3,7,20,0)');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);}window.addEventListener('resize',r);r();})();
+/* PARTICLES */
+(function(){const c=document.getElementById('particle-canvas'),ctx=c.getContext('2d');let W,H,mouse={x:-9999,y:-9999};function r(){W=c.width=innerWidth;H=c.height=innerHeight;}r();window.addEventListener('resize',r);window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});const pts=Array.from({length:60},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.4,vy:-(Math.random()*.5+.1),size:Math.random()*1.8+.4,life:Math.random(),maxLife:.6+Math.random()*.4,color:Math.random()<.5?'0,255,245':'255,215,0'}));function loop(){ctx.clearRect(0,0,W,H);if(mouse.x>0){const g=ctx.createRadialGradient(mouse.x,mouse.y,0,mouse.x,mouse.y,110);g.addColorStop(0,'rgba(0,255,245,0.06)');g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}pts.forEach(p=>{const dx=p.x-mouse.x,dy=p.y-mouse.y,d=Math.sqrt(dx*dx+dy*dy);if(d<110){const f=(110-d)/110;p.vx+=(dx/d)*f*.5;p.vy+=(dy/d)*f*.5;}p.vx*=.97;p.vy*=.97;p.x+=p.vx;p.y+=p.vy;p.life-=.003;if(p.life<=0||p.y<-10){p.x=Math.random()*W;p.y=H+10;p.vx=(Math.random()-.5)*.4;p.vy=-(Math.random()*.5+.1);p.life=p.maxLife;p.color=Math.random()<.5?'0,255,245':'255,215,0';}ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fillStyle=`rgba(${p.color},${(p.life/p.maxLife)*.7})`;ctx.fill();});requestAnimationFrame(loop);}loop();})();
 
+/* GAME */
 const heroes = [
-{ name: "Aamon",img: "assets/heroes/aamon.png"},
-{ name: "Akai", img: "assets/heroes/akai.png"},
-{ name: "Aldous", img: "assets/heroes/aldous.png"},
-{ name: "Alice", img: "assets/heroes/alice.png"},
-{ name: "Alpha", img: "assets/heroes/alpha.png"},
-{ name: "Alucard", img: "assets/heroes/alucard.png"},
-{ name: "Angela", img: "assets/heroes/angela.png"},
-{ name: "Argus", img: "assets/heroes/argus.png"},
-{ name: "Arlott", img: "assets/heroes/arlott.png"},
-{ name: "Atlas", img: "assets/heroes/atlas.png"},
-{ name: "Aulus", img: "assets/heroes/aulus.png"},
-{ name: "Aurora", img: "assets/heroes/aurora.png"},
-{ name: "Badang", img: "assets/heroes/badang.png"},
-{ name: "Balmond", img: "assets/heroes/balmond.png"},
-{ name: "Bane", img: "assets/heroes/bane.png"},
-{ name: "Barats", img: "assets/heroes/barats.png"},
-{ name: "Baxia", img: "assets/heroes/baxia.png"},
-{ name: "Beatrix", img: "assets/heroes/beatrix.png"},
-{ name: "Belerick", img: "assets/heroes/belerick.png"},
-{ name: "Benedetta", img: "assets/heroes/benedetta.png"},
-{ name: "Brody", img: "assets/heroes/brody.png"},
-{ name: "Bruno", img: "assets/heroes/bruno.png"},
-{ name: "Carmilla", img: "assets/heroes/carmilla.png"},
-{ name: "Cecilion", img: "assets/heroes/cecilion.png"},
-{ name: "Chang'e", img: "assets/heroes/change.png"},
-{ name: "Chip", img: "assets/heroes/chip.png"},
-{ name: "Chou", img: "assets/heroes/chou.png"},
-{ name: "Cici", img: "assets/heroes/cici.png"},
-{ name: "Claude", img: "assets/heroes/claude.png"},
-{ name: "Clint", img: "assets/heroes/clint.png"},
-{ name: "Cyclops", img: "assets/heroes/cyclops.png"},
-{ name: "Diggie", img: "assets/heroes/diggie.png"},
-{ name: "Dyrroth", img: "assets/heroes/dyrroth.png"},
-{ name: "Edith", img: "assets/heroes/edith.png"},
-{ name: "Esmeralda", img: "assets/heroes/esmeralda.png"},
-{ name: "Estes", img: "assets/heroes/estes.png"},
-{ name: "Eudora", img: "assets/heroes/eudora.png"},
-{ name: "Fanny", img: "assets/heroes/fanny.png"},
-{ name: "Faramis",  img: "assets/heroes/faramis.png"},
-{ name: "Floryn", img: "assets/heroes/floryn.png"},
-{ name: "Franco", img: "assets/heroes/franco.png"},
-{ name: "Fredrinn", img: "assets/heroes/fredrinn.png"},
-{ name: "Freya", img: "assets/heroes/freya.png"},
-{ name: "Gatotkaca", img: "assets/heroes/gatotkaca.png"},
-{ name: "Gloo", img: "assets/heroes/gloo.png"},
-{ name: "Gord", img: "assets/heroes/gord.png"},
-{ name: "Granger", img: "assets/heroes/granger.png"},
-{ name: "Grock", img: "assets/heroes/grock.png"},
-{ name: "Guinevere", img: "assets/heroes/guinevere.png"},
-{ name: "Gusion", img: "assets/heroes/gusion.png"},
-{ name: "Hanabi", img: "assets/heroes/hanabi.png"},
-{ name: "Hanzo",  img: "assets/heroes/hanzo.png"},
-{ name: "Harith", img: "assets/heroes/harith.png"},
-{ name: "Harley", img: "assets/heroes/harley.png"},
-{ name: "Hayabusa", img: "assets/heroes/hayabusa.png"},
-{ name: "Helcurt", img: "assets/heroes/helcurt.png"},
-{ name: "Hilda", img: "assets/heroes/hilda.png"},
-{ name: "Hylos", img: "assets/heroes/hylos.png"},
-{ name: "Irithel", img: "assets/heroes/irithel.png"},
-{ name: "Ixia", img: "assets/heroes/ixia.png"},
-{ name: "Jawhead", img: "assets/heroes/jawhead.png"},
-{ name: "Johnson", img: "assets/heroes/johnson.png"},
-{ name: "Joy", img: "assets/heroes/joy.png"},
-{ name: "Julian", img: "assets/heroes/julian.png"},
-{ name: "Kadita", img: "assets/heroes/kadita.png"},
-{ name: "Kagura", img: "assets/heroes/kagura.png"},
-{ name: "Kaja", img: "assets/heroes/kaja.png"},
-{ name: "Kalea", img: "assets/heroes/kalea.png"},
-{ name: "Karina", img: "assets/heroes/karina.png"},
-{ name: "Karrie", img: "assets/heroes/karrie.png"},
-{ name: "Khaleed", img: "assets/heroes/khaleed.png"},
-{ name: "Khufra", img: "assets/heroes/khufra.png"},
-{ name: "Kimmy", img: "assets/heroes/kimmy.png"},
-{ name: "Lancelot", img: "assets/heroes/lancelot.png"},
-{ name: "Lapu-Lapu", img: "assets/heroes/lapu-lapu.png"},
-{ name: "Layla", img: "assets/heroes/layla.png"},
-{ name: "Leomord", img: "assets/heroes/leomord.png"},
-{ name: "Lesley", img: "assets/heroes/lesley.png"},
-{ name: "Ling", img: "assets/heroes/ling.png"},
-{ name: "Lolita", img: "assets/heroes/lolita.png"},
-{ name: "Lukas", img: "assets/heroes/lukas.png"},
-{ name: "Lunox", img: "assets/heroes/lunox.png"},
-{ name: "Luo Yi", img: "assets/heroes/luo-yi.png"},
-{ name: "Lylia", img: "assets/heroes/lylia.png"},
-{ name: "Marcel", img: "assets/heroes/marcel.png"},
-{ name: "Masha", img: "assets/heroes/masha.png"},
-{ name: "Mathilda", img: "assets/heroes/mathilda.png"},
-{ name: "Melissa", img: "assets/heroes/melissa.png"},
-{ name: "Minotaur", img: "assets/heroes/minotaur.png"},
-{ name: "Minsitthar", img: "assets/heroes/minsitthar.png"},
-{ name: "Miya", img: "assets/heroes/miya.png"},
-{ name: "Moskov", img: "assets/heroes/moskov.png"},
-{ name: "Nana", img: "assets/heroes/nana.png"},
-{ name: "Natalia", img: "assets/heroes/natalia.png"},
-{ name: "Natan", img: "assets/heroes/natan.png"},
-{ name: "Nolan", img: "assets/heroes/nolan.png"},
-{ name: "Novaria", img: "assets/heroes/novaria.png"},
-{ name: "Obsidia", img: "assets/heroes/obsidia.png"},
-{ name: "Odette", img: "assets/heroes/odette.png"},
-{ name: "Paquito", img: "assets/heroes/paquito.png"},
-{ name: "Pharsa", img: "assets/heroes/pharsa.png"},
-{ name: "Phoveus", img: "assets/heroes/phoveus.png"},
-{ name: "Popol and Kupa", img: "assets/heroes/popol-and-kupa.png"},
-{ name: "Rafaela", img: "assets/heroes/rafaela.png"},
-{ name: "Roger", img: "assets/heroes/roger.png"},
-{ name: "Ruby", img: "assets/heroes/ruby.png"},
-{ name: "Saber", img: "assets/heroes/saber.png"},
-{ name: "Selena", img: "assets/heroes/selena.png"},
-{ name: "Silvanna", img: "assets/heroes/silvanna.png"},
-{ name: "Sora", img: "assets/heroes/sora.png"},
-{ name: "Sun", img: "assets/heroes/sun.png"},
-{ name: "Suyou", img: "assets/heroes/suyou.png"},
-{ name: "Terizla", img: "assets/heroes/terizla.png"},
-{ name: "Thamuz", img: "assets/heroes/thamuz.png"},
-{ name: "Tigreal", img: "assets/heroes/tigreal.png"},
-{ name: "Uranus", img: "assets/heroes/uranus.png"},
-{ name: "Vale", img: "assets/heroes/vale.png"},
-{ name: "Valentina", img: "assets/heroes/valentina.png"},
-{ name: "Valir", img: "assets/heroes/valir.png"},
-{ name: "Vexana", img: "assets/heroes/vexana.png"},
-{ name: "Wanwan", img: "assets/heroes/wanwan.png"},
-{ name: "X.Borg", img: "assets/heroes/x-borg.png"},
-{ name: "Xavier", img: "assets/heroes/xavier.png"},
-{ name: "Yi Sun-shin", img: "assets/heroes/yi-sun-shin.png"},
-{ name: "Yin", img: "assets/heroes/yin.png"},
-{ name: "Yve", img: "assets/heroes/yve.png"},
-{ name: "Yu Zhong", img: "assets/heroes/yu-zhong.png"},
-{ name: "Zhask", img: "assets/heroes/zhask.png"},
-{ name: "Zhuxin", img: "assets/heroes/zhuxin.png"},
-{ name: "Zilong", img: "assets/heroes/zilong.png"},
-{ name: "Zetian", img: "assets/heroes/zetian.png"}
+  {name:"Aamon",img:"../assets/heroes/aamon.png"},{name:"Akai",img:"../assets/heroes/akai.png"},
+  {name:"Aldous",img:"../assets/heroes/aldous.png"},{name:"Alice",img:"../assets/heroes/alice.png"},
+  {name:"Alpha",img:"../assets/heroes/alpha.png"},{name:"Alucard",img:"../assets/heroes/alucard.png"},
+  {name:"Angela",img:"../assets/heroes/angela.png"},{name:"Argus",img:"../assets/heroes/argus.png"},
+  {name:"Arlott",img:"../assets/heroes/arlott.png"},{name:"Atlas",img:"../assets/heroes/atlas.png"},
+  {name:"Aurora",img:"../assets/heroes/aurora.png"},{name:"Badang",img:"../assets/heroes/badang.png"},
+  {name:"Balmond",img:"../assets/heroes/balmond.png"},{name:"Bane",img:"../assets/heroes/bane.png"},
+  {name:"Barats",img:"../assets/heroes/barats.png"},{name:"Baxia",img:"../assets/heroes/baxia.png"},
+  {name:"Beatrix",img:"../assets/heroes/beatrix.png"},{name:"Belerick",img:"../assets/heroes/belerick.png"},
+  {name:"Benedetta",img:"../assets/heroes/benedetta.png"},{name:"Brody",img:"../assets/heroes/brody.png"},
+  {name:"Bruno",img:"../assets/heroes/bruno.png"},{name:"Carmilla",img:"../assets/heroes/carmilla.png"},
+  {name:"Cecilion",img:"../assets/heroes/cecilion.png"},{name:"Chang'e",img:"../assets/heroes/change.png"},
+  {name:"Chip",img:"../assets/heroes/chip.png"},{name:"Chou",img:"../assets/heroes/chou.png"},
+  {name:"Cici",img:"../assets/heroes/cici.png"},{name:"Claude",img:"../assets/heroes/claude.png"},
+  {name:"Clint",img:"../assets/heroes/clint.png"},{name:"Cyclops",img:"../assets/heroes/cyclops.png"},
+  {name:"Diggie",img:"../assets/heroes/diggie.png"},{name:"Dyrroth",img:"../assets/heroes/dyrroth.png"},
+  {name:"Edith",img:"../assets/heroes/edith.png"},{name:"Esmeralda",img:"../assets/heroes/esmeralda.png"},
+  {name:"Estes",img:"../assets/heroes/estes.png"},{name:"Eudora",img:"../assets/heroes/eudora.png"},
+  {name:"Fanny",img:"../assets/heroes/fanny.png"},{name:"Faramis",img:"../assets/heroes/faramis.png"},
+  {name:"Floryn",img:"../assets/heroes/floryn.png"},{name:"Franco",img:"../assets/heroes/franco.png"},
+  {name:"Fredrinn",img:"../assets/heroes/fredrinn.png"},{name:"Freya",img:"../assets/heroes/freya.png"},
+  {name:"Gatotkaca",img:"../assets/heroes/gatotkaca.png"},{name:"Gloo",img:"../assets/heroes/gloo.png"},
+  {name:"Gord",img:"../assets/heroes/gord.png"},{name:"Granger",img:"../assets/heroes/granger.png"},
+  {name:"Grock",img:"../assets/heroes/grock.png"},{name:"Guinevere",img:"../assets/heroes/guinevere.png"},
+  {name:"Gusion",img:"../assets/heroes/gusion.png"},{name:"Hanabi",img:"../assets/heroes/hanabi.png"},
+  {name:"Hanzo",img:"../assets/heroes/hanzo.png"},{name:"Harith",img:"../assets/heroes/harith.png"},
+  {name:"Harley",img:"../assets/heroes/harley.png"},{name:"Hayabusa",img:"../assets/heroes/hayabusa.png"},
+  {name:"Helcurt",img:"../assets/heroes/helcurt.png"},{name:"Hilda",img:"../assets/heroes/hilda.png"},
+  {name:"Hylos",img:"../assets/heroes/hylos.png"},{name:"Irithel",img:"../assets/heroes/irithel.png"},
+  {name:"Ixia",img:"../assets/heroes/ixia.png"},{name:"Jawhead",img:"../assets/heroes/jawhead.png"},
+  {name:"Johnson",img:"../assets/heroes/johnson.png"},{name:"Joy",img:"../assets/heroes/joy.png"},
+  {name:"Julian",img:"../assets/heroes/julian.png"},{name:"Kadita",img:"../assets/heroes/kadita.png"},
+  {name:"Kagura",img:"../assets/heroes/kagura.png"},{name:"Kaja",img:"../assets/heroes/kaja.png"},
+  {name:"Kalea",img:"../assets/heroes/kalea.png"},{name:"Karina",img:"../assets/heroes/karina.png"},
+  {name:"Karrie",img:"../assets/heroes/karrie.png"},{name:"Khaleed",img:"../assets/heroes/khaleed.png"},
+  {name:"Khufra",img:"../assets/heroes/khufra.png"},{name:"Kimmy",img:"../assets/heroes/kimmy.png"},
+  {name:"Lancelot",img:"../assets/heroes/lancelot.png"},{name:"Lapu-Lapu",img:"../assets/heroes/lapu-lapu.png"},
+  {name:"Layla",img:"../assets/heroes/layla.png"},{name:"Leomord",img:"../assets/heroes/leomord.png"},
+  {name:"Lesley",img:"../assets/heroes/lesley.png"},{name:"Ling",img:"../assets/heroes/ling.png"},
+  {name:"Lolita",img:"../assets/heroes/lolita.png"},{name:"Lukas",img:"../assets/heroes/lukas.png"},
+  {name:"Lunox",img:"../assets/heroes/lunox.png"},{name:"Luo Yi",img:"../assets/heroes/luo-yi.png"},
+  {name:"Lylia",img:"../assets/heroes/lylia.png"},{name:"Marcel",img:"../assets/heroes/marcel.png"},
+  {name:"Masha",img:"../assets/heroes/masha.png"},{name:"Mathilda",img:"../assets/heroes/mathilda.png"},
+  {name:"Melissa",img:"../assets/heroes/melissa.png"},{name:"Minotaur",img:"../assets/heroes/minotaur.png"},
+  {name:"Minsitthar",img:"../assets/heroes/minsitthar.png"},{name:"Miya",img:"../assets/heroes/miya.png"},
+  {name:"Moskov",img:"../assets/heroes/moskov.png"},{name:"Nana",img:"../assets/heroes/nana.png"},
+  {name:"Natalia",img:"../assets/heroes/natalia.png"},{name:"Natan",img:"../assets/heroes/natan.png"},
+  {name:"Nolan",img:"../assets/heroes/nolan.png"},{name:"Novaria",img:"../assets/heroes/novaria.png"},
+  {name:"Obsidia",img:"../assets/heroes/obsidia.png"},{name:"Odette",img:"../assets/heroes/odette.png"},
+  {name:"Paquito",img:"../assets/heroes/paquito.png"},{name:"Pharsa",img:"../assets/heroes/pharsa.png"},
+  {name:"Phoveus",img:"../assets/heroes/phoveus.png"},{name:"Popol and Kupa",img:"../assets/heroes/popol-and-kupa.png"},
+  {name:"Rafaela",img:"../assets/heroes/rafaela.png"},{name:"Roger",img:"../assets/heroes/roger.png"},
+  {name:"Ruby",img:"../assets/heroes/ruby.png"},{name:"Saber",img:"../assets/heroes/saber.png"},
+  {name:"Selena",img:"../assets/heroes/selena.png"},{name:"Silvanna",img:"../assets/heroes/silvanna.png"},
+  {name:"Sora",img:"../assets/heroes/sora.png"},{name:"Sun",img:"../assets/heroes/sun.png"},
+  {name:"Suyou",img:"../assets/heroes/suyou.png"},{name:"Terizla",img:"../assets/heroes/terizla.png"},
+  {name:"Thamuz",img:"../assets/heroes/thamuz.png"},{name:"Tigreal",img:"../assets/heroes/tigreal.png"},
+  {name:"Uranus",img:"../assets/heroes/uranus.png"},{name:"Vale",img:"../assets/heroes/vale.png"},
+  {name:"Valentina",img:"../assets/heroes/valentina.png"},{name:"Valir",img:"../assets/heroes/valir.png"},
+  {name:"Vexana",img:"../assets/heroes/vexana.png"},{name:"Wanwan",img:"../assets/heroes/wanwan.png"},
+  {name:"X.Borg",img:"../assets/heroes/x-borg.png"},{name:"Xavier",img:"../assets/heroes/xavier.png"},
+  {name:"Yi Sun-shin",img:"../assets/heroes/yi-sun-shin.png"},{name:"Yin",img:"../assets/heroes/yin.png"},
+  {name:"Yve",img:"../assets/heroes/yve.png"},{name:"Yu Zhong",img:"../assets/heroes/yu-zhong.png"},
+  {name:"Zhask",img:"../assets/heroes/zhask.png"},{name:"Zhuxin",img:"../assets/heroes/zhuxin.png"},
+  {name:"Zilong",img:"../assets/heroes/zilong.png"},{name:"Zetian",img:"../assets/heroes/zetian.png"}
 ];
 
-let timerInterval
+let timerInterval, scoreCorrect = 0, scoreTotal = 0, currentHero = null;
 
-function startGame(){
-
-const hero=heroes[Math.floor(Math.random()*heroes.length)]
-
-const img=document.getElementById("heroImage")
-
-img.src=hero.img
-
-img.style.filter="brightness(0)"
-
-document.getElementById("answer").classList.remove("show")
-document.getElementById("answer").innerText=""
-
-let time=15
-
-document.getElementById("timer").innerText=time
-
-timerInterval=setInterval(()=>{
-
-time--
-
-document.getElementById("timer").innerText=time
-
-if(time<=0){
-
-clearInterval(timerInterval)
-
-img.style.filter="none"
-
-const answer=document.getElementById("answer")
-
-answer.innerText="Answer: "+hero.name
-answer.classList.add("show")
-
+function startGame() {
+  clearInterval(timerInterval);
+  currentHero = heroes[Math.floor(Math.random() * heroes.length)];
+  const img = document.getElementById('heroImage');
+  img.src = currentHero.img;
+  img.style.filter = 'brightness(0) saturate(0)';
+  img.style.boxShadow = '0 0 40px rgba(0,255,245,0.2)';
+  const ansEl = document.getElementById('answer');
+  ansEl.classList.remove('show');
+  ansEl.textContent = '';
+  const timerEl = document.getElementById('timer');
+  timerEl.classList.remove('danger');
+  scoreTotal++;
+  document.getElementById('scoreTotal').textContent = scoreTotal;
+  let time = 15;
+  timerEl.textContent = time;
+  timerInterval = setInterval(() => {
+    time--;
+    timerEl.textContent = time;
+    if (time <= 5) timerEl.classList.add('danger');
+    if (time <= 0) {
+      clearInterval(timerInterval);
+      img.style.filter = 'none';
+      img.style.boxShadow = '0 0 60px rgba(255,69,0,0.6)';
+      ansEl.textContent = currentHero.name;
+      ansEl.classList.add('show');
+      timerEl.textContent = '✗';
+    }
+  }, 1000);
 }
 
-},1000)
-
-}
-
+document.body.classList.add('loaded');
+document.addEventListener('click', () => { document.querySelectorAll('video').forEach(v=>{if(v.paused)v.play().catch(()=>{});}); }, {once:true});
 </script>
-
 </body>
 </html>

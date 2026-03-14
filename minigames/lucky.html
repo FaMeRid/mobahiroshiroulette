@@ -1,48 +1,272 @@
-<h1>🎉 Lucky Viewer</h1>
-<style>#winner{
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lucky Viewer — MOBAHIROSHI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root{--cyan:#00fff5;--gold:#ffd700;--purple:#a855ff;--orange:#ff4500;--dark:#030714;--glow-c:rgba(0,255,245,0.8);--glow-g:rgba(255,215,0,0.8);}
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    body{min-height:100dvh;overflow-x:hidden;background:var(--dark);color:#e0ffff;font-family:'Exo 2',sans-serif;opacity:0;transition:opacity 0.9s ease;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+    body.loaded{opacity:1;}
+    #bg-video{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;opacity:.08;z-index:0;pointer-events:none;animation:bgScale 25s ease-in-out infinite alternate;}
+    @keyframes bgScale{from{transform:scale(1.05);}to{transform:scale(1.18);}}
+    #grid-canvas{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.22;}
+    #particle-canvas{position:fixed;inset:0;z-index:2;pointer-events:none;}
+    .bg-glow{position:fixed;inset:0;background:radial-gradient(ellipse 80% 55% at 50% 0%,rgba(0,255,245,.16) 0%,transparent 65%),radial-gradient(ellipse 60% 40% at 50% 100%,rgba(168,85,255,.1) 0%,transparent 60%);pointer-events:none;z-index:3;}
+    .scanlines{position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.06) 3px,rgba(0,0,0,.06) 4px);pointer-events:none;z-index:4;}
+    .vignette{position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,.72) 100%);pointer-events:none;z-index:5;}
+    .hud-corner{position:fixed;width:80px;height:80px;z-index:50;pointer-events:none;opacity:0;animation:hudFade 1s ease-out forwards 1.5s;}
+    @keyframes hudFade{to{opacity:1;}}
+    .hud-corner::before,.hud-corner::after{content:"";position:absolute;background:var(--cyan);box-shadow:0 0 10px var(--cyan);}
+    .hud-corner::before{width:2px;height:30px;}.hud-corner::after{width:30px;height:2px;}
+    .hud-tl{top:16px;left:16px;}.hud-tl::before,.hud-tl::after{top:0;left:0;}
+    .hud-tr{top:16px;right:16px;transform:scaleX(-1);}.hud-tr::before,.hud-tr::after{top:0;left:0;}
+    .hud-bl{bottom:16px;left:16px;transform:scaleY(-1);}.hud-bl::before,.hud-bl::after{top:0;left:0;}
+    .hud-br{bottom:16px;right:16px;transform:scale(-1);}.hud-br::before,.hud-br::after{top:0;left:0;}
 
-font-size:50px;
-color:gold;
+    header{position:fixed;top:0;width:100%;background:rgba(3,7,20,.88);backdrop-filter:blur(14px);padding:1.2rem 3rem;display:flex;justify-content:space-between;align-items:center;z-index:100;border-bottom:1px solid rgba(0,255,245,.2);}
+    .logo{font-family:'Orbitron',sans-serif;font-size:clamp(1.6rem,4.5vw,2.6rem);font-weight:900;letter-spacing:5px;background:linear-gradient(90deg,#ffae00,#fffde0,#ffd700,#ffae00);background-size:300%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:logoFlow 7s linear infinite;text-decoration:none;}
+    @keyframes logoFlow{0%{background-position:0%;}100%{background-position:300%;}}
+    .header-right{display:flex;gap:1.5rem;align-items:center;}
+    .social-icon{font-size:2rem;color:var(--cyan);transition:all .4s ease;text-shadow:0 0 18px var(--glow-c);}
+    .social-icon:hover{transform:translateY(-8px) scale(1.3) rotate(12deg);color:var(--gold);}
+    .back-link{font-family:'Orbitron',sans-serif;font-size:.75rem;letter-spacing:2px;color:rgba(0,255,245,.6);text-decoration:none;border:1px solid rgba(0,255,245,.3);padding:6px 14px;border-radius:999px;transition:all .3s;}
+    .back-link:hover{color:var(--gold);border-color:var(--gold);background:rgba(255,215,0,.06);}
 
-animation:winnerPop 1s ease;
+    .container{position:relative;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:110px 1.5rem 3rem;text-align:center;gap:2rem;}
 
-}
+    .page-title-wrap{opacity:0;transform:translateY(36px);animation:revealUp 1.4s cubic-bezier(.16,1,.3,1) forwards .5s;}
+    @keyframes revealUp{to{opacity:1;transform:translateY(0);}}
+    .page-title{font-family:'Orbitron',sans-serif;font-size:clamp(2.2rem,6vw,4.5rem);font-weight:900;letter-spacing:4px;background:linear-gradient(90deg,#ffae00 0%,#fffde0 45%,#ffd700 55%,#ffae00 100%);background-size:300%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:titleShine 10s linear infinite 1s;}
+    @keyframes titleShine{0%{background-position:0%;}100%{background-position:300%;}}
+    .title-bar{height:3px;width:0;background:linear-gradient(90deg,transparent,var(--gold),var(--cyan),var(--gold),transparent);margin:10px auto 0;border-radius:2px;animation:barExpand 1s ease-out forwards 1.7s;box-shadow:0 0 12px var(--gold);}
+    @keyframes barExpand{to{width:100%;}}
+    .page-sub{font-size:clamp(.9rem,2vw,1.1rem);color:rgba(200,240,255,.5);letter-spacing:2px;margin-top:.6rem;}
 
-@keyframes winnerPop{
+    .lucky-card{
+      background:rgba(8,12,35,.82);border:2px solid rgba(0,255,245,.3);border-radius:26px;
+      padding:3rem 2.5rem;
+      box-shadow:0 20px 70px rgba(0,0,0,.7),inset 0 0 40px rgba(0,255,245,.05);
+      backdrop-filter:blur(10px);
+      display:flex;flex-direction:column;align-items:center;gap:1.8rem;
+      max-width:560px;width:100%;
+      opacity:0;animation:revealUp 1.2s ease-out forwards .8s;
+    }
 
-0%{transform:scale(0)}
-100%{transform:scale(1)}
+    .textarea-label{font-size:.72rem;letter-spacing:3px;color:rgba(0,255,245,.5);text-transform:uppercase;font-weight:700;align-self:flex-start;}
 
-}</style>
+    #names{
+      width:100%;height:150px;
+      background:rgba(0,255,245,.04);
+      border:1px solid rgba(0,255,245,.25);
+      border-radius:14px;
+      padding:1rem 1.2rem;
+      color:#e0ffff;
+      font-family:'Exo 2',sans-serif;font-size:1rem;
+      resize:vertical;
+      transition:border-color .3s,box-shadow .3s;
+      outline:none;
+    }
+    #names:focus{border-color:var(--cyan);box-shadow:0 0 20px rgba(0,255,245,.2);}
+    #names::placeholder{color:rgba(200,240,255,.3);}
 
-<textarea id="names" placeholder="вставь ники зрителей"></textarea>
+    .count-row{
+      width:100%;display:flex;justify-content:space-between;align-items:center;
+      font-size:.78rem;color:rgba(200,240,255,.4);letter-spacing:1px;
+    }
+    .count-num{color:var(--cyan);font-family:'Orbitron',sans-serif;font-weight:700;}
 
-<br><br>
+    /* WINNER DISPLAY */
+    .winner-wrap{
+      width:100%;
+      background:rgba(0,255,245,.04);border:1px solid rgba(0,255,245,.2);
+      border-radius:18px;padding:1.5rem 2rem;
+      min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;
+      transition:all .5s;
+    }
+    .winner-wrap.active{border-color:var(--gold);background:rgba(255,215,0,.06);box-shadow:0 0 40px rgba(255,215,0,.25);}
 
-<button onclick="pickWinner()">Pick Winner</button>
+    #winner{
+      font-family:'Orbitron',sans-serif;
+      font-size:clamp(1.6rem,4.5vw,2.8rem);font-weight:900;
+      background:linear-gradient(90deg,var(--gold),var(--cyan));
+      -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+      opacity:0;transform:scale(0.6);
+      transition:opacity .5s,transform .5s;
+    }
+    #winner.show{opacity:1;transform:scale(1);}
 
-<h2 id="winner"></h2>
+    .winner-sub{font-size:.72rem;letter-spacing:3px;color:rgba(0,255,245,.5);text-transform:uppercase;font-weight:700;opacity:0;transition:opacity .5s .2s;}
+    .winner-sub.show{opacity:1;}
+
+    .pick-btn{
+      position:relative;
+      padding:clamp(14px,3vw,20px) clamp(40px,9vw,100px);
+      font-family:'Orbitron',sans-serif;
+      font-size:clamp(1.1rem,2.5vw,1.7rem);font-weight:900;letter-spacing:3px;
+      color:#030714;
+      background:linear-gradient(90deg,#ffb300,#ffe066,#ffd700,#ffb300);
+      background-size:300% 100%;border:none;border-radius:999px;cursor:pointer;
+      box-shadow:0 0 50px rgba(255,215,0,.7);
+      transition:transform .4s cubic-bezier(.175,.885,.32,1.275),box-shadow .4s;
+      animation:btnGlow 3.5s ease-in-out infinite;overflow:hidden;
+    }
+    @keyframes btnGlow{0%,100%{box-shadow:0 0 50px rgba(255,215,0,.7);}50%{box-shadow:0 0 90px rgba(255,215,0,1);}}
+    .pick-btn::before{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(110deg,transparent,rgba(255,255,255,.4),transparent);animation:btnSweep 4s ease-in-out infinite;}
+    @keyframes btnSweep{0%,100%{left:-100%;}50%{left:150%;}}
+    .pick-btn:hover{transform:translateY(-10px) scale(1.06);box-shadow:0 0 100px rgba(255,215,0,1);}
+
+    /* WINNER CONFETTI */
+    .confetti-piece{position:fixed;width:10px;height:10px;pointer-events:none;z-index:9999;border-radius:2px;animation:confettiFall linear forwards;}
+    @keyframes confettiFall{0%{transform:translateY(-50px) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+
+    @media(max-width:768px){
+      header{padding:1rem 1.5rem;}
+      .logo{font-size:clamp(1.4rem,5vw,1.9rem);letter-spacing:3px;}
+      .hud-corner{display:none;}
+      .lucky-card{padding:2rem 1.5rem;}
+    }
+  </style>
+</head>
+<body>
+
+<video id="bg-video" autoplay loop muted playsinline>
+  <source src="../assets/videos/fire-sparks.mp4" type="video/mp4">
+</video>
+<canvas id="grid-canvas"></canvas>
+<canvas id="particle-canvas"></canvas>
+<div class="bg-glow"></div>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+<div class="hud-corner hud-tl"></div>
+<div class="hud-corner hud-tr"></div>
+<div class="hud-corner hud-bl"></div>
+<div class="hud-corner hud-br"></div>
+
+<header>
+  <a href="../index.html" class="logo">MOBAHIROSHI</a>
+  <div class="header-right">
+    <a href="minigames.html" class="back-link"><i class="fas fa-arrow-left"></i> Назад</a>
+    <a href="https://www.youtube.com/@Mobahiroshi" target="_blank" class="social-icon"><i class="fab fa-youtube"></i></a>
+    <a href="https://t.me/mobahiroshi" target="_blank" class="social-icon"><i class="fab fa-telegram-plane"></i></a>
+  </div>
+</header>
+
+<div class="container">
+  <div class="page-title-wrap">
+    <div class="page-title">LUCKY VIEWER</div>
+    <div class="title-bar"></div>
+    <p class="page-sub">Случайный победитель среди зрителей стрима</p>
+  </div>
+
+  <div class="lucky-card">
+    <span class="textarea-label">Список участников</span>
+    <textarea id="names" placeholder="Вставь ники зрителей, каждый с новой строки...
+Пример:
+PlayerOne
+Viewer123
+CoolFan"></textarea>
+    <div class="count-row">
+      <span>Участников: <span class="count-num" id="count">0</span></span>
+      <span style="font-size:.7rem;color:rgba(200,240,255,.3);">по одному на строку</span>
+    </div>
+
+    <div class="winner-wrap" id="winnerWrap">
+      <div class="winner-sub" id="winnerSub">Победитель</div>
+      <div id="winner">?</div>
+    </div>
+
+    <button class="pick-btn" onclick="pickWinner()">ВЫБРАТЬ ПОБЕДИТЕЛЯ</button>
+  </div>
+</div>
 
 <script>
+(function(){const c=document.getElementById('grid-canvas'),ctx=c.getContext('2d');function r(){c.width=innerWidth;c.height=innerHeight;d();}function d(){ctx.clearRect(0,0,c.width,c.height);const w=c.width,h=c.height,hz=h*.55,vp={x:w/2,y:hz},cols=18,rows=12,bot=h+40,sp=w*1.4;ctx.strokeStyle='rgba(0,220,255,0.2)';ctx.lineWidth=0.8;for(let i=0;i<=cols;i++){const bx=(w/2-sp/2)+(sp/cols)*i;ctx.beginPath();ctx.moveTo(vp.x,vp.y);ctx.lineTo(bx,bot);ctx.stroke();}for(let j=0;j<=rows;j++){const t=j/rows,e=t*t,y=hz+(bot-hz)*e,xl=vp.x+(-sp/2)*e,xr=vp.x+(sp/2)*e;ctx.beginPath();ctx.moveTo(xl,y);ctx.lineTo(xr,y);ctx.stroke();}const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'rgba(3,7,20,1)');g.addColorStop(.45,'rgba(3,7,20,0)');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);}window.addEventListener('resize',r);r();})();
+(function(){const c=document.getElementById('particle-canvas'),ctx=c.getContext('2d');let W,H,mouse={x:-9999,y:-9999};function r(){W=c.width=innerWidth;H=c.height=innerHeight;}r();window.addEventListener('resize',r);window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});const pts=Array.from({length:60},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.4,vy:-(Math.random()*.5+.1),size:Math.random()*1.8+.4,life:Math.random(),maxLife:.6+Math.random()*.4,color:Math.random()<.5?'0,255,245':'255,215,0'}));function loop(){ctx.clearRect(0,0,W,H);if(mouse.x>0){const g=ctx.createRadialGradient(mouse.x,mouse.y,0,mouse.x,mouse.y,110);g.addColorStop(0,'rgba(0,255,245,0.06)');g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}pts.forEach(p=>{const dx=p.x-mouse.x,dy=p.y-mouse.y,d=Math.sqrt(dx*dx+dy*dy);if(d<110){const f=(110-d)/110;p.vx+=(dx/d)*f*.5;p.vy+=(dy/d)*f*.5;}p.vx*=.97;p.vy*=.97;p.x+=p.vx;p.y+=p.vy;p.life-=.003;if(p.life<=0||p.y<-10){p.x=Math.random()*W;p.y=H+10;p.vx=(Math.random()-.5)*.4;p.vy=-(Math.random()*.5+.1);p.life=p.maxLife;p.color=Math.random()<.5?'0,255,245':'255,215,0';}ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fillStyle=`rgba(${p.color},${(p.life/p.maxLife)*.7})`;ctx.fill();});requestAnimationFrame(loop);}loop();})();
 
-function pickWinner(){
+/* COUNT UPDATE */
+const namesEl = document.getElementById('names');
+namesEl.addEventListener('input', () => {
+  const list = namesEl.value.split('\n').filter(n => n.trim() !== '');
+  document.getElementById('count').textContent = list.length;
+});
 
-const list=document
-.getElementById("names")
-.value
-.split("\n")
-.filter(n=>n.trim()!="")
-
-if(list.length===0){
-alert("Нет участников")
-return
+/* CONFETTI */
+function spawnConfetti() {
+  const colors = ['#ffd700','#ff4500','#00fff5','#a855ff','#ff69b4','#4ade80'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const size = 6 + Math.random() * 10;
+      el.style.cssText = `
+        left:${Math.random()*100}%;top:0;
+        width:${size}px;height:${size}px;
+        background:${color};
+        animation-duration:${2 + Math.random() * 2.5}s;
+        animation-delay:${Math.random() * 0.8}s;
+        border-radius:${Math.random() > 0.5 ? '50%' : '2px'};
+      `;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 5000);
+    }, i * 30);
+  }
 }
 
-const winner=list[Math.floor(Math.random()*list.length)]
-
-document.getElementById("winner").innerText=
-"🎉 Победитель: "+winner
-
+/* ROLL ANIMATION */
+function rollAnimation(finalName, duration, callback) {
+  const el = document.getElementById('winner');
+  const names = namesEl.value.split('\n').filter(n => n.trim() !== '');
+  let elapsed = 0;
+  const interval = 80;
+  el.classList.remove('show');
+  const timer = setInterval(() => {
+    const fake = names[Math.floor(Math.random() * names.length)];
+    el.style.opacity = '0.7';
+    el.textContent = fake;
+    el.style.opacity = '1';
+    elapsed += interval;
+    if (elapsed >= duration) {
+      clearInterval(timer);
+      el.textContent = finalName;
+      callback();
+    }
+  }, interval);
 }
 
+function pickWinner() {
+  const list = namesEl.value.split('\n').filter(n => n.trim() !== '');
+  if (list.length === 0) {
+    namesEl.style.borderColor = 'rgba(255,69,0,0.6)';
+    namesEl.style.boxShadow = '0 0 20px rgba(255,69,0,0.3)';
+    setTimeout(() => { namesEl.style.borderColor = ''; namesEl.style.boxShadow = ''; }, 1500);
+    return;
+  }
+  const winner = list[Math.floor(Math.random() * list.length)];
+  const wrap = document.getElementById('winnerWrap');
+  const sub = document.getElementById('winnerSub');
+  const el = document.getElementById('winner');
+
+  wrap.classList.add('active');
+  sub.classList.remove('show');
+  el.classList.remove('show');
+
+  rollAnimation(winner, 1200, () => {
+    el.classList.add('show');
+    sub.classList.add('show');
+    spawnConfetti();
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+  });
+}
+
+document.body.classList.add('loaded');
+document.addEventListener('click',()=>{document.querySelectorAll('video').forEach(v=>{if(v.paused)v.play().catch(()=>{});});},{once:true});
 </script>
+</body>
+</html>

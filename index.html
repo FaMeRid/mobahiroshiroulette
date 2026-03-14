@@ -7,65 +7,231 @@
   <title>MOBAHIROSHI</title>
 
   <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Exo+2:wght@900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;700;900&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
   <style>
     :root {
-      --neon-cyan: #00fff5;
-      --gold: #ffd700;
-      --deep-dark: #030714;
-      --text-glow: #e0ffff;
-      --shadow-neon: rgba(0, 255, 245, 0.8);
+      --cyan:   #00fff5;
+      --gold:   #ffd700;
+      --purple: #a855ff;
+      --dark:   #030714;
+      --glow-c: rgba(0,255,245,0.8);
+      --glow-g: rgba(255,215,0,0.8);
     }
 
-    * { margin:0; padding:0; box-sizing:border-box; }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    html { scroll-behavior: smooth; }
 
     body {
       min-height: 100dvh;
-      margin: 0;
       overflow-x: hidden;
-      color: var(--text-glow);
+      background: var(--dark);
+      color: #e0ffff;
       font-family: 'Exo 2', sans-serif;
-      position: relative;
-      background: var(--deep-dark);
       opacity: 0;
-      transition: opacity 0.8s ease;
+      transition: opacity 0.9s ease;
+      position: relative;
     }
+    body.loaded { opacity: 1; }
 
-    body.loaded {
-      opacity: 1;
-    }
+    /* ==============================
+       LAYERS
+    ============================== */
 
-    /* Видео-фон с искрами */
-    #bg-particles {
+    /* Video BG */
+    #bg-video {
       position: fixed;
       inset: 0;
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       object-fit: cover;
-      object-position: center bottom;
-      opacity: 0.18;
-      z-index: -10;
+      opacity: 0.13;
+      z-index: 0;
       pointer-events: none;
-      transform: scale(1.1);
-      animation: bgZoom 20s ease-in-out infinite alternate; 
+      animation: bgScale 25s ease-in-out infinite alternate;
+    }
+    @keyframes bgScale {
+      from { transform: scale(1.05); }
+      to   { transform: scale(1.18); }
     }
 
+    /* Perspective grid */
+    #grid-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.28;
+    }
+
+    /* Interactive particle canvas */
+    #particle-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* Top glow burst */
     .bg-glow {
       position: fixed;
       inset: 0;
-      background: radial-gradient(ellipse at 50% 20%, rgba(0,255,245,0.28) 0%, transparent 65%);
+      background:
+        radial-gradient(ellipse 80% 55% at 50% 0%,  rgba(0,255,245,0.22) 0%, transparent 65%),
+        radial-gradient(ellipse 60% 40% at 50% 100%, rgba(168,85,255,0.15) 0%, transparent 60%);
       pointer-events: none;
-      z-index: -5;
+      z-index: 3;
     }
 
+    /* Scanline overlay */
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,0.07) 3px,
+        rgba(0,0,0,0.07) 4px
+      );
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    /* Vignette */
+    .vignette {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.7) 100%);
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* ==============================
+       HUD CORNERS
+    ============================== */
+    .hud-corner {
+      position: fixed;
+      width: 80px;
+      height: 80px;
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0;
+      animation: hudFade 1s ease-out forwards 2s;
+    }
+    @keyframes hudFade { to { opacity: 1; } }
+    .hud-corner::before, .hud-corner::after {
+      content: "";
+      position: absolute;
+      background: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan);
+    }
+    .hud-corner::before { width: 2px; height: 30px; }
+    .hud-corner::after  { width: 30px; height: 2px; }
+    .hud-tl { top:16px; left:16px; }
+    .hud-tl::before { top:0; left:0; }
+    .hud-tl::after  { top:0; left:0; }
+    .hud-tr { top:16px; right:16px; transform: scaleX(-1); }
+    .hud-tr::before { top:0; left:0; }
+    .hud-tr::after  { top:0; left:0; }
+    .hud-bl { bottom:16px; left:16px; transform: scaleY(-1); }
+    .hud-bl::before { top:0; left:0; }
+    .hud-bl::after  { top:0; left:0; }
+    .hud-br { bottom:16px; right:16px; transform: scale(-1); }
+    .hud-br::before { top:0; left:0; }
+    .hud-br::after  { top:0; left:0; }
+
+    /* HUD status badge */
+    .hud-live {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--cyan);
+      border: 1px solid rgba(0,255,245,0.3);
+      padding: 5px 16px;
+      border-radius: 99px;
+      backdrop-filter: blur(10px);
+      background: rgba(0,255,245,0.05);
+      z-index: 50;
+      opacity: 0;
+      animation: hudFade 1s ease-out forwards 2.4s;
+    }
+    .live-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #ff3a3a;
+      box-shadow: 0 0 8px #ff3a3a;
+      animation: blink 1.4s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.2; }
+    }
+
+    /* ==============================
+       HEROES
+    ============================== */
+    .heroes {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+      perspective: 1200px;
+    }
+    .hero {
+      position: absolute;
+      bottom: 0;
+      width: clamp(300px, 42vw, 560px);
+      height: auto;
+      object-fit: contain;
+      opacity: 0;
+      animation: heroReveal 2.4s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+    .hero-left  {
+      left: -2%;
+      animation-delay: 0.4s;
+      filter: drop-shadow(0 0 40px rgba(0,255,245,0.55)) brightness(1.25);
+    }
+    .hero-right {
+      right: -2%;
+      animation-delay: 0.8s;
+      filter: drop-shadow(0 0 40px rgba(168,85,255,0.55)) brightness(1.25);
+    }
+    @keyframes heroReveal {
+      from { opacity: 0; transform: translateY(60px); }
+      to   { opacity: 0.97; transform: translateY(0); }
+    }
+
+    /* Hero energy aura */
+    .hero-aura {
+      position: absolute;
+      bottom: 0;
+      width: clamp(300px, 42vw, 560px);
+      height: 60%;
+      pointer-events: none;
+      opacity: 0;
+      animation: heroReveal 2.4s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+    .hero-aura-left  { left:-2%; animation-delay:0.4s; background: radial-gradient(ellipse at 50% 100%, rgba(0,255,245,0.25), transparent 70%); }
+    .hero-aura-right { right:-2%; animation-delay:0.8s; background: radial-gradient(ellipse at 50% 100%, rgba(168,85,255,0.25), transparent 70%); }
+
+    /* ==============================
+       MAIN CONTAINER
+    ============================== */
     .container {
       position: relative;
-      z-index: 10;
+      z-index: 20;
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
@@ -75,307 +241,728 @@
       text-align: center;
     }
 
-    .heroes {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      z-index: 15;
-      perspective: 1000px;
-    }
-
-    .hero {
-      position: absolute;
-      bottom: 0;
-      width: clamp(320px, 45vw, 580px);        /* ← БОЛЬШЕ, было 220–420 */
-      height: auto;
-      object-fit: contain;
-      filter:
-      drop-shadow(0 0 30px rgba(0,255,245,0.7))
-      brightness(1.3);
+    /* ==============================
+       TITLE + GLITCH
+    ============================== */
+    .title-wrap {
+      position: relative;
+      display: inline-block;
       opacity: 0;
-      transform: translateY(80px);
-      transition: transform 0.4s ease-out;
-      animation: hero-reveal 2.2s cubic-bezier(0.16,1,0.3,1) forwards;
-      pointer-events: none;
-      
+      transform: translateY(36px);
+      animation: revealUp 1.6s cubic-bezier(0.16,1,0.3,1) forwards 0.5s;
     }
-.hero video {
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  background: transparent !important;
-
-  mix-blend-mode: multiply;                /* вместо screen — иногда лучше для очень яркого зелёного */                 /* основной режим для удаления яркого зелёного */
-
-  filter:
-    hue-rotate(200deg)                       /* точный поворот для #00FF00 → становится почти чёрным */
-    saturate(0.01)                           /* максимально убираем цвет */
-    brightness(1.55)                         /* герой становится ярче после удаления фона */
-    contrast(1.45)
-    sepia(0.05)                              /* убирает остаточный зелёный оттенок */
-    drop-shadow(0 0 15px rgba(255,215,0,0.6)); /* добавляет glow вокруг героя */
-}
-    /* Ближе к центру */
-    .hero-left  { left: -2%; animation-delay: 0.3s; }   /* ← было -8%, теперь ближе */
-    .hero-right { right: -2%; animation-delay: 0.7s; }  /* ← было -8%, теперь ближе */
-
-    @keyframes hero-reveal {
-      to { opacity: 0.98; transform: translateY(0); }
+    @keyframes revealUp {
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .title {
       font-family: 'Orbitron', sans-serif;
-      font-size: clamp(3.2rem, 9.5vw, 6.2rem);
+      font-size: clamp(3rem, 9vw, 6rem);
       font-weight: 900;
-      letter-spacing: 5px;
-      background: linear-gradient(90deg, var(--gold), #fffacd, var(--gold));
-      background-size: 400%;
+      letter-spacing: 6px;
+      line-height: 0.9;
+      background: linear-gradient(90deg, #ffae00 0%, #fffde0 45%, #ffd700 55%, #ffae00 100%);
+      background-size: 300%;
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
-      text-shadow: 0 0 80px rgba(255,215,0,0.7);
-      margin: 0.2em 0 0.1em;
-      line-height: 0.85;
-      opacity: 0;
-      transform: translateY(40px);
-      animation: reveal-text 1.8s ease-out forwards 0.5s, shine 12s linear infinite;
+      animation: titleShine 10s linear infinite 2s;
+      position: relative;
+    }
+    @keyframes titleShine {
+      0%   { background-position: 0%; }
+      100% { background-position: 300%; }
     }
 
-    @keyframes reveal-text {
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes shine {
-      0%   { background-position: 0% 50%; }
-      100% { background-position: 400% 50%; }
-    }
-
-    .nickname {
-      font-size: clamp(1.6rem, 5vw, 2.4rem);
+    /* Glitch layers */
+    .title::before, .title::after {
+      content: "MOBAHIROSHI";
+      position: absolute;
+      inset: 0;
+      font-family: 'Orbitron', sans-serif;
+      font-size: inherit;
       font-weight: 900;
-      color: var(--neon-cyan);
-      text-shadow: 0 0 40px var(--shadow-neon);
-      margin: 0.2em 0 1.2em;
+      letter-spacing: inherit;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      -webkit-background-clip: text;
+      pointer-events: none;
+    }
+    .title::before {
+      background: linear-gradient(90deg, var(--cyan), var(--cyan));
+      -webkit-background-clip: text;
+      background-clip: text;
+      animation: glitch1 6s infinite 3s;
       opacity: 0;
-      animation: reveal-text 1.4s ease-out forwards 1s;
+    }
+    .title::after {
+      background: linear-gradient(90deg, var(--purple), var(--purple));
+      -webkit-background-clip: text;
+      background-clip: text;
+      animation: glitch2 6s infinite 3s;
+      opacity: 0;
     }
 
-    .tagline {
-      font-size: clamp(1.3rem, 4vw, 1.8rem);
-      max-width: 780px;
+    @keyframes glitch1 {
+      0%,92%,100% { opacity:0; transform:translate(0); clip-path:none; }
+      93%  { opacity:0.8; transform:translate(-4px,1px); clip-path:polygon(0 20%,100% 20%,100% 38%,0 38%); }
+      94%  { opacity:0; }
+      95%  { opacity:0.7; transform:translate(4px,-2px); clip-path:polygon(0 55%,100% 55%,100% 72%,0 72%); }
+      96%  { opacity:0; }
+      97%  { opacity:0.6; transform:translate(-3px,2px); clip-path:polygon(0 75%,100% 75%,100% 88%,0 88%); }
+      98%  { opacity:0; }
+    }
+    @keyframes glitch2 {
+      0%,92%,100% { opacity:0; transform:translate(0); clip-path:none; }
+      93%  { opacity:0.7; transform:translate(5px,-1px); clip-path:polygon(0 40%,100% 40%,100% 55%,0 55%); }
+      94%  { opacity:0; }
+      95%  { opacity:0.6; transform:translate(-4px,2px); clip-path:polygon(0 70%,100% 70%,100% 80%,0 80%); }
+      96%  { opacity:0; }
+    }
+
+    /* underline bar */
+    .title-bar {
+      height: 3px;
+      width: 0;
+      background: linear-gradient(90deg, transparent, var(--gold), var(--cyan), var(--gold), transparent);
+      margin: 10px auto 0;
+      border-radius: 2px;
+      animation: barExpand 1s ease-out forwards 2s;
+      box-shadow: 0 0 12px var(--gold), 0 0 24px rgba(255,215,0,0.4);
+    }
+    @keyframes barExpand {
+      to { width: 100%; }
+    }
+
+    /* ==============================
+       NICKNAME
+    ============================== */
+    .nickname {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1rem, 3.5vw, 1.8rem);
       font-weight: 700;
-      color: #d0fffc;
-      text-shadow: 0 4px 20px #000c;
-      margin: 0 auto 2.5rem;
-      line-height: 1.35;
+      letter-spacing: 4px;
+      color: var(--cyan);
+      text-shadow: 0 0 30px var(--glow-c), 0 0 60px rgba(0,255,245,0.3);
+      margin: 0.7em 0 0.5em;
       opacity: 0;
-      animation: reveal-text 1.4s ease-out forwards 1.3s;
+      animation: revealUp 1.4s ease-out forwards 1s;
+      position: relative;
+    }
+    .nickname::before {
+      content: "—  ";
+      opacity: 0.5;
+    }
+    .nickname::after {
+      content: "  —";
+      opacity: 0.5;
+    }
+
+    /* ==============================
+       TYPEWRITER TAGLINE
+    ============================== */
+    .tagline-wrap {
+      font-size: clamp(1.1rem, 3.5vw, 1.6rem);
+      font-weight: 700;
+      color: #c0f0ef;
+      letter-spacing: 1px;
+      margin: 0.6em auto 2.4rem;
+      max-width: 720px;
+      line-height: 1.4;
+      opacity: 0;
+      animation: revealUp 1.2s ease-out forwards 1.4s;
+    }
+    #typewriter {
+      display: inline;
+    }
+    .cursor-blink {
+      display: inline-block;
+      width: 2px;
+      height: 1.1em;
+      background: var(--cyan);
+      margin-left: 3px;
+      vertical-align: middle;
+      animation: blink 0.9s step-end infinite;
+      box-shadow: 0 0 8px var(--cyan);
+    }
+
+    /* ==============================
+       STATS ROW
+    ============================== */
+    .stats-row {
+      display: flex;
+      gap: clamp(1.5rem, 4vw, 3.5rem);
+      margin-bottom: 2.5rem;
+      opacity: 0;
+      animation: revealUp 1.2s ease-out forwards 1.7s;
+    }
+    .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .stat-num {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.4rem, 3.5vw, 2rem);
+      font-weight: 900;
+      color: var(--gold);
+      text-shadow: 0 0 18px rgba(255,215,0,0.6);
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 0.65rem;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: rgba(200,240,255,0.55);
+      font-weight: 700;
+    }
+    .stat-divider {
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, transparent, rgba(0,255,245,0.3), transparent);
+      align-self: center;
+    }
+
+    /* ==============================
+       BUTTON
+    ============================== */
+    .btn-wrap {
+      position: relative;
+      display: inline-block;
+      opacity: 0;
+      transform: scale(0.85);
+      animation: revealBtn 1.6s cubic-bezier(0.34,1.56,0.64,1) forwards 2s;
+    }
+    @keyframes revealBtn {
+      to { opacity:1; transform:scale(1); }
+    }
+
+    /* Orbiting ring */
+    .btn-ring {
+      position: absolute;
+      inset: -14px;
+      border-radius: 999px;
+      border: 1.5px solid rgba(255,215,0,0.35);
+      animation: ringRotate 6s linear infinite;
+      pointer-events: none;
+    }
+    .btn-ring::before {
+      content: "";
+      position: absolute;
+      top: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 14px var(--gold);
+    }
+    @keyframes ringRotate { to { transform: rotate(360deg); } }
+
+    .btn-ring-2 {
+      position: absolute;
+      inset: -22px;
+      border-radius: 999px;
+      border: 1px dashed rgba(0,255,245,0.2);
+      animation: ringRotate 10s linear infinite reverse;
+      pointer-events: none;
     }
 
     .start-btn {
-      padding: clamp(18px, 4.5vw, 26px) clamp(70px, 12vw, 160px);
-      font-size: clamp(1.7rem, 5.5vw, 2.6rem);
+      position: relative;
+      padding: clamp(18px,4vw,26px) clamp(60px,11vw,150px);
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.4rem, 4.5vw, 2.4rem);
       font-weight: 900;
+      letter-spacing: 3px;
       color: #030714;
-      background: linear-gradient(90deg, var(--gold), #ffeb3b, var(--gold));
+      background: linear-gradient(90deg, #ffb300, #ffe066, #ffd700, #ffb300);
       background-size: 300% 100%;
       border: none;
       border-radius: 999px;
       cursor: pointer;
-      box-shadow: 0 0 90px rgba(255,215,0,0.8), inset 0 0 50px rgba(255,255,255,0.4);
-      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      opacity: 0;
-      transform: scale(0.85);
-      animation: reveal-btn 1.6s cubic-bezier(0.34,1.56,0.64,1) forwards 1.6s, pulse-glow 4s ease-in-out infinite 2.5s;
+      overflow: hidden;
+      transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275), box-shadow 0.4s;
+      box-shadow:
+        0 0 50px rgba(255,215,0,0.7),
+        0 0 120px rgba(255,215,0,0.3),
+        inset 0 0 40px rgba(255,255,255,0.35);
+      animation: btnGlow 3.5s ease-in-out infinite 3s;
+    }
+    @keyframes btnGlow {
+      0%,100% { box-shadow: 0 0 50px rgba(255,215,0,0.7), 0 0 120px rgba(255,215,0,0.25); }
+      50%     { box-shadow: 0 0 90px rgba(255,215,0,1),   0 0 200px rgba(255,215,0,0.45); }
+    }
+
+    /* Liquid shine sweep */
+    .start-btn::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%);
+      animation: btnSweep 4s ease-in-out infinite 3s;
+    }
+    @keyframes btnSweep {
+      0%,100% { left:-100%; opacity:0.6; }
+      50%     { left:150%;  opacity:1; }
     }
 
     .start-btn:hover {
-      transform: translateY(-16px) scale(1.08);
-      box-shadow: 0 0 180px rgba(255,215,0,1);
+      transform: translateY(-14px) scale(1.07);
+      box-shadow: 0 0 120px rgba(255,215,0,1), 0 30px 80px rgba(255,215,0,0.4);
       background-position: 100% 0;
     }
+    .start-btn:active { transform: translateY(-4px) scale(1.02); }
 
-    @keyframes reveal-btn {
-      to { opacity: 1; transform: scale(1); }
+    /* btn text */
+    .btn-text {
+      position: relative;
+      z-index: 1;
+    }
+    .btn-sub {
+      display: block;
+      font-size: 0.5em;
+      letter-spacing: 4px;
+      opacity: 0.65;
+      font-weight: 700;
+      margin-top: 2px;
     }
 
-    @keyframes pulse-glow {
-      0%,100% { box-shadow: 0 0 90px rgba(255,215,0,0.8); }
-      50%     { box-shadow: 0 0 160px rgba(255,215,0,1); }
-    }
-
+    /* ==============================
+       SOCIAL BAR
+    ============================== */
     .social-bar {
       display: flex;
-      gap: clamp(50px, 10vw, 100px);
-      margin-top: 2rem;
+      gap: clamp(30px, 8vw, 80px);
+      margin-top: 2.8rem;
       opacity: 0;
-      animation: reveal-text 1.2s ease-out forwards 2.2s;
+      animation: revealUp 1.2s ease-out forwards 2.5s;
     }
-
     .social-icon {
-      width: clamp(70px, 10vw, 90px);
-      height: clamp(70px, 10vw, 90px);
+      position: relative;
+      width: clamp(62px, 9vw, 88px);
+      height: clamp(62px, 9vw, 88px);
       border-radius: 50%;
       display: grid;
       place-items: center;
-      font-size: clamp(2rem, 5vw, 2.8rem);
+      font-size: clamp(1.8rem, 4.5vw, 2.6rem);
       color: white;
-      transition: all 0.5s ease;
-      box-shadow: 0 12px 50px rgba(0,0,0,0.7);
+      text-decoration: none;
+      transition: transform 0.45s cubic-bezier(0.175,0.885,0.32,1.275), box-shadow 0.4s;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
     }
+    .social-icon::after {
+      content: "";
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      background: conic-gradient(transparent 60%, rgba(255,255,255,0.3) 80%, transparent 100%);
+      animation: socialRing 4s linear infinite;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .social-icon:hover::after { opacity: 1; }
+    @keyframes socialRing { to { transform: rotate(360deg); } }
 
     .social-icon:hover {
-      transform: translateY(-16px) scale(1.25) rotate(10deg);
-      box-shadow: 0 30px 100px var(--shadow-neon);
+      transform: translateY(-18px) scale(1.28) rotate(8deg);
+    }
+    .youtube   {
+      background: radial-gradient(circle at 35% 35%, #ff5555, #cc0000);
+      box-shadow: 0 10px 40px rgba(204,0,0,0.5);
+    }
+    .youtube:hover { box-shadow: 0 20px 80px rgba(255,50,50,0.8); }
+    .telegram  {
+      background: radial-gradient(circle at 35% 35%, #54c8f0, #1b8fc4);
+      box-shadow: 0 10px 40px rgba(27,143,196,0.5);
+    }
+    .telegram:hover { box-shadow: 0 20px 80px rgba(0,180,255,0.8); }
+    .instagram {
+      background: radial-gradient(circle at 35% 35%, #f09433, #e6683c 30%, #dc2743 60%, #bc1888);
+      box-shadow: 0 10px 40px rgba(188,24,136,0.4);
+    }
+    .instagram:hover { box-shadow: 0 20px 80px rgba(240,80,160,0.8); }
+
+    /* ==============================
+       FLOATING RUNES (background deco)
+    ============================== */
+    .rune {
+      position: fixed;
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(0.7rem, 1.5vw, 1rem);
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: rgba(0,255,245,0.12);
+      pointer-events: none;
+      z-index: 6;
+      animation: runeFloat linear infinite;
+      white-space: nowrap;
+    }
+    @keyframes runeFloat {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 0.08; }
+      50%  { opacity: 0.18; }
+      100% { transform: translateY(-120px) rotate(8deg); opacity: 0.04; }
     }
 
-    .youtube   { background: #ff0000e8; }
-    .telegram  { background: #229ed9e8; }
-    .instagram { background: linear-gradient(145deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
-/* ===== MOBILE ULTRA VERSION ===== */
-
-@media (max-width: 768px) {
-
-  .container{
-    padding-top: 80px;
-  }
-
-  .hero{
-    width: clamp(170px, 42vw, 300px);
-    bottom:-10%;
-    opacity:0.85;
-    filter: drop-shadow(0 40px 120px rgba(0,255,245,0.7)) brightness(1.25);
-  }
-
-  .hero-left{
-    left:-8%;
-  }
-
-  .hero-right{
-    right:-8%;
-  }
-
-  .title{
-    font-size: clamp(2.8rem, 13vw, 4.8rem);
-    letter-spacing:3px;
-    margin-bottom:6px;
-  }
-
-  .nickname{
-    font-size: clamp(1.3rem,5vw,2rem);
-    margin-bottom:18px;
-  }
-
-  .tagline{
-    font-size:1.25rem;
-    max-width:90%;
-    line-height:1.4;
-    margin-bottom:35px;
-  }
-
-  .start-btn{
-    padding:18px 70px;
-    font-size:1.9rem;
-    border-radius:999px;
-    box-shadow:
-      0 0 80px rgba(255,215,0,0.9),
-      inset 0 0 30px rgba(255,255,255,0.5);
-  }
-
-  .start-btn:hover{
-    transform:scale(1.05);
-  }
-
-  .social-bar{
-    gap:40px;
-    margin-top:30px;
-  }
-
-  .social-icon{
-    width:64px;
-    height:64px;
-    font-size:1.9rem;
-  }
+    /* ==============================
+       MOBILE
+    ============================== */
+    @media (max-width: 768px) {
+      .container { padding-top: 70px; }
+      .hero { width: clamp(155px, 40vw, 280px); }
+      .hero-left  { left: -8%; }
+      .hero-right { right: -8%; }
+      .title-wrap { margin-top: 1rem; }
+      .title { font-size: clamp(2.5rem, 13vw, 4.5rem); letter-spacing: 3px; }
+      .nickname { font-size: clamp(1rem, 5vw, 1.5rem); }
+      .nickname::before, .nickname::after { display: none; }
+      .tagline-wrap { font-size: 1.1rem; max-width: 88%; margin-bottom: 1.8rem; }
+      .stats-row { gap: 1rem; margin-bottom: 1.8rem; }
+      .stat-num { font-size: 1.3rem; }
+      .stat-label { font-size: 0.58rem; }
+      .start-btn { padding: 16px 55px; font-size: 1.6rem; letter-spacing: 2px; }
+      .social-bar { gap: 30px; margin-top: 2rem; }
+      .social-icon { width: 60px; height: 60px; font-size: 1.7rem; }
+      .hud-corner { display: none; }
+      .rune { display: none; }
+      .btn-ring, .btn-ring-2 { display: none; }
     }
-    @keyframes bgZoom{
-  from{transform:scale(1.05)}
-  to{transform:scale(1.15)}
-}
+    @media (max-width: 420px) {
+      .title { font-size: clamp(2rem, 14vw, 3.5rem); }
+      .stats-row { flex-wrap: wrap; justify-content: center; }
+      .stat-divider:nth-child(4) { display: none; }
+    }
   </style>
 </head>
 <body>
 
-<!-- Видео-фон с искрами -->
-<video id="bg-particles" autoplay loop muted playsinline>
+<!-- Video background -->
+<video id="bg-video" autoplay loop muted playsinline>
   <source src="assets/videos/fire-sparks.mp4" type="video/mp4">
 </video>
 
-<div class="bg-glow"></div>
+<!-- Canvases -->
+<canvas id="grid-canvas"></canvas>
+<canvas id="particle-canvas"></canvas>
 
+<!-- Overlays -->
+<div class="bg-glow"></div>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+
+<!-- HUD corners -->
+<div class="hud-corner hud-tl"></div>
+<div class="hud-corner hud-tr"></div>
+<div class="hud-corner hud-bl"></div>
+<div class="hud-corner hud-br"></div>
+
+<!-- HUD live badge -->
+<div class="hud-live">
+  <div class="live-dot"></div>
+  LIVE STREAM
+</div>
+
+<!-- Floating rune texts (decorative BG) -->
+<div class="rune" style="left:5%;  top:70%; animation-duration:14s; animation-delay:0s">MLBB • RANK • MVP</div>
+<div class="rune" style="left:72%; top:60%; animation-duration:18s; animation-delay:3s">LEGENDARY • MYTHIC</div>
+<div class="rune" style="left:15%; top:80%; animation-duration:12s; animation-delay:6s">MOBAHIROSHI</div>
+<div class="rune" style="left:60%; top:75%; animation-duration:16s; animation-delay:1s">⬡ ◈ ✦ ◈ ⬡</div>
+<div class="rune" style="left:80%; top:85%; animation-duration:20s; animation-delay:4s">HERO • SPELL • LANE</div>
+
+<!-- Heroes (videos) -->
 <div class="heroes">
-  <!-- Левый герой — видео вместо png -->
+  <div class="hero-aura hero-aura-left"></div>
+  <div class="hero-aura hero-aura-right"></div>
   <video class="hero hero-left" autoplay loop muted playsinline>
     <source src="assets/videos/hero1.mp4" type="video/mp4">
   </video>
-
-  <!-- Правый герой — видео вместо png -->
   <video class="hero hero-right" autoplay loop muted playsinline>
     <source src="assets/videos/hero2.mp4" type="video/mp4">
   </video>
 </div>
 
+<!-- Main content -->
 <div class="container">
-  <h1 class="title">MOBAHIROSHI</h1>
-  <div class="nickname">@mobahiroshi</div>
-  <p class="tagline">Игры слишком скучные? Тогда ты по адресу!</p>
 
-  <button class="start-btn" onclick="location.href='linkforall.html'">
-    ОТКРЫТЬ СЕЙЧАС
-  </button>
-
-  <div class="social-bar">
-    <a href="#" class="social-icon youtube" target="_blank"><i class="fab fa-youtube"></i></a>
-    <a href="#" class="social-icon telegram" target="_blank"><i class="fab fa-telegram-plane"></i></a>
-    <a href="#" class="social-icon instagram" target="_blank"><i class="fab fa-instagram"></i></a>
+  <div class="title-wrap">
+    <h1 class="title">MOBAHIROSHI</h1>
+    <div class="title-bar"></div>
   </div>
+
+
+  <div class="tagline-wrap">
+    <span id="typewriter"></span><span class="cursor-blink"></span>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat">
+      <span class="stat-num" data-target="132">0</span>
+      <span class="stat-label">Героев</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <span class="stat-num" data-target="14">0</span>
+      <span class="stat-label">Спеллов</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <span class="stat-num" data-target="5">0</span>
+      <span class="stat-label">Линий</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <span class="stat-num" data-target="7">0</span>
+      <span class="stat-label">Эмблем</span>
+    </div>
+  </div>
+
+  <!-- Button -->
+  <div class="btn-wrap">
+    <div class="btn-ring"></div>
+    <div class="btn-ring-2"></div>
+    <button class="start-btn" id="mainBtn" onclick="location.href='linkforall.html'">
+      <span class="btn-text">
+        ОТКРЫТЬ СЕЙЧАС
+        <span class="btn-sub">нажми и попробуй удачу</span>
+      </span>
+    </button>
+  </div>
+
+  <!-- Social -->
+  <div class="social-bar">
+    <a href="#" class="social-icon youtube"    target="_blank" rel="noopener"><i class="fab fa-youtube"></i></a>
+    <a href="#" class="social-icon telegram"   target="_blank" rel="noopener"><i class="fab fa-telegram-plane"></i></a>
+    <a href="#" class="social-icon instagram"  target="_blank" rel="noopener"><i class="fab fa-instagram"></i></a>
+  </div>
+
 </div>
 
-<!-- Фоновый звук -->
+<!-- Background audio -->
 <audio id="bg-audio" loop>
   <source src="https://assets.mixkit.co/sfx/preview/mixkit-epic-cinematic-trailer-104.mp3" type="audio/mpeg">
-  Ваш браузер не поддерживает аудио.
 </audio>
 
 <script>
-  // Звук
-  const audio = document.getElementById('bg-audio');
-  audio.volume = 0.2;
+/* =============================================
+   PERSPECTIVE GRID
+============================================= */
+(function() {
+  const c = document.getElementById('grid-canvas');
+  const ctx = c.getContext('2d');
+  function resize() { c.width = innerWidth; c.height = innerHeight; draw(); }
+  function draw() {
+    ctx.clearRect(0, 0, c.width, c.height);
+    const w = c.width, h = c.height;
+    const horizon = h * 0.55;
+    const vp = { x: w/2, y: horizon };
+    const cols = 18, rows = 12;
+    const bottom = h + 40;
+    const spread = w * 1.4;
 
-  // Parallax на героях (только десктоп)
-  if (window.innerWidth > 768) {
-    document.addEventListener('mousemove', (e) => {
-      const x = (window.innerWidth / 2 - e.clientX) / 60;  // чуть меньше смещение
-      const y = (window.innerHeight / 2 - e.clientY) / 60;
-      document.querySelector('.hero-left').style.transform = `translate(${x}px, ${y}px) translateY(0)`;
-      document.querySelector('.hero-right').style.transform = `translate(${-x}px, ${-y}px) translateY(0)`;
-    });
+    ctx.strokeStyle = 'rgba(0,220,255,0.22)';
+    ctx.lineWidth = 0.8;
+
+    // Vertical lines (converge to VP)
+    for (let i = 0; i <= cols; i++) {
+      const bx = (w/2 - spread/2) + (spread / cols) * i;
+      ctx.beginPath();
+      ctx.moveTo(vp.x, vp.y);
+      ctx.lineTo(bx, bottom);
+      ctx.stroke();
+    }
+    // Horizontal lines
+    for (let j = 0; j <= rows; j++) {
+      const t = j / rows;
+      const ease = t * t;
+      const y = horizon + (bottom - horizon) * ease;
+      const xLeft  = vp.x + ((-spread/2) * ease);
+      const xRight = vp.x + ((spread/2)  * ease);
+      ctx.beginPath();
+      ctx.moveTo(xLeft, y);
+      ctx.lineTo(xRight, y);
+      ctx.stroke();
+    }
+    // Top fade
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0,   'rgba(3,7,20,1)');
+    grad.addColorStop(0.45,'rgba(3,7,20,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
   }
+  window.addEventListener('resize', resize);
+  resize();
+})();
 
-  // Принудительно показываем страницу
-  document.body.classList.add('loaded');
+/* =============================================
+   INTERACTIVE PARTICLES
+============================================= */
+(function() {
+  const c = document.getElementById('particle-canvas');
+  const ctx = c.getContext('2d');
+  let W, H, mouse = { x: -9999, y: -9999 };
 
-  // Запуск видео по клику (на мобильных часто нужно)
-  document.addEventListener('click', () => {
-    document.querySelectorAll('video').forEach(vid => {
-      if (vid.paused) vid.play().catch(() => {});
+  function resize() { W = c.width = innerWidth; H = c.height = innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+  window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+  const COUNT = 80;
+  const particles = Array.from({ length: COUNT }, () => ({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    vx: (Math.random()-0.5)*0.4,
+    vy: -(Math.random()*0.5+0.1),
+    size: Math.random()*1.8+0.4,
+    life: Math.random(),
+    maxLife: 0.6+Math.random()*0.4,
+    color: Math.random() < 0.5 ? '0,255,245' : '255,215,0'
+  }));
+
+  // Mouse trail
+  const trail = [];
+
+  function loop() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Mouse glow
+    if (mouse.x > 0) {
+      const g = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 120);
+      g.addColorStop(0, 'rgba(0,255,245,0.07)');
+      g.addColorStop(1, 'transparent');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // Ambient particles
+    particles.forEach(p => {
+      // Mouse repulsion
+      const dx = p.x - mouse.x, dy = p.y - mouse.y;
+      const dist = Math.sqrt(dx*dx+dy*dy);
+      if (dist < 120) {
+        const force = (120-dist)/120;
+        p.vx += (dx/dist)*force*0.6;
+        p.vy += (dy/dist)*force*0.6;
+      }
+      p.vx *= 0.97; p.vy *= 0.97;
+      p.x += p.vx; p.y += p.vy;
+      p.life -= 0.003;
+      if (p.life <= 0 || p.y < -10) {
+        p.x = Math.random()*W;
+        p.y = H + 10;
+        p.vx = (Math.random()-0.5)*0.4;
+        p.vy = -(Math.random()*0.5+0.1);
+        p.life = p.maxLife;
+        p.color = Math.random()<0.5?'0,255,245':'255,215,0';
+      }
+      const a = (p.life / p.maxLife)*0.7;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(${p.color},${a})`;
+      ctx.fill();
     });
-  }, { once: true });
-  document.querySelector('.start-btn').addEventListener('click',()=>{
-  if(navigator.vibrate){
-    navigator.vibrate(40)
+
+    requestAnimationFrame(loop);
   }
-})
+  loop();
+})();
+
+/* =============================================
+   TYPEWRITER
+============================================= */
+(function() {
+  const text = "Игры слишком скучные? Тогда ты по адресу!";
+  const el = document.getElementById('typewriter');
+  let i = 0;
+  function type() {
+    if (i <= text.length) {
+      el.textContent = text.slice(0, i++);
+      setTimeout(type, 55 + Math.random()*35);
+    }
+  }
+  setTimeout(type, 1800);
+})();
+
+/* =============================================
+   ANIMATED COUNTERS
+============================================= */
+(function() {
+  function animCount(el, target, duration) {
+    const start = performance.now();
+    function frame(now) {
+      const t = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1-t, 3);
+      el.textContent = Math.round(ease * target) + (target > 10 ? '' : '');
+      if (t < 1) requestAnimationFrame(frame);
+      else el.textContent = target;
+    }
+    requestAnimationFrame(frame);
+  }
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        document.querySelectorAll('[data-target]').forEach(el => {
+          animCount(el, +el.dataset.target, 1800);
+        });
+        obs.disconnect();
+      }
+    });
+  });
+  setTimeout(() => {
+    const row = document.querySelector('.stats-row');
+    if (row) obs.observe(row);
+  }, 2200);
+})();
+
+/* =============================================
+   PARALLAX HEROES
+============================================= */
+if (window.innerWidth > 768) {
+  const left  = document.querySelector('.hero-left');
+  const right = document.querySelector('.hero-right');
+  document.addEventListener('mousemove', e => {
+    const x = (window.innerWidth/2  - e.clientX) / 55;
+    const y = (window.innerHeight/2 - e.clientY) / 55;
+    if (left)  left.style.transform  = `translate(${x}px, ${y}px)`;
+    if (right) right.style.transform = `translate(${-x}px, ${-y}px)`;
+  });
+}
+
+/* =============================================
+   BUTTON CLICK RIPPLE
+============================================= */
+document.getElementById('mainBtn').addEventListener('click', function(e) {
+  const ripple = document.createElement('span');
+  ripple.style.cssText = `
+    position:absolute; border-radius:50%;
+    width:6px; height:6px;
+    background:rgba(255,255,255,0.6);
+    transform:scale(0); animation:rippleAnim 0.6s ease-out forwards;
+    left:${e.offsetX-3}px; top:${e.offsetY-3}px; pointer-events:none;`;
+  const style = document.createElement('style');
+  style.textContent = `@keyframes rippleAnim{to{transform:scale(60);opacity:0;}}`;
+  document.head.appendChild(style);
+  this.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 700);
+  if (navigator.vibrate) navigator.vibrate(40);
+});
+
+/* =============================================
+   INIT
+============================================= */
+document.body.classList.add('loaded');
+document.getElementById('bg-audio').volume = 0.18;
+
+document.addEventListener('click', () => {
+  document.querySelectorAll('video').forEach(v => {
+    if (v.paused) v.play().catch(()=>{});
+  });
+  document.getElementById('bg-audio').play().catch(()=>{});
+}, { once: true });
 </script>
-
 </body>
 </html>

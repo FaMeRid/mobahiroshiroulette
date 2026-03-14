@@ -1,11 +1,352 @@
-<div class="games">
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мини-игры — MOBAHIROSHI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --cyan:   #00fff5;
+      --gold:   #ffd700;
+      --purple: #a855ff;
+      --orange: #ff4500;
+      --dark:   #030714;
+      --glow-c: rgba(0,255,245,0.8);
+      --glow-g: rgba(255,215,0,0.8);
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      min-height: 100dvh;
+      overflow-x: hidden;
+      background: var(--dark);
+      color: #e0ffff;
+      font-family: 'Exo 2', sans-serif;
+      opacity: 0;
+      transition: opacity 0.9s ease;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    body.loaded { opacity: 1; }
 
-<a href="guess-hero.html">Guess the Hero</a>
+    #bg-video {
+      position: fixed; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; opacity: 0.08; z-index: 0; pointer-events: none;
+      animation: bgScale 25s ease-in-out infinite alternate;
+    }
+    @keyframes bgScale { from { transform: scale(1.05); } to { transform: scale(1.18); } }
 
-<a href="trivia.html">MLBB Trivia</a>
+    #grid-canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.22; }
+    #particle-canvas { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
 
-<a href="challenge.html">Random Challenge</a>
+    .bg-glow {
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 55% at 50% 0%, rgba(0,255,245,0.16) 0%, transparent 65%),
+        radial-gradient(ellipse 60% 40% at 50% 100%, rgba(168,85,255,0.1) 0%, transparent 60%);
+      pointer-events: none; z-index: 3;
+    }
+    .scanlines {
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px);
+      pointer-events: none; z-index: 4;
+    }
+    .vignette {
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.72) 100%);
+      pointer-events: none; z-index: 5;
+    }
 
-<a href="lucky.html">Lucky Viewer</a>
+    .hud-corner {
+      position: fixed; width: 80px; height: 80px;
+      z-index: 50; pointer-events: none;
+      opacity: 0; animation: hudFade 1s ease-out forwards 1.5s;
+    }
+    @keyframes hudFade { to { opacity: 1; } }
+    .hud-corner::before, .hud-corner::after {
+      content: ""; position: absolute;
+      background: var(--cyan); box-shadow: 0 0 10px var(--cyan);
+    }
+    .hud-corner::before { width: 2px; height: 30px; }
+    .hud-corner::after  { width: 30px; height: 2px; }
+    .hud-tl { top:16px; left:16px; }
+    .hud-tl::before,.hud-tl::after { top:0; left:0; }
+    .hud-tr { top:16px; right:16px; transform: scaleX(-1); }
+    .hud-tr::before,.hud-tr::after { top:0; left:0; }
+    .hud-bl { bottom:16px; left:16px; transform: scaleY(-1); }
+    .hud-bl::before,.hud-bl::after { top:0; left:0; }
+    .hud-br { bottom:16px; right:16px; transform: scale(-1); }
+    .hud-br::before,.hud-br::after { top:0; left:0; }
 
+    header {
+      position: fixed; top: 0; width: 100%;
+      background: rgba(3,7,20,0.88); backdrop-filter: blur(14px);
+      padding: 1.2rem 3rem;
+      display: flex; justify-content: space-between; align-items: center;
+      z-index: 100; border-bottom: 1px solid rgba(0,255,245,0.2);
+    }
+    .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 900; letter-spacing: 5px;
+      background: linear-gradient(90deg, #ffae00, #fffde0, #ffd700, #ffae00);
+      background-size: 300%; -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: logoFlow 7s linear infinite; text-decoration: none;
+    }
+    @keyframes logoFlow { 0% { background-position: 0%; } 100% { background-position: 300%; } }
+    .social-icons { display: flex; gap: 2rem; }
+    .social-icon {
+      font-size: 2.2rem; color: var(--cyan);
+      transition: all 0.4s ease; text-shadow: 0 0 18px var(--glow-c);
+    }
+    .social-icon:hover {
+      transform: translateY(-10px) scale(1.35) rotate(12deg);
+      color: var(--gold); text-shadow: 0 0 35px var(--glow-g);
+    }
+
+    .container {
+      position: relative; z-index: 20;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 100dvh;
+      padding: 110px 1.5rem 3rem;
+      text-align: center;
+    }
+
+    .page-title-wrap {
+      opacity: 0; transform: translateY(36px);
+      animation: revealUp 1.4s cubic-bezier(0.16,1,0.3,1) forwards 0.5s;
+      margin-bottom: 1.5rem;
+    }
+    @keyframes revealUp { to { opacity: 1; transform: translateY(0); } }
+    .page-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2.6rem, 7vw, 5rem); font-weight: 900; letter-spacing: 4px;
+      background: linear-gradient(90deg, #ffae00 0%, #fffde0 45%, #ffd700 55%, #ffae00 100%);
+      background-size: 300%; -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: titleShine 10s linear infinite 1s;
+    }
+    @keyframes titleShine { 0% { background-position: 0%; } 100% { background-position: 300%; } }
+    .title-bar {
+      height: 3px; width: 0;
+      background: linear-gradient(90deg, transparent, var(--gold), var(--cyan), var(--gold), transparent);
+      margin: 10px auto 0; border-radius: 2px;
+      animation: barExpand 1s ease-out forwards 1.7s;
+      box-shadow: 0 0 12px var(--gold), 0 0 24px rgba(255,215,0,0.4);
+    }
+    @keyframes barExpand { to { width: 100%; } }
+    .page-sub {
+      font-size: clamp(1rem, 2.5vw, 1.3rem);
+      color: rgba(200,240,255,0.5); letter-spacing: 2px; margin-top: 0.8rem; font-weight: 600;
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2rem;
+      max-width: 1100px;
+      width: 100%;
+      margin-top: 1rem;
+      opacity: 0;
+      animation: revealUp 1.2s cubic-bezier(0.16,1,0.3,1) forwards 1.0s;
+    }
+
+    .game-card {
+      position: relative;
+      background: rgba(8,12,35,0.8);
+      border: 2px solid rgba(0,255,245,0.28);
+      border-radius: 22px;
+      padding: 2.5rem 2rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 16px 60px rgba(0,0,0,0.65);
+      backdrop-filter: blur(8px);
+      overflow: hidden;
+      display: flex; flex-direction: column; align-items: center; gap: 1rem;
+    }
+    .game-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(0,255,245,0.07), transparent 60%);
+      opacity: 0; transition: opacity 0.4s; pointer-events: none;
+    }
+    .game-card:hover::before { opacity: 1; }
+    .game-card:hover {
+      transform: translateY(-20px) scale(1.05);
+      box-shadow: 0 40px 120px rgba(255,215,0,0.4), 0 0 70px rgba(0,255,245,0.3);
+      border-color: var(--gold);
+    }
+
+    .game-icon {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      font-size: 2.2rem;
+      border: 2px solid rgba(0,255,245,0.3);
+      background: rgba(0,255,245,0.06);
+      box-shadow: 0 0 24px rgba(0,255,245,0.25);
+      transition: all 0.4s;
+    }
+    .game-card:hover .game-icon {
+      box-shadow: 0 0 50px rgba(255,215,0,0.6);
+      border-color: var(--gold);
+      background: rgba(255,215,0,0.08);
+    }
+
+    .game-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(1.1rem, 2.5vw, 1.5rem); font-weight: 900; letter-spacing: 2px;
+      background: linear-gradient(90deg, var(--cyan), var(--gold));
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .game-desc {
+      font-size: 0.88rem; color: rgba(200,240,255,0.5);
+      letter-spacing: 1px; line-height: 1.5; font-weight: 500;
+    }
+    .game-badge {
+      display: inline-block;
+      padding: 4px 14px; border-radius: 999px;
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase;
+      border: 1px solid rgba(0,255,245,0.35);
+      color: var(--cyan);
+      background: rgba(0,255,245,0.06);
+    }
+
+    .rune {
+      position: fixed; font-family: 'Orbitron', sans-serif;
+      font-size: 0.85rem; font-weight: 900; letter-spacing: 2px;
+      color: rgba(0,255,245,0.1); pointer-events: none; z-index: 6;
+      animation: runeFloat linear infinite; white-space: nowrap;
+    }
+    @keyframes runeFloat {
+      0%   { transform: translateY(0); opacity: 0.07; }
+      50%  { opacity: 0.14; }
+      100% { transform: translateY(-110px); opacity: 0.03; }
+    }
+
+    @media (max-width: 768px) {
+      header { padding: 1rem 1.5rem; }
+      .logo { font-size: clamp(1.5rem, 5.5vw, 2rem); letter-spacing: 3px; }
+      .social-icon { font-size: 1.9rem; }
+      .games-grid { grid-template-columns: 1fr; max-width: 420px; }
+      .hud-corner, .rune { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<video id="bg-video" autoplay loop muted playsinline>
+  <source src="../assets/videos/fire-sparks.mp4" type="video/mp4">
+</video>
+<canvas id="grid-canvas"></canvas>
+<canvas id="particle-canvas"></canvas>
+<div class="bg-glow"></div>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+<div class="hud-corner hud-tl"></div>
+<div class="hud-corner hud-tr"></div>
+<div class="hud-corner hud-bl"></div>
+<div class="hud-corner hud-br"></div>
+
+<div class="rune" style="left:7%;  top:66%; animation-duration:15s;">MLBB • RANK • MVP</div>
+<div class="rune" style="left:66%; top:60%; animation-duration:19s; animation-delay:3s">LEGENDARY • MYTHIC</div>
+<div class="rune" style="left:20%; top:80%; animation-duration:13s; animation-delay:6s">MOBAHIROSHI</div>
+<div class="rune" style="left:55%; top:74%; animation-duration:17s; animation-delay:2s">⬡ ◈ ✦ ◈ ⬡</div>
+
+<header>
+  <a href="../index.html" class="logo" style="text-decoration:none;">MOBAHIROSHI</a>
+  <div class="social-icons">
+    <a href="https://www.youtube.com/@Mobahiroshi" target="_blank" class="social-icon"><i class="fab fa-youtube"></i></a>
+    <a href="https://t.me/mobahiroshi" target="_blank" class="social-icon"><i class="fab fa-telegram-plane"></i></a>
+    <a href="https://www.instagram.com/mobahiroshi" target="_blank" class="social-icon"><i class="fab fa-instagram"></i></a>
+  </div>
+</header>
+
+<div class="container">
+  <div class="page-title-wrap">
+    <div class="page-title">МИНИ-ИГРЫ</div>
+    <div class="title-bar"></div>
+    <p class="page-sub">Испытай себя — кто настоящий знаток MLBB?</p>
+  </div>
+
+  <div class="games-grid">
+    <a class="game-card" href="guess-hero.html">
+      <div class="game-icon"><i class="fas fa-eye-slash"></i></div>
+      <div class="game-title">GUESS THE HERO</div>
+      <div class="game-desc">Угадай героя по силуэту за 15 секунд</div>
+      <span class="game-badge">Угадывалка</span>
+    </a>
+
+    <a class="game-card" href="trivia.html">
+      <div class="game-icon"><i class="fas fa-brain"></i></div>
+      <div class="game-title">MLBB TRIVIA</div>
+      <div class="game-desc">Проверь свои знания об игровой вселенной</div>
+      <span class="game-badge">Викторина</span>
+    </a>
+
+    <a class="game-card" href="challenge.html">
+      <div class="game-icon"><i class="fas fa-dice"></i></div>
+      <div class="game-title">CHALLENGE</div>
+      <div class="game-desc">Случайный вызов для хардкорного геймплея</div>
+      <span class="game-badge">Рандом</span>
+    </a>
+
+    <a class="game-card" href="lucky.html">
+      <div class="game-icon"><i class="fas fa-trophy"></i></div>
+      <div class="game-title">LUCKY VIEWER</div>
+      <div class="game-desc">Случайный победитель среди зрителей стрима</div>
+      <span class="game-badge">Розыгрыш</span>
+    </a>
+  </div>
 </div>
+
+<script>
+(function() {
+  const c = document.getElementById('grid-canvas');
+  const ctx = c.getContext('2d');
+  function resize() { c.width = innerWidth; c.height = innerHeight; draw(); }
+  function draw() {
+    ctx.clearRect(0,0,c.width,c.height);
+    const w=c.width,h=c.height,horizon=h*.55,vp={x:w/2,y:horizon};
+    const cols=18,rows=12,bottom=h+40,spread=w*1.4;
+    ctx.strokeStyle='rgba(0,220,255,0.2)'; ctx.lineWidth=0.8;
+    for(let i=0;i<=cols;i++){const bx=(w/2-spread/2)+(spread/cols)*i;ctx.beginPath();ctx.moveTo(vp.x,vp.y);ctx.lineTo(bx,bottom);ctx.stroke();}
+    for(let j=0;j<=rows;j++){const t=j/rows,e=t*t,y=horizon+(bottom-horizon)*e,xl=vp.x+(-spread/2)*e,xr=vp.x+(spread/2)*e;ctx.beginPath();ctx.moveTo(xl,y);ctx.lineTo(xr,y);ctx.stroke();}
+    const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,'rgba(3,7,20,1)');g.addColorStop(.45,'rgba(3,7,20,0)');ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+  }
+  window.addEventListener('resize',resize);resize();
+})();
+(function() {
+  const c=document.getElementById('particle-canvas'),ctx=c.getContext('2d');
+  let W,H,mouse={x:-9999,y:-9999};
+  function resize(){W=c.width=innerWidth;H=c.height=innerHeight;}
+  resize();window.addEventListener('resize',resize);
+  window.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
+  const pts=Array.from({length:65},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.4,vy:-(Math.random()*.5+.1),size:Math.random()*1.8+.4,life:Math.random(),maxLife:.6+Math.random()*.4,color:Math.random()<.5?'0,255,245':'255,215,0'}));
+  function loop(){
+    ctx.clearRect(0,0,W,H);
+    if(mouse.x>0){const g=ctx.createRadialGradient(mouse.x,mouse.y,0,mouse.x,mouse.y,110);g.addColorStop(0,'rgba(0,255,245,0.06)');g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
+    pts.forEach(p=>{
+      const dx=p.x-mouse.x,dy=p.y-mouse.y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<110){const f=(110-d)/110;p.vx+=(dx/d)*f*.5;p.vy+=(dy/d)*f*.5;}
+      p.vx*=.97;p.vy*=.97;p.x+=p.vx;p.y+=p.vy;p.life-=.003;
+      if(p.life<=0||p.y<-10){p.x=Math.random()*W;p.y=H+10;p.vx=(Math.random()-.5)*.4;p.vy=-(Math.random()*.5+.1);p.life=p.maxLife;p.color=Math.random()<.5?'0,255,245':'255,215,0';}
+      ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fillStyle=`rgba(${p.color},${(p.life/p.maxLife)*.7})`;ctx.fill();
+    });
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+document.body.classList.add('loaded');
+document.addEventListener('click',()=>{document.querySelectorAll('video').forEach(v=>{if(v.paused)v.play().catch(()=>{}); });},{once:true});
+</script>
+</body>
+</html>
