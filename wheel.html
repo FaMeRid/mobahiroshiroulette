@@ -4,1051 +4,1342 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MLBB Stream Wheel — MOBAHIROSHI</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
-:root{
 
-/* NIGHT THEME */
+/* ===== RESET ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
---bg-main:#030714;
---bg-secondary:#050d22;
-
---neon-cyan:#00fff5;
---neon-purple:#a855ff;
---gold:#ffd700;
-
---text-main:#e0ffff;
---text-dim:#7aa5ff;
-
---glow-cyan:0 0 20px #00fff5,0 0 60px rgba(0,255,245,0.5);
---glow-gold:0 0 20px #ffd700,0 0 60px rgba(255,215,0,0.4);
-
---card-bg:#0b0f1d;
-
---wheel-dark:#0d1225;
---wheel-light:#02040a;
-
+/* ===== DARK THEME (default) ===== */
+:root {
+  --bg-main: #030714;
+  --bg-card: #0d1225;
+  --text-main: #e0ffff;
+  --text-dim: #7aa5cc;
+  --gold: #ffd700;
+  --gold-dim: rgba(255,215,0,0.35);
+  --cyan: #00e5ff;
+  --border: rgba(0,255,245,0.15);
+  --btn-bg: rgba(15,20,45,0.85);
+  --btn-active-bg: linear-gradient(135deg, #ffd700, #ffaa00);
+  --btn-active-color: #000;
+  --overlay-bg: rgba(0,0,0,0.88);
+  --key-bg: rgba(10,15,40,0.95);
+  --lever-base: linear-gradient(145deg,#555,#111);
+  --lever-stick: linear-gradient(180deg,#ddd,#777);
+  --arena-border: rgba(255,215,0,0.35);
+  --arena-shadow: 0 0 40px rgba(255,215,0,0.5), 0 0 100px rgba(255,215,0,0.15);
+  --wheel-glow: drop-shadow(0 0 22px rgba(255,215,0,0.7)) drop-shadow(0 0 55px rgba(255,215,0,0.25));
+  --spotlight-color: linear-gradient(to bottom, rgba(255,240,150,0.18), rgba(255,240,150,0.04), transparent);
 }
 
 /* ===== LIGHT THEME ===== */
-
-body.light-theme{
-
---bg-main:#f4f7ff;
---bg-secondary:#ffffff;
-
---neon-cyan:#0096ff;
---neon-purple:#7a5cff;
---gold:#c89b3c;
-
---text-main:#1c1c1c;
---text-dim:#555;
-
---glow-cyan:0 0 15px #4db8ff;
---glow-gold:0 0 20px #c89b3c;
-
---card-bg:#ffffff;
-
---wheel-dark:#e8ecff;
---wheel-light:#ffffff;
-
+body.light {
+  --bg-main: #eef2ff;
+  --bg-card: #ffffff;
+  --text-main: #1a1a2e;
+  --text-dim: #4a5580;
+  --gold: #b88a00;
+  --gold-dim: rgba(184,138,0,0.3);
+  --cyan: #0055cc;
+  --border: rgba(0,80,200,0.15);
+  --btn-bg: rgba(215,222,255,0.85);
+  --btn-active-bg: linear-gradient(135deg,#1a3a8f,#2a55cc);
+  --btn-active-color: #fff;
+  --overlay-bg: rgba(10,20,80,0.72);
+  --key-bg: rgba(220,228,255,0.97);
+  --lever-base: linear-gradient(145deg,#b0b8d0,#8090b0);
+  --lever-stick: linear-gradient(180deg,#ccd0e0,#909ab8);
+  --arena-border: rgba(184,138,0,0.45);
+  --arena-shadow: 0 0 30px rgba(184,138,0,0.35), 0 0 60px rgba(184,138,0,0.12);
+  --wheel-glow: drop-shadow(0 0 16px rgba(184,138,0,0.5)) drop-shadow(0 0 35px rgba(184,138,0,0.18));
+  --spotlight-color: linear-gradient(to bottom, rgba(255,220,80,0.12), transparent);
 }
-* { margin:0; padding:0; box-sizing:border-box; }
+
+/* ===== BODY ===== */
 body {
-  background: var(--bg-color);
-  color: var(--text-color);
-  font-family: Orbitron, sans-serif;
-  overflow: hidden;
-  transition: background 0.5s, color 0.5s;
+  font-family: 'Orbitron', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: var(--text-main);
+  transition: color 0.4s;
 }
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  transition: background 0.5s;
+}
+body:not(.light)::before {
+  background:
+    radial-gradient(circle at 50% 35%, rgba(0,120,220,0.22), transparent 45%),
+    radial-gradient(circle at 15% 75%, rgba(0,200,200,0.12), transparent 50%),
+    radial-gradient(circle at 85% 20%, rgba(255,215,0,0.10), transparent 50%),
+    linear-gradient(175deg, #0d1433 0%, #04081a 55%, #02040c 100%);
+}
+body.light::before {
+  background:
+    radial-gradient(circle at 50% 35%, rgba(100,160,255,0.2), transparent 45%),
+    radial-gradient(circle at 15% 75%, rgba(100,200,255,0.1), transparent 50%),
+    radial-gradient(circle at 85% 20%, rgba(255,200,0,0.08), transparent 50%),
+    linear-gradient(175deg, #dde5ff 0%, #eef2ff 55%, #f0f4ff 100%);
+}
+
+/* ===== PARTICLES ===== */
+#particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+body.light #particles { opacity: 0.3; }
+
+/* ===== HEADER ===== */
 header {
   position: fixed;
   top: 0;
   width: 100%;
-  background: rgba(3,7,20,0.88);
-  backdrop-filter: blur(14px);
-  padding: 1.2rem 3rem;
+  z-index: 200;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  z-index: 100;
-  border-bottom: 1px solid rgba(0,255,245,0.2);
+  padding: 0.85rem 2rem;
+  backdrop-filter: blur(16px);
+  transition: background 0.4s, border-color 0.4s;
 }
-body.light-theme header { background: rgba(255,255,255,0.9); border-bottom: 1px solid rgba(0,0,0,0.1);}
-.logo{
-
-font-size:clamp(2.6rem,6vw,3.8rem);
-
-background:linear-gradient(
-90deg,
-#ffd700,
-#fff6a0,
-#ffd700,
-#ffae00
-);
-
-background-size:300%;
-
--webkit-background-clip:text;
-color:transparent;
-
-animation:logoFlow 6s linear infinite;
-
-letter-spacing:6px;
-
+body:not(.light) header {
+  background: rgba(3,7,20,0.88);
+  border-bottom: 1px solid var(--border);
+}
+body.light header {
+  background: rgba(238,242,255,0.92);
+  border-bottom: 1px solid rgba(0,80,200,0.12);
+  box-shadow: 0 1px 12px rgba(0,50,200,0.07);
 }
 
-@keyframes logoFlow{
-
-0%{background-position:0%;}
-100%{background-position:300%;}
-
+.logo {
+  font-size: clamp(1.2rem, 3.5vw, 2.5rem);
+  font-weight: 800;
+  letter-spacing: 5px;
+  text-decoration: none;
+  background: linear-gradient(90deg, #ffd700, #fffaaa, #ffd700, #ffaa00);
+  background-size: 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: logoFlow 7s linear infinite;
 }
-body.light-theme .logo { color:#333; text-shadow:none; }
-.social-icons { display:flex; gap:2rem; }
-.social-icon { font-size:2.6rem; color:var(--neon-cyan); transition: all 0.5s ease; text-shadow:0 0 20px var(--shadow-neon);}
-body.light-theme .social-icon { color:#007bff; text-shadow:none; }
-.social-icon:hover { transform: translateY(-12px) scale(1.4) rotate(15deg); color: var(--gold); text-shadow: 0 0 40px var(--gold);}
-#theme-toggle { background:none; border:none; font-size:2rem; color:var(--neon-cyan); cursor:pointer; margin-left:1rem;}
-body.light-theme #theme-toggle { color:#ffcc00; }
-
-.container { display:flex; height:100vh; align-items:center; justify-content:space-between; padding:0 120px; padding-top:80px; }
-#wheelArea{ width:800px; height:800px; overflow:hidden; position:relative; border-radius:450px; }
-#wheel { width:100%; height:100%; border-radius:50%; background: radial-gradient(circle,var(--wheel-bg),var(--wheel-alt)); box-shadow:0 0 30px var(--gold),0 0 120px rgba(255,215,0,.4), inset 0 0 80px rgba(0,0,0,.9); transform-style: preserve-3d; filter: drop-shadow(0 0 40px gold); position:absolute; left:-450px; }
-.arrow{
-
-position:absolute;
-left:calc(37%);
-top:50%;
-
-transform:translateX(-50%);
-
-width:0;
-height:0;
-
-border-top:50px solid transparent;
-border-bottom:50px solid transparent;
-border-right:70px solid gold;
-
-filter:
-
-drop-shadow(0 0 20px gold)
-drop-shadow(0 0 40px rgba(255,215,0,0.8));
-
+body.light .logo {
+  background: linear-gradient(90deg, #b88a00, #7a60d0, #b88a00);
+  background-size: 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
-#buildOverlay { position: fixed; inset:0; background:rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index:200; opacity:0; transition:0.5s; }
-body.light-theme #buildOverlay { background:rgba(255,255,255,0.9);}
-#buildOverlay.visible { display:flex; opacity:1; }
-#buildContent { background:var(--card-bg); padding:40px 60px; border-radius:24px; box-shadow:0 0 60px var(--gold); max-width:90vw; max-height:80vh; overflow-y:auto; color:var(--gold); font-family:'Orbitron',monospace; text-align:center; }
-#closeBuild { position:absolute; top:24px; right:24px; background:none; border:none; font-size:2.4rem; color:var(--gold); cursor:pointer; filter:drop-shadow(0 0 6px var(--gold)); transition:color 0.3s;}
-#closeBuild:hover { color:#fff; }
-#lever{
-position:absolute;
-bottom:90px;
-left:50%;
-transform:translateX(-50%);
-width:160px;
-height:260px;
-cursor:pointer;
-display:flex;
-justify-content:center;
-align-items:flex-end;
+@keyframes logoFlow {
+  0%   { background-position: 0%; }
+  100% { background-position: 300%; }
 }
 
-/* база */
-.lever-base{
-
-position:absolute;
-bottom:0;
-
-width:140px;
-height:50px;
-
-border-radius:14px;
-
-background:linear-gradient(145deg,#555,#111);
-
-box-shadow:
-inset 0 0 12px #000,
-0 0 25px rgba(0,0,0,0.8);
-
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+.social-icon {
+  font-size: 1.4rem;
+  color: var(--cyan);
+  text-decoration: none;
+  transition: color 0.3s, transform 0.3s, filter 0.3s;
+}
+.social-icon:hover {
+  color: var(--gold);
+  transform: translateY(-3px) scale(1.2);
+  filter: drop-shadow(0 0 8px var(--gold));
 }
 
-/* ручка */
-.lever-arm{
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--cyan);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: color 0.3s, transform 0.2s;
+  line-height: 1;
+}
+.icon-btn:hover { color: var(--gold); transform: scale(1.15); }
 
-position:absolute;
-bottom:30px;
-
-display:flex;
-flex-direction:column;
-align-items:center;
-
-transform-origin:bottom;
-transition:transform .25s ease;
-
+/* ===== KEYBOARD HINTS PANEL ===== */
+#keyHints {
+  position: fixed;
+  top: 64px;
+  right: 1.4rem;
+  z-index: 300;
+  background: var(--key-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+  min-width: 210px;
+  display: none;
+  animation: fadeDown 0.2s ease-out;
+}
+#keyHints.show { display: block; }
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hints-title {
+  font-size: 0.6rem;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+.hint-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 7px;
+  font-size: 0.72rem;
+  color: var(--text-main);
+}
+.hint-row:last-child { margin-bottom: 0; }
+kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 5px;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+body:not(.light) kbd {
+  background: rgba(0,180,255,0.13);
+  border: 1px solid rgba(0,180,255,0.3);
+  color: #7ad4ff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+body.light kbd {
+  background: rgba(50,100,220,0.09);
+  border: 1px solid rgba(50,100,220,0.22);
+  color: #334499;
+  box-shadow: 0 2px 4px rgba(0,0,50,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
 }
 
-/* красная ручка */
-.lever-knob{
-
-width:40px;
-height:40px;
-
-border-radius:50%;
-
-margin-top:8px;
-
-background:radial-gradient(
-circle at 30% 30%,
-#ff7070,
-#b30000
-);
-
-box-shadow:
-0 0 25px red,
-0 0 50px rgba(255,0,0,.7),
-inset 0 0 8px rgba(0,0,0,.7);
-
+/* ===== MAIN LAYOUT ===== */
+.container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.5rem, 4vw, 5rem);
+  min-height: 100vh;
+  padding: 80px clamp(1rem, 4vw, 4rem) 1.5rem;
+  flex-wrap: wrap;
 }
 
-/* металлическая палка */
-.lever-stick{
-
-width:20px;
-height:150px;
-
-background:linear-gradient(
-180deg,
-#e5e5e5,
-#777
-);
-
-border-radius:6px;
-
-box-shadow:
-inset 0 0 6px #000,
-0 0 10px rgba(255,255,255,0.3);
-
+/* ===== WHEEL AREA ===== */
+#wheelArea {
+  position: relative;
+  width: clamp(260px, 44vw, 560px);
+  height: clamp(260px, 44vw, 560px);
+  flex-shrink: 0;
 }
 
-/* анимация */
-#lever.pull .lever-arm{
-animation: leverPull 0.6s ease;
+.arena-ring {
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  pointer-events: none;
+  border: 3px solid var(--arena-border);
+  box-shadow: var(--arena-shadow);
+  animation: arenaRotate 40s linear infinite;
+}
+@keyframes arenaRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
-@keyframes leverPull{
-
-0%{transform:rotate(0deg)}
-25%{transform:rotate(60deg)}
-50%{transform:rotate(35deg)}
-75%{transform:rotate(48deg)}
-100%{transform:rotate(0deg)}
-
+.spotlight {
+  position: absolute;
+  top: -60%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120%;
+  height: 120%;
+  pointer-events: none;
+  background: var(--spotlight-color);
+  clip-path: polygon(40% 0%, 60% 0%, 100% 100%, 0% 100%);
+  filter: blur(30px);
+  animation: spotlightMove 9s ease-in-out infinite;
 }
-#lever:hover .lever-ball{
-box-shadow:
-0 0 30px red,
-0 0 60px red;
-}
-@keyframes leverPull{
-
-0%{
-transform:rotate(0deg);
+@keyframes spotlightMove {
+  0%,100% { opacity:0.6; transform:translateX(-50%) rotate(-3deg); }
+  50%      { opacity:1;   transform:translateX(-50%) rotate(3deg); }
 }
 
-20%{
-transform:rotate(55deg); /* мощный рывок вниз */
+#wheel {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: block;
+  animation: wheelGlow 4s ease-in-out infinite;
+}
+@keyframes wheelGlow {
+  0%,100% { filter: var(--wheel-glow); }
+  50%     { filter: drop-shadow(0 0 40px rgba(255,215,0,0.95)) drop-shadow(0 0 70px rgba(255,215,0,0.3)); }
 }
 
-40%{
-transform:rotate(30deg); /* отдача вверх */
+.arrow {
+  position: absolute;
+  left: -28px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 22px solid transparent;
+  border-bottom: 22px solid transparent;
+  border-left: 32px solid var(--gold);
+  filter: drop-shadow(0 0 8px var(--gold));
+  z-index: 10;
 }
 
-60%{
-transform:rotate(45deg); /* вторая тряска */
+/* ===== RIGHT CONTROLS ===== */
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  min-width: 170px;
 }
 
-80%{
-transform:rotate(35deg);
+.wheel-label {
+  text-align: center;
+}
+.wheel-label-name {
+  display: block;
+  font-size: clamp(0.9rem, 2.5vw, 1.35rem);
+  font-weight: 800;
+  color: var(--gold);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-shadow: 0 0 14px var(--gold-dim);
+}
+.wheel-label-step {
+  display: block;
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  margin-top: 2px;
 }
 
-100%{
-transform:rotate(0deg); /* возвращается */
+/* Category buttons */
+.wheel-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
+}
+.menu-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-transform: uppercase;
+  background: var(--btn-bg);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  backdrop-filter: blur(10px);
+  width: 100%;
+}
+.menu-btn:hover, .menu-btn.active {
+  background: var(--btn-active-bg);
+  color: var(--btn-active-color);
+  border-color: transparent;
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 0 18px var(--gold-dim);
+}
+body.light .menu-btn {
+  background: rgba(215,222,255,0.8);
+  border-color: rgba(100,130,220,0.28);
+  color: #1a3a8f;
+}
+body.light .menu-btn:hover, body.light .menu-btn.active {
+  box-shadow: 0 4px 16px rgba(26,58,143,0.22);
+}
+.btn-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 4px;
+  font-size: 0.58rem;
+  opacity: 0.6;
+  border: 1px solid currentColor;
+  background: rgba(0,0,0,0.2);
+  flex-shrink: 0;
+}
+.menu-btn.active .btn-key,
+.menu-btn:hover .btn-key { opacity: 0.75; }
+
+/* ===== LEVER ===== */
+.lever-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  height: 130px;
+  width: 75px;
+  user-select: none;
+}
+.lever-base {
+  position: absolute;
+  bottom: 0;
+  width: 68px;
+  height: 22px;
+  border-radius: 8px;
+  background: var(--lever-base);
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.6);
+}
+.lever-arm {
+  position: absolute;
+  bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-origin: bottom center;
+}
+.lever-arm.pull {
+  animation: leverPull 0.65s ease;
+}
+@keyframes leverPull {
+  0%   { transform: rotate(0deg); }
+  20%  { transform: rotate(52deg); }
+  40%  { transform: rotate(28deg); }
+  60%  { transform: rotate(44deg); }
+  80%  { transform: rotate(32deg); }
+  100% { transform: rotate(0deg); }
+}
+.lever-knob {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ff7070, #b30000);
+  box-shadow: 0 0 16px rgba(255,60,60,0.8), 0 0 32px rgba(255,0,0,0.35);
+  transition: box-shadow 0.3s;
+}
+.lever-wrap:hover .lever-knob {
+  box-shadow: 0 0 28px red, 0 0 55px rgba(255,50,50,0.65);
+}
+.lever-stick {
+  width: 11px;
+  height: 74px;
+  border-radius: 4px;
+  background: var(--lever-stick);
+  box-shadow: inset 0 0 4px rgba(0,0,0,0.4);
 }
 
+/* ===== BOTTOM BUTTONS ===== */
+.bottom-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
 }
-#lever.pull{
-animation: leverShake 0.65s;
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s;
+  text-transform: uppercase;
+  width: 100%;
 }
-
-@keyframes leverShake{
-
-0%{transform:translateX(-50%) translateY(0)}
-20%{transform:translateX(-50%) translateY(4px)}
-40%{transform:translateX(-50%) translateY(-3px)}
-60%{transform:translateX(-50%) translateY(3px)}
-80%{transform:translateX(-50%) translateY(-2px)}
-100%{transform:translateX(-50%) translateY(0)}
-
+.reshuffle-btn {
+  background: rgba(0,200,255,0.07);
+  border: 1px solid rgba(0,200,255,0.28);
+  color: var(--cyan);
 }
-#showBuildBtn{ position:absolute; bottom:20px; left:50%; transform:translateX(-50%); padding:10px 30px; font-family:Orbitron; font-size:20px; border:none; border-radius:12px; cursor:pointer; background:var(--gold); color:#000; box-shadow:0 0 20px var(--gold); transition:.3s;}
-#showBuildBtn:hover{ transform:translateX(-50%) scale(1.05); box-shadow:0 0 40px var(--gold);}
-#wheelMenu{ position:absolute; right:80px; top:200px; display:flex; flex-direction:column; gap:15px;}
-#wheelMenu button{
-
-padding:14px 30px;
-
-font-family:Orbitron;
-font-weight:700;
-
-border-radius:14px;
-
-background:
-
-linear-gradient(
-145deg,
-rgba(40,40,60,0.7),
-rgba(10,10,20,0.9)
-);
-
-border:1px solid rgba(255,215,0,0.4);
-
-color:gold;
-
-backdrop-filter:blur(10px);
-
-transition:all .35s;
-
-box-shadow:
-
-0 0 10px rgba(255,215,0,0.2);
-
+.reshuffle-btn:hover {
+  background: rgba(0,200,255,0.18);
+  box-shadow: 0 0 14px rgba(0,200,255,0.28);
+  transform: translateY(-1px);
 }
-
-#wheelMenu button:hover{
-
-transform:translateY(-5px) scale(1.05);
-
-box-shadow:
-
-0 0 20px gold,
-0 0 40px rgba(255,215,0,0.4);
-
-background:linear-gradient(
-145deg,
-#ffd700,
-#ffae00
-);
-
-color:black;
-
+body.light .reshuffle-btn {
+  background: rgba(0,80,200,0.06);
+  border-color: rgba(0,80,200,0.22);
 }
-#centerWinner{ position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; z-index:150; pointer-events:none; opacity:0; transition:opacity 1s ease;}
-#centerWinner img{ width:260px; filter:drop-shadow(0 0 30px gold);}
-#centerWinner h2{ font-size:48px; color:gold; margin-top:15px;}
-@media (max-width:768px){ #wheelArea{ width:100vw; height:100vw; transform:translateX(0); } .container{ flex-direction:column; padding:0 20px; padding-top:100px; } #wheelMenu{ right:20px; top:120px; } }
-#centerWinner video {
-  max-width: 500px;
-  border-radius: 20px;
-  box-shadow: 0 0 40px gold, 0 0 80px #ffdd00;
-  animation: winnerPop 0.8s ease-out;
+body.light .reshuffle-btn:hover {
+  background: rgba(0,80,200,0.13);
 }
+.build-btn {
+  background: rgba(255,215,0,0.09);
+  border: 1px solid rgba(255,215,0,0.35);
+  color: var(--gold);
+}
+.build-btn:hover {
+  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  color: #000;
+  border-color: transparent;
+  box-shadow: 0 0 18px rgba(255,215,0,0.45);
+  transform: translateY(-1px);
+}
+body.light .build-btn { color: #8a6800; background: rgba(184,138,0,0.09); border-color: rgba(184,138,0,0.3); }
+body.light .build-btn:hover { background: linear-gradient(135deg,#b88a00,#a07a00); color:#fff; border-color:transparent; box-shadow:0 4px 16px rgba(184,138,0,0.28); }
 
+/* ===== WINNER OVERLAY ===== */
+#winnerOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: var(--overlay-bg);
+  backdrop-filter: blur(7px);
+  cursor: pointer;
+  animation: fadeIn 0.35s ease-out;
+}
+#winnerOverlay.show { display: flex; }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.winner-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  animation: winnerPop 0.55s cubic-bezier(0.34,1.56,0.64,1);
+}
 @keyframes winnerPop {
-  0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+  0%   { transform: scale(0.35) rotate(-8deg); opacity: 0; }
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
-/* ===== GAME LOBBY BACKGROUND ===== */
-
-body{
-
-background:
-radial-gradient(circle at 20% 30%, rgba(0,255,255,0.12), transparent 40%),
-radial-gradient(circle at 80% 70%, rgba(255,215,0,0.12), transparent 40%),
-linear-gradient(160deg,var(--bg-main),var(--bg-secondary));
-
-color:var(--text-main);
-
-transition:background 0.6s,color 0.6s;
-
+#winnerImg {
+  width: clamp(140px, 24vw, 260px);
+  height: clamp(140px, 24vw, 260px);
+  object-fit: contain;
+  border-radius: 16px;
+}
+#winnerVideo {
+  max-width: min(90vw, 500px);
+  border-radius: 20px;
+  box-shadow: 0 0 40px rgba(255,215,0,0.55);
+}
+#winnerName {
+  font-size: clamp(1.3rem, 3.5vw, 2.3rem);
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-shadow: 0 0 28px var(--gold-dim);
+}
+#winnerRarity {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: 20px;
+}
+.r-common    { background:rgba(100,100,120,0.5); color:#ccc;    border:1px solid #888; }
+.r-rare      { background:rgba(50,100,160,0.5);  color:#7ec8e3; border:1px solid #4a90c8; }
+.r-epic      { background:rgba(120,50,180,0.5);  color:#d480ff; border:1px solid #9040cc; }
+.r-legendary { background:rgba(180,150,0,0.5);   color:#ffd700; border:1px solid #ccaa00; }
+.r-mythic    { background:rgba(200,30,30,0.5);   color:#ff9090; border:1px solid #cc3333; }
+.winner-hint {
+  font-size: 0.58rem;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
 }
 
-/* движущаяся дымка */
-body::before{
-content:"";
-position:fixed;
-inset:0;
-
-background:
-url("assets/bg/stars.png"),
-radial-gradient(circle at 20% 30%, rgba(0,255,255,0.1), transparent 40%),
-radial-gradient(circle at 80% 70%, rgba(255,215,0,0.1), transparent 40%);
-
-background-size:cover;
-
-animation: starMove 120s linear infinite;
-
-z-index:-3;
+/* ===== BUILD OVERLAY ===== */
+#buildOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: var(--overlay-bg);
+  backdrop-filter: blur(8px);
 }
-
-@keyframes starMove{
-0%{transform:translateY(0);}
-100%{transform:translateY(-200px);}
+#buildOverlay.show { display: flex; }
+#buildPanel {
+  position: relative;
+  max-width: min(92vw, 820px);
+  max-height: 80vh;
+  width: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: winnerPop 0.4s ease-out;
 }
-body::after{
-
-content:"";
-
-position:fixed;
-
-top:-50%;
-left:-50%;
-
-width:200%;
-height:200%;
-
-background:
-
-radial-gradient(circle,rgba(255,215,0,0.05),transparent 60%),
-radial-gradient(circle,rgba(0,255,255,0.05),transparent 60%);
-
-animation:lightMove 20s linear infinite;
-
-pointer-events:none;
-
-z-index:-2;
-
+body:not(.light) #buildPanel {
+  background: #0b1028;
+  border: 1px solid rgba(255,215,0,0.22);
+  box-shadow: 0 0 60px rgba(255,215,0,0.18), 0 20px 60px rgba(0,0,0,0.8);
 }
-
-@keyframes lightMove{
-
-0%{transform:rotate(0deg);}
-100%{transform:rotate(360deg);}
-
+body.light #buildPanel {
+  background: #fff;
+  border: 1px solid rgba(100,130,220,0.18);
+  box-shadow: 0 8px 40px rgba(0,30,120,0.14);
 }
-#particles{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-pointer-events:none;
-z-index:-1;
+.panel-header {
+  padding: 18px 20px 12px;
+  text-align: center;
+  font-size: clamp(0.8rem, 2vw, 1.1rem);
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold);
+  border-bottom: 1px solid var(--gold-dim);
 }
-#wheel{
-animation:wheelPulse 4s infinite ease-in-out;
+body.light .panel-header { color: #1a3a8f; border-bottom-color: rgba(100,130,220,0.15); }
+.panel-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: var(--gold);
+  transition: background 0.2s;
+  line-height: 1;
 }
+.panel-close:hover { background: rgba(255,215,0,0.12); }
+body.light .panel-close { color: #555; }
+body.light .panel-close:hover { background: rgba(0,0,0,0.06); }
+.table-wrap {
+  overflow: auto;
+  flex: 1;
+  padding: 0 14px;
+}
+.builds-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.7rem;
+}
+.builds-table th {
+  padding: 8px 10px;
+  text-align: left;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 700;
+  position: sticky;
+  top: 0;
+}
+body:not(.light) .builds-table th {
+  color: rgba(255,215,0,0.7);
+  border-bottom: 1px solid rgba(255,215,0,0.18);
+  background: #0b1028;
+}
+body.light .builds-table th {
+  color: #4060aa;
+  border-bottom: 1px solid rgba(60,100,220,0.13);
+  background: #fff;
+}
+.builds-table td {
+  padding: 8px 10px;
+  vertical-align: middle;
+}
+body:not(.light) .builds-table td { border-bottom: 1px solid rgba(255,255,255,0.04); color: #c8d8ff; }
+body.light .builds-table td { border-bottom: 1px solid rgba(0,0,0,0.05); color: #2a3a6a; }
+.builds-table tr:hover td { background: rgba(128,128,255,0.04); }
+.cell-num { text-align: center; color: var(--text-dim); font-weight: 700; }
+.cell-item { display: flex; align-items: center; gap: 8px; }
+.cell-item img { width: 34px; height: 34px; object-fit: contain; border-radius: 6px; }
+.cell-dash { color: #666; }
+.empty-msg {
+  padding: 32px 20px;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+.clear-btn {
+  margin: 10px 14px 14px;
+  padding: 7px 18px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s;
+  background: rgba(255,50,50,0.09);
+  border: 1px solid rgba(255,50,50,0.28);
+  color: #ff7070;
+  align-self: flex-start;
+}
+.clear-btn:hover { background: rgba(255,50,50,0.22); box-shadow: 0 0 10px rgba(255,50,50,0.25); }
+body.light .clear-btn { color: #cc3333; background: rgba(200,50,50,0.06); border-color: rgba(200,50,50,0.22); }
 
-@keyframes wheelPulse{
-0%{filter:drop-shadow(0 0 20px gold);}
-50%{filter:drop-shadow(0 0 60px gold);}
-100%{filter:drop-shadow(0 0 20px gold);}
+/* ===== RESPONSIVE ===== */
+@media (max-width: 680px) {
+  .container {
+    flex-direction: column;
+    padding: 72px 1rem 1.5rem;
+    gap: 1rem;
+    align-items: center;
+  }
+  #wheelArea {
+    width: min(84vw, 310px);
+    height: min(84vw, 310px);
+  }
+  .arrow {
+    left: -22px;
+    border-top: 17px solid transparent;
+    border-bottom: 17px solid transparent;
+    border-left: 25px solid var(--gold);
+  }
+  .controls {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem;
+    width: 100%;
+    min-width: unset;
+  }
+  .wheel-label { width: 100%; text-align: center; }
+  .wheel-menu { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 6px; }
+  .menu-btn { padding: 7px 11px; font-size: 0.62rem; width: auto; }
+  .btn-key { display: none; }
+  .lever-wrap { height: 98px; width: 58px; }
+  .lever-stick { height: 52px; }
+  .lever-knob { width: 19px; height: 19px; }
+  .bottom-btns { flex-direction: row; width: auto; gap: 6px; }
+  .action-btn { width: auto; padding: 7px 11px; font-size: 0.6rem; }
+  .logo { font-size: 1.05rem; letter-spacing: 3px; }
+  .social-icon { display: none; }
+  .header-right { gap: 0.5rem; }
+  #keyHints { right: 0.5rem; min-width: 185px; }
+}
+@media (max-width: 380px) {
+  #wheelArea { width: 80vw; height: 80vw; }
+  .menu-btn { font-size: 0.58rem; padding: 6px 9px; }
 }
 </style>
 </head>
 <body>
 
+<canvas id="particles"></canvas>
+
 <header>
-<a href="#"><div class="logo">MOBAHIROSHI</div></a>
-<div class="social-icons">
-<a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
-<a href="#" class="social-icon"><i class="fab fa-telegram-plane"></i></a>
-<a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
-<button id="theme-toggle"><i class="fas fa-moon"></i></button>
-</div>
+  <a href="#" class="logo">MOBAHIROSHI</a>
+  <div class="header-right">
+    <a href="https://youtube.com" class="social-icon" title="YouTube">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M23.5 6.2s-.2-1.7-1-2.4c-.9-1-1.9-1-2.4-1.1C17.1 2.5 12 2.5 12 2.5s-5.1 0-8.1.2c-.5.1-1.5.1-2.4 1.1-.7.7-1 2.4-1 2.4S.2 8.1.2 10v1.8c0 1.9.3 3.8.3 3.8s.2 1.7 1 2.4c.9 1 2.1.9 2.7 1C6.1 19.2 12 19.2 12 19.2s5.1 0 8.1-.3c.5-.1 1.5-.1 2.4-1.1.7-.7 1-2.4 1-2.4s.3-1.9.3-3.8V10c0-1.9-.3-3.8-.3-3.8zM9.7 14.7V8.5l6.5 3.1-6.5 3.1z"/></svg>
+    </a>
+    <a href="https://t.me/" class="social-icon" title="Telegram">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.9 8.2l-2 9.4c-.1.5-.5.7-.9.4l-2.5-1.9-1.2 1.1c-.1.1-.3.2-.6.2l.2-2.7 5.1-4.6c.2-.2 0-.3-.3-.1L6.1 14.3l-2.4-.8c-.5-.2-.5-.5.1-.7l11.1-4.3c.5-.2.9.1.8.7h.2z"/></svg>
+    </a>
+    <a href="https://instagram.com" class="social-icon" title="Instagram">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 3.3.1 4.8 1.7 4.9 4.9.1 1.3.1 1.6.1 4.8 0 3.2 0 3.6-.1 4.8-.1 3.2-1.7 4.8-4.9 4.9-1.3.1-1.6.1-4.9.1-3.2 0-3.6 0-4.8-.1-3.3-.1-4.8-1.7-4.9-4.9C2.2 15.6 2.2 15.2 2.2 12c0-3.2 0-3.6.1-4.8C2.4 3.9 4 2.3 7.2 2.3c1.2-.1 1.6-.1 4.8-.1zM12 0C8.7 0 8.3 0 7.1.1 2.7.3.3 2.7.1 7.1.0 8.3 0 8.7 0 12c0 3.3 0 3.7.1 4.9.2 4.4 2.6 6.8 7 7C8.3 24 8.7 24 12 24c3.3 0 3.7 0 4.9-.1 4.4-.2 6.8-2.6 7-7 .1-1.2.1-1.6.1-4.9 0-3.3 0-3.7-.1-4.9C23.7 2.7 21.3.3 16.9.1 15.7 0 15.3 0 12 0zm0 5.8a6.2 6.2 0 1 0 0 12.4A6.2 6.2 0 0 0 12 5.8zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.4-11.8a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z"/></svg>
+    </a>
+    <button class="icon-btn" id="themeBtn" title="Toggle theme">🌙</button>
+    <button class="icon-btn" id="keyBtn" title="Keyboard shortcuts">⌨️</button>
+  </div>
 </header>
 
-<div class="arrow"></div>
+<!-- Keyboard hints panel -->
+<div id="keyHints">
+  <div class="hints-title">Keyboard Shortcuts</div>
+  <div class="hint-row"><kbd>Space</kbd><span>Spin the wheel</span></div>
+  <div class="hint-row"><kbd>R</kbd><span>Reshuffle</span></div>
+  <div class="hint-row"><kbd>1</kbd><span>Heroes wheel</span></div>
+  <div class="hint-row"><kbd>2</kbd><span>Spells wheel</span></div>
+  <div class="hint-row"><kbd>3</kbd><span>Lanes wheel</span></div>
+  <div class="hint-row"><kbd>4</kbd><span>Emblems wheel</span></div>
+</div>
+
 <div class="container">
+  <!-- Wheel -->
   <div id="wheelArea">
-    <canvas id="wheel" width="1400" height="1400"></canvas>
+    <div class="arena-ring"></div>
+    <div class="spotlight"></div>
+    <canvas id="wheel" width="700" height="700"></canvas>
+    <div class="arrow"></div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="wheel-label">
+      <span class="wheel-label-name" id="labelName">Heroes</span>
+      <span class="wheel-label-step" id="labelStep">Step 1 / 4</span>
+    </div>
+
+    <div class="wheel-menu">
+      <button class="menu-btn active" data-type="heroes" onclick="setWheel('heroes')"><span class="btn-key">1</span>Heroes</button>
+      <button class="menu-btn" data-type="spells" onclick="setWheel('spells')"><span class="btn-key">2</span>Spells</button>
+      <button class="menu-btn" data-type="lanes"  onclick="setWheel('lanes')"><span class="btn-key">3</span>Lanes</button>
+      <button class="menu-btn" data-type="emblems" onclick="setWheel('emblems')"><span class="btn-key">4</span>Emblems</button>
+    </div>
+
+    <!-- Lever -->
+    <div class="lever-wrap" id="lever" onclick="pullLever()" title="Spin (Space)">
+      <div class="lever-base"></div>
+      <div class="lever-arm" id="leverArm">
+        <div class="lever-knob"></div>
+        <div class="lever-stick"></div>
+      </div>
+    </div>
+
+    <div class="bottom-btns">
+      <button class="action-btn reshuffle-btn" onclick="reshuffleWheel()" title="Reshuffle (R)">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4C7.58 4 4 7.58 4 12s3.58 8 8 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        Reshuffle
+      </button>
+      <button class="action-btn build-btn" onclick="openBuild()">Show Build</button>
+    </div>
   </div>
 </div>
 
-<div id="lever" onclick="pullLever()">
-
-<div class="lever-base"></div>
-
-<div class="lever-arm">
-
-<div class="lever-knob"></div>
-<div class="lever-stick"></div>
+<!-- Winner overlay -->
+<div id="winnerOverlay" onclick="closeWinner()">
+  <div class="winner-card" id="winnerCard">
+    <img id="winnerImg" src="" alt="" style="display:none">
+    <video id="winnerVideo" autoplay playsinline style="display:none"></video>
+    <div id="winnerName"></div>
+    <div id="winnerRarity"></div>
+    <div class="winner-hint">Click to dismiss</div>
+  </div>
 </div>
 
-</div>
-
-<div id="wheelMenu">
-<button onclick="setWheel('heroes')">Heroes</button>
-<button onclick="setWheel('spells')">Spells</button>
-<button onclick="setWheel('lanes')">Lanes</button>
-<button onclick="setWheel('emblems')">Emblems</button>
-</div>
-
-<button id="showBuildBtn">Show Build</button>
-
+<!-- Build overlay -->
 <div id="buildOverlay">
-<button id="closeBuild"><i class="fas fa-times"></i></button>
-<div id="buildContent"></div>
+  <div id="buildPanel">
+    <div class="panel-header">Your Builds</div>
+    <button class="panel-close" onclick="closeBuild()">✕</button>
+    <div id="buildBody"></div>
+  </div>
 </div>
 
-<audio id="tickSound" src="https://assets.codepen.io/605876/tick.mp3"></audio> <!-- замени на свой -->
-<audio id="spinSound" src="sounds/spin.mp3"></audio> <!-- замени на свой -->
-
-<div id="centerWinner"></div>
+<audio id="tickSound" src="sounds/tick.mp3"></audio>
+<audio id="spinSound" src="sounds/spin.mp3"></audio>
 
 <script>
-// ----------------------- ВСЁ В ОДНОМ ФАЙЛЕ -----------------------
-
-// Массивы данных
- const heroes = [
-  { name: "Aamon", rarity: "Epic", img: "assets/heroes/heroes-icons/hero1.png" },
-  { name: "Akai", rarity: "Rare", img: "assets/heroes/heroes-icons/hero2.png" },
-  { name: "Aldous", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero3.png" },
-  { name: "Alice", rarity: "Epic", img: "assets/heroes/heroes-icons/hero4.png", video: "assets/heroes/videos/alice.mp4"},
-  { name: "Alpha", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero5.png" },
-  { name: "Alucard", rarity: "Common", img: "assets/heroes/heroes-icons/hero6.png" },
-  { name: "Angela", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero7.png", video: "assets/heroes/videos/angela.mp4"},
-  { name: "Argus", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero8.png" },
-  { name: "Arlott", rarity: "Epic", img: "assets/heroes/heroes-icons/hero9.png" },
-  { name: "Atlas", rarity: "Epic", img: "assets/heroes/heroes-icons/hero10.png", video: "assets/heroes/videos/atlas.mp4"},
-  { name: "Aulus", rarity: "Rare", img: "assets/heroes/heroes-icons/hero11.png" },
-  { name: "Aurora", rarity: "Epic", img: "assets/heroes/heroes-icons/hero12.png" },
-  { name: "Badang", rarity: "Epic", img: "assets/heroes/heroes-icons/hero13.png" },
-  { name: "Balmond", rarity: "Common", img: "assets/heroes/heroes-icons/hero14.png" },
-  { name: "Bane", rarity: "Rare", img: "assets/heroes/heroes-icons/hero15.png" },
-  { name: "Barats", rarity: "Epic", img: "assets/heroes/heroes-icons/hero16.png" },
-  { name: "Baxia", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero17.png" },
-  { name: "Beatrix", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero18.png" },
-  { name: "Belerick", rarity: "Rare", img: "assets/heroes/heroes-icons/hero19.png" },
-  { name: "Benedetta", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero20.png" },
-  { name: "Brody", rarity: "Epic", img: "assets/heroes/heroes-icons/hero21.png" },
-  { name: "Bruno", rarity: "Rare", img: "assets/heroes/heroes-icons/hero22.png" },
-  { name: "Carmilla", rarity: "Rare", img: "assets/heroes/heroes-icons/hero23.png" },
-  { name: "Cecilion", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero24.png" },
-  { name: "Chang'e", rarity: "Rare", img: "assets/heroes/heroes-icons/hero25.png" },
-  { name: "Chip", rarity: "Epic", img: "assets/heroes/heroes-icons/hero26.png" },
-  { name: "Chou", rarity: "Epic", img: "assets/heroes/heroes-icons/hero27.png" },
-  { name: "Cici", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero28.png" },
-  { name: "Claude", rarity: "Rare", img: "assets/heroes/heroes-icons/hero29.png" },
-  { name: "Clint", rarity: "Epic", img: "assets/heroes/heroes-icons/hero30.png", video: "assets/heroes/videos/clint.mp4"},
-  { name: "Cyclops", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero31.png" },
-  { name: "Diggie", rarity: "Epic", img: "assets/heroes/heroes-icons/hero32.png" },
-  { name: "Dyrroth", rarity: "Epic", img: "assets/heroes/heroes-icons/hero33.png" },
-  { name: "Edith", rarity: "Epic", img: "assets/heroes/heroes-icons/hero34.png" },
-  { name: "Esmeralda", rarity: "Epic", img: "assets/heroes/heroes-icons/hero35.png" },
-  { name: "Estes", rarity: "Rare", img: "assets/heroes/heroes-icons/hero36.png", video: "assets/heroes/videos/estes.mp4"},
-  { name: "Eudora", rarity: "Rare", img: "assets/heroes/heroes-icons/hero37.png" },
-  { name: "Fanny", rarity: "Epic", img: "assets/heroes/heroes-icons/hero38.png" },
-  { name: "Faramis", rarity: "Rare", img: "assets/heroes/heroes-icons/hero39.png" },
-  { name: "Floryn", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero40.png" },
-  { name: "Franco", rarity: "Epic", img: "assets/heroes/heroes-icons/hero41.png" },
-  { name: "Fredrinn", rarity: "Rare", img: "assets/heroes/heroes-icons/hero42.png" },
-  { name: "Freya", rarity: "Rare", img: "assets/heroes/heroes-icons/hero43.png" },
-  { name: "Gatotkaca", rarity: "Epic", img: "assets/heroes/heroes-icons/hero44.png" },
-  { name: "Gloo", rarity: "Epic", img: "assets/heroes/heroes-icons/hero45.png" },
-  { name: "Gord", rarity: "Epic", img: "assets/heroes/heroes-icons/hero46.png" },
-  { name: "Granger", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero47.png" },
-  { name: "Grock", rarity: "Epic", img: "assets/heroes/heroes-icons/hero48.png" },
-  { name: "Guinevere", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero49.png" },
-  { name: "Gusion", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero50.png" },
-  { name: "Hanabi", rarity: "Epic", img: "assets/heroes/heroes-icons/hero51.png" },
-  { name: "Hanzo", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero52.png" },
-  { name: "Harith", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero53.png" },
-  { name: "Harley", rarity: "Epic", img: "assets/heroes/heroes-icons/hero54.png" },
-  { name: "Hayabusa", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero55.png" },
-  { name: "Helcurt", rarity: "Rare", img: "assets/heroes/heroes-icons/hero56.png" },
-  { name: "Hilda", rarity: "Epic", img: "assets/heroes/heroes-icons/hero57.png" },
-  { name: "Hylos", rarity: "Rare", img: "assets/heroes/heroes-icons/hero58.png" },
-  { name: "Irithel", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero59.png" },
-  { name: "Ixia", rarity: "Rare", img: "assets/heroes/heroes-icons/hero60.png" },
-  { name: "Jawhead", rarity: "Epic", img: "assets/heroes/heroes-icons/hero61.png" },
-  { name: "Johnson", rarity: "Common", img: "assets/heroes/heroes-icons/hero62.png" },
-  { name: "Joy", rarity: "Rare", img: "assets/heroes/heroes-icons/hero63.png" },
-  { name: "Julian", rarity: "Epic", img: "assets/heroes/heroes-icons/hero64.png" },
-  { name: "Kadita", rarity: "Epic", img: "assets/heroes/heroes-icons/hero65.png" },
-  { name: "Kagura", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero66.png" },
-  { name: "Kaja", rarity: "Epic", img: "assets/heroes/heroes-icons/hero67.png" },
-  { name: "Kalea", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero68.png" },
-  { name: "Karina", rarity: "Rare", img: "assets/heroes/heroes-icons/hero69.png" },
-  { name: "Karrie", rarity: "Epic", img: "assets/heroes/heroes-icons/hero70.png" },
-  { name: "Khaleed", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero71.png" },
-  { name: "Khufra", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero72.png" },
-  { name: "Kimmy", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero73.png" },
-  { name: "Lancelot", rarity: "Epic", img: "assets/heroes/heroes-icons/hero74.png" },
-  { name: "Lapu-Lapu", rarity: "Epic", img: "assets/heroes/heroes-icons/hero75.png" },
-  { name: "Layla", rarity: "Common", img: "assets/heroes/heroes-icons/hero76.png" },
-  { name: "Leomord", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero77.png" },
-  { name: "Lesley", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero78.png" },
-  { name: "Ling", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero79.png" },
-  { name: "Lolita", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero80.png" },
-  { name: "Lukas", rarity: "Epic", img: "assets/heroes/heroes-icons/hero81.png" },
-  { name: "Lunox", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero82.png" },
-  { name: "Luo Yi", rarity: "Epic", img: "assets/heroes/heroes-icons/hero83.png" },
-  { name: "Lylia", rarity: "Rare", img: "assets/heroes/heroes-icons/hero84.png" },
-  { name: "Marcel", rarity: "Epic", img: "assets/heroes/heroes-icons/hero85.png" },
-  { name: "Martis", rarity: "Epic", img: "assets/heroes/heroes-icons/hero86.png" }, 
-  { name: "Masha", rarity: "Epic", img: "assets/heroes/heroes-icons/hero87.png" },    
-  { name: "Mathilda", rarity: "Rare", img: "assets/heroes/heroes-icons/hero88.png" },
-  { name: "Melissa", rarity: "Epic", img: "assets/heroes/heroes-icons/hero89.png" },
-  { name: "Minotaur", rarity: "Rare", img: "assets/heroes/heroes-icons/hero90.png" },
-  { name: "Minsitthar", rarity: "Rare", img: "assets/heroes/heroes-icons/hero91.png" },
-  { name: "Miya", rarity: "Common", img: "assets/heroes/heroes-icons/hero92.png" },
-  { name: "Moskov", rarity: "Rare", img: "assets/heroes/heroes-icons/hero93.png" },
-  { name: "Nana", rarity: "Common", img: "assets/heroes/heroes-icons/hero94.png" },
-  { name: "Natalia", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero95.png" },
-  { name: "Natan", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero96.png" },
-  { name: "Nolan", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero97.png" },
-  { name: "Novaria", rarity: "Rare", img: "assets/heroes/heroes-icons/hero98.png" },
-  { name: "Obsidia", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero99.png" },
-  { name: "Odette", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero100.png" },
-  { name: "Paquito", rarity: "Epic", img: "assets/heroes/heroes-icons/hero101.png" },
-  { name: "Pharsa", rarity: "Epic", img: "assets/heroes/heroes-icons/hero102.png" },
-  { name: "Phoveus", rarity: "Epic", img: "assets/heroes/heroes-icons/hero103.png" },
-  { name: "Popol and Kupa", rarity: "Rare", img: "assets/heroes/heroes-icons/hero104.png" },
-  { name: "Rafaela", rarity: "Common", img: "assets/heroes/heroes-icons/hero105.png" },
-  { name: "Roger", rarity: "Epic", img: "assets/heroes/heroes-icons/hero106.png" },
-  { name: "Ruby", rarity: "Epic", img: "assets/heroes/heroes-icons/hero107.png" },
-  { name: "Saber", rarity: "Common", img: "assets/heroes/heroes-icons/hero108.png" },
-  { name: "Selena", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero109.png" },
-  { name: "Silvanna", rarity: "Rare", img: "assets/heroes/heroes-icons/hero110.png" },
-  { name: "Sora", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero111.png" },
-  { name: "Sun", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero112.png" },
-  { name: "Suyou", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero113.png" },
-  { name: "Terizla", rarity: "Epic", img: "assets/heroes/heroes-icons/hero114.png" },
-  { name: "Thamuz", rarity: "Epic", img: "assets/heroes/heroes-icons/hero115.png" },
-  { name: "Tigreal", rarity: "Common", img: "assets/heroes/heroes-icons/hero116.png" },
-  { name: "Uranus", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero117.png" },
-  { name: "Vale", rarity: "Rare", img: "assets/heroes/heroes-icons/hero118.png" },
-  { name: "Valentina", rarity: "Epic", img: "assets/heroes/heroes-icons/hero119.png" },
-  { name: "Valir", rarity: "Epic", img: "assets/heroes/heroes-icons/hero120.png" },
-  { name: "Vexana", rarity: "Rare", img: "assets/heroes/heroes-icons/hero121.png" },
-  { name: "Wanwan", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero122.png" },
-  { name: "X.Borg", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero123.png" },
-  { name: "Xavier", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero124.png" },
-  { name: "Yi Sun-shin", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero125.png" },
-  { name: "Yin", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero126.png" },
-  { name: "Yve", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero127.png" },
-  { name: "Yu Zhong", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero128.png" },
-  { name: "Zhask", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero129.png" },
-  { name: "Zhuxin", rarity: "Legendary", img: "assets/heroes/heroes-icons/hero130.png" },
-  { name: "Zilong", rarity: "Common", img: "assets/heroes/heroes-icons/hero131.png" },
-  { name: "Zetian", rarity: "Mythic", img: "assets/heroes/heroes-icons/hero132.png" }
+// ==================== DATA ====================
+const heroes = [
+  { name:"Aamon", rarity:"Epic", img:"assets/heroes/heroes-icons/hero1.png" },
+  { name:"Akai", rarity:"Rare", img:"assets/heroes/heroes-icons/hero2.png" },
+  { name:"Aldous", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero3.png" },
+  { name:"Alice", rarity:"Epic", img:"assets/heroes/heroes-icons/hero4.png" },
+  { name:"Alpha", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero5.png" },
+  { name:"Alucard", rarity:"Common", img:"assets/heroes/heroes-icons/hero6.png" },
+  { name:"Angela", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero7.png" },
+  { name:"Argus", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero8.png" },
+  { name:"Arlott", rarity:"Epic", img:"assets/heroes/heroes-icons/hero9.png" },
+  { name:"Atlas", rarity:"Epic", img:"assets/heroes/heroes-icons/hero10.png" },
+  { name:"Aulus", rarity:"Rare", img:"assets/heroes/heroes-icons/hero11.png" },
+  { name:"Aurora", rarity:"Epic", img:"assets/heroes/heroes-icons/hero12.png" },
+  { name:"Badang", rarity:"Epic", img:"assets/heroes/heroes-icons/hero13.png" },
+  { name:"Balmond", rarity:"Common", img:"assets/heroes/heroes-icons/hero14.png" },
+  { name:"Bane", rarity:"Rare", img:"assets/heroes/heroes-icons/hero15.png" },
+  { name:"Barats", rarity:"Epic", img:"assets/heroes/heroes-icons/hero16.png" },
+  { name:"Baxia", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero17.png" },
+  { name:"Beatrix", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero18.png" },
+  { name:"Belerick", rarity:"Rare", img:"assets/heroes/heroes-icons/hero19.png" },
+  { name:"Benedetta", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero20.png" },
+  { name:"Brody", rarity:"Epic", img:"assets/heroes/heroes-icons/hero21.png" },
+  { name:"Bruno", rarity:"Rare", img:"assets/heroes/heroes-icons/hero22.png" },
+  { name:"Carmilla", rarity:"Rare", img:"assets/heroes/heroes-icons/hero23.png" },
+  { name:"Cecilion", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero24.png" },
+  { name:"Chang'e", rarity:"Rare", img:"assets/heroes/heroes-icons/hero25.png" },
+  { name:"Chip", rarity:"Epic", img:"assets/heroes/heroes-icons/hero26.png" },
+  { name:"Chou", rarity:"Epic", img:"assets/heroes/heroes-icons/hero27.png" },
+  { name:"Cici", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero28.png" },
+  { name:"Claude", rarity:"Rare", img:"assets/heroes/heroes-icons/hero29.png" },
+  { name:"Clint", rarity:"Epic", img:"assets/heroes/heroes-icons/hero30.png" },
+  { name:"Cyclops", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero31.png" },
+  { name:"Diggie", rarity:"Epic", img:"assets/heroes/heroes-icons/hero32.png" },
+  { name:"Dyrroth", rarity:"Epic", img:"assets/heroes/heroes-icons/hero33.png" },
+  { name:"Edith", rarity:"Epic", img:"assets/heroes/heroes-icons/hero34.png" },
+  { name:"Esmeralda", rarity:"Epic", img:"assets/heroes/heroes-icons/hero35.png" },
+  { name:"Estes", rarity:"Rare", img:"assets/heroes/heroes-icons/hero36.png" },
+  { name:"Eudora", rarity:"Rare", img:"assets/heroes/heroes-icons/hero37.png" },
+  { name:"Fanny", rarity:"Epic", img:"assets/heroes/heroes-icons/hero38.png" },
+  { name:"Faramis", rarity:"Rare", img:"assets/heroes/heroes-icons/hero39.png" },
+  { name:"Floryn", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero40.png" },
+  { name:"Franco", rarity:"Epic", img:"assets/heroes/heroes-icons/hero41.png" },
+  { name:"Fredrinn", rarity:"Rare", img:"assets/heroes/heroes-icons/hero42.png" },
+  { name:"Freya", rarity:"Rare", img:"assets/heroes/heroes-icons/hero43.png" },
+  { name:"Gatotkaca", rarity:"Epic", img:"assets/heroes/heroes-icons/hero44.png" },
+  { name:"Gloo", rarity:"Epic", img:"assets/heroes/heroes-icons/hero45.png" },
+  { name:"Gord", rarity:"Epic", img:"assets/heroes/heroes-icons/hero46.png" },
+  { name:"Granger", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero47.png" },
+  { name:"Grock", rarity:"Epic", img:"assets/heroes/heroes-icons/hero48.png" },
+  { name:"Guinevere", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero49.png" },
+  { name:"Gusion", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero50.png" },
+  { name:"Hanabi", rarity:"Epic", img:"assets/heroes/heroes-icons/hero51.png" },
+  { name:"Hanzo", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero52.png" },
+  { name:"Harith", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero53.png" },
+  { name:"Harley", rarity:"Epic", img:"assets/heroes/heroes-icons/hero54.png" },
+  { name:"Hayabusa", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero55.png" },
+  { name:"Helcurt", rarity:"Rare", img:"assets/heroes/heroes-icons/hero56.png" },
+  { name:"Hilda", rarity:"Epic", img:"assets/heroes/heroes-icons/hero57.png" },
+  { name:"Hylos", rarity:"Rare", img:"assets/heroes/heroes-icons/hero58.png" },
+  { name:"Irithel", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero59.png" },
+  { name:"Ixia", rarity:"Rare", img:"assets/heroes/heroes-icons/hero60.png" },
+  { name:"Jawhead", rarity:"Epic", img:"assets/heroes/heroes-icons/hero61.png" },
+  { name:"Johnson", rarity:"Common", img:"assets/heroes/heroes-icons/hero62.png" },
+  { name:"Joy", rarity:"Rare", img:"assets/heroes/heroes-icons/hero63.png" },
+  { name:"Julian", rarity:"Epic", img:"assets/heroes/heroes-icons/hero64.png" },
+  { name:"Kadita", rarity:"Epic", img:"assets/heroes/heroes-icons/hero65.png" },
+  { name:"Kagura", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero66.png" },
+  { name:"Kaja", rarity:"Epic", img:"assets/heroes/heroes-icons/hero67.png" },
+  { name:"Kalea", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero68.png" },
+  { name:"Karina", rarity:"Rare", img:"assets/heroes/heroes-icons/hero69.png" },
+  { name:"Karrie", rarity:"Epic", img:"assets/heroes/heroes-icons/hero70.png" },
+  { name:"Khaleed", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero71.png" },
+  { name:"Khufra", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero72.png" },
+  { name:"Kimmy", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero73.png" },
+  { name:"Lancelot", rarity:"Epic", img:"assets/heroes/heroes-icons/hero74.png" },
+  { name:"Lapu-Lapu", rarity:"Epic", img:"assets/heroes/heroes-icons/hero75.png" },
+  { name:"Layla", rarity:"Common", img:"assets/heroes/heroes-icons/hero76.png" },
+  { name:"Leomord", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero77.png" },
+  { name:"Lesley", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero78.png" },
+  { name:"Ling", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero79.png" },
+  { name:"Lolita", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero80.png" },
+  { name:"Lukas", rarity:"Epic", img:"assets/heroes/heroes-icons/hero81.png" },
+  { name:"Lunox", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero82.png" },
+  { name:"Luo Yi", rarity:"Epic", img:"assets/heroes/heroes-icons/hero83.png" },
+  { name:"Lylia", rarity:"Rare", img:"assets/heroes/heroes-icons/hero84.png" },
+  { name:"Marcel", rarity:"Epic", img:"assets/heroes/heroes-icons/hero85.png" },
+  { name:"Martis", rarity:"Epic", img:"assets/heroes/heroes-icons/hero86.png" },
+  { name:"Masha", rarity:"Epic", img:"assets/heroes/heroes-icons/hero87.png" },
+  { name:"Mathilda", rarity:"Rare", img:"assets/heroes/heroes-icons/hero88.png" },
+  { name:"Melissa", rarity:"Epic", img:"assets/heroes/heroes-icons/hero89.png" },
+  { name:"Minotaur", rarity:"Rare", img:"assets/heroes/heroes-icons/hero90.png" },
+  { name:"Minsitthar", rarity:"Rare", img:"assets/heroes/heroes-icons/hero91.png" },
+  { name:"Miya", rarity:"Common", img:"assets/heroes/heroes-icons/hero92.png" },
+  { name:"Moskov", rarity:"Rare", img:"assets/heroes/heroes-icons/hero93.png" },
+  { name:"Nana", rarity:"Common", img:"assets/heroes/heroes-icons/hero94.png" },
+  { name:"Natalia", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero95.png" },
+  { name:"Natan", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero96.png" },
+  { name:"Nolan", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero97.png" },
+  { name:"Novaria", rarity:"Rare", img:"assets/heroes/heroes-icons/hero98.png" },
+  { name:"Obsidia", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero99.png" },
+  { name:"Odette", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero100.png" },
+  { name:"Paquito", rarity:"Epic", img:"assets/heroes/heroes-icons/hero101.png" },
+  { name:"Pharsa", rarity:"Epic", img:"assets/heroes/heroes-icons/hero102.png" },
+  { name:"Phoveus", rarity:"Epic", img:"assets/heroes/heroes-icons/hero103.png" },
+  { name:"Popol and Kupa", rarity:"Rare", img:"assets/heroes/heroes-icons/hero104.png" },
+  { name:"Rafaela", rarity:"Common", img:"assets/heroes/heroes-icons/hero105.png" },
+  { name:"Roger", rarity:"Epic", img:"assets/heroes/heroes-icons/hero106.png" },
+  { name:"Ruby", rarity:"Epic", img:"assets/heroes/heroes-icons/hero107.png" },
+  { name:"Saber", rarity:"Common", img:"assets/heroes/heroes-icons/hero108.png" },
+  { name:"Selena", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero109.png" },
+  { name:"Silvanna", rarity:"Rare", img:"assets/heroes/heroes-icons/hero110.png" },
+  { name:"Sora", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero111.png" },
+  { name:"Sun", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero112.png" },
+  { name:"Suyou", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero113.png" },
+  { name:"Terizla", rarity:"Epic", img:"assets/heroes/heroes-icons/hero114.png" },
+  { name:"Thamuz", rarity:"Epic", img:"assets/heroes/heroes-icons/hero115.png" },
+  { name:"Tigreal", rarity:"Common", img:"assets/heroes/heroes-icons/hero116.png" },
+  { name:"Uranus", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero117.png" },
+  { name:"Vale", rarity:"Rare", img:"assets/heroes/heroes-icons/hero118.png" },
+  { name:"Valentina", rarity:"Epic", img:"assets/heroes/heroes-icons/hero119.png" },
+  { name:"Valir", rarity:"Epic", img:"assets/heroes/heroes-icons/hero120.png" },
+  { name:"Vexana", rarity:"Rare", img:"assets/heroes/heroes-icons/hero121.png" },
+  { name:"Wanwan", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero122.png" },
+  { name:"X.Borg", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero123.png" },
+  { name:"Xavier", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero124.png" },
+  { name:"Yi Sun-shin", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero125.png" },
+  { name:"Yin", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero126.png" },
+  { name:"Yve", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero127.png" },
+  { name:"Yu Zhong", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero128.png" },
+  { name:"Zhask", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero129.png" },
+  { name:"Zhuxin", rarity:"Legendary", img:"assets/heroes/heroes-icons/hero130.png" },
+  { name:"Zilong", rarity:"Common", img:"assets/heroes/heroes-icons/hero131.png" },
+  { name:"Zetian", rarity:"Mythic", img:"assets/heroes/heroes-icons/hero132.png" },
 ];
 const spells = [
-      {name: "Flicker", rarity: "Common", img: "assets/spells/Flicker.png"},
-      {name: "Execute", rarity: "Rare", img: "assets/spells/execute.png"},
-      {name: "Retribution", rarity: "Epic", img: "assets/spells/Retribution.png"},
-      {name: "Inspire", rarity: "Legendary", img: "assets/spells/Inspire.png"},
-      {name: "Purify", rarity: "Mythic", img: "assets/spells/purify.png"},
-      {name: "Sprint", rarity: "Common", img: "assets/spells/sprint.png"},
-      {name: "Ice-retribution", rarity: "Epic", img: "assets/spells/ice-retribution.png"},
-      {name: "Aegis", rarity: "Rare", img: "assets/spells/aegis.png"},
-      {name: "Petrify", rarity: "Epic", img: "assets/spells/petrify.png"},
-      {name: "Flame-retribution", rarity: "Epic", img: "assets/spells/flame-retribution.png"},
-      {name: "Flameshot", rarity: "Legendary", img: "assets/spells/flameshot.png"},
-      {name: "Arrival", rarity: "Mythic", img: "assets/spells/arrival.png"},
-     {name: "Bloody-retribution", rarity: "Epic", img: "assets/spells/bloody-retribution.png"},
-      {name: "Vengeance", rarity: "Epic", img: "assets/spells/vengeance.png"}
-    ];
+  { name:"Flicker", rarity:"Common", img:"assets/spells/Flicker.png" },
+  { name:"Execute", rarity:"Rare", img:"assets/spells/execute.png" },
+  { name:"Retribution", rarity:"Epic", img:"assets/spells/Retribution.png" },
+  { name:"Inspire", rarity:"Legendary", img:"assets/spells/Inspire.png" },
+  { name:"Purify", rarity:"Mythic", img:"assets/spells/purify.png" },
+  { name:"Sprint", rarity:"Common", img:"assets/spells/sprint.png" },
+  { name:"Ice-retribution", rarity:"Epic", img:"assets/spells/ice-retribution.png" },
+  { name:"Aegis", rarity:"Rare", img:"assets/spells/aegis.png" },
+  { name:"Petrify", rarity:"Epic", img:"assets/spells/petrify.png" },
+  { name:"Flame-retribution", rarity:"Epic", img:"assets/spells/flame-retribution.png" },
+  { name:"Flameshot", rarity:"Legendary", img:"assets/spells/flameshot.png" },
+  { name:"Arrival", rarity:"Mythic", img:"assets/spells/arrival.png" },
+  { name:"Bloody-retribution", rarity:"Epic", img:"assets/spells/bloody-retribution.png" },
+  { name:"Vengeance", rarity:"Epic", img:"assets/spells/vengeance.png" },
+];
+const lanes = [
+  { name:"Gold Lane", rarity:"Common", img:"assets/lanes/Gold.png" },
+  { name:"EXP Lane", rarity:"Rare", img:"assets/lanes/Exp.png" },
+  { name:"Mid Lane", rarity:"Epic", img:"assets/lanes/Mid.png" },
+  { name:"Jungler", rarity:"Legendary", img:"assets/lanes/Jungler.png" },
+  { name:"Roam", rarity:"Mythic", img:"assets/lanes/Roam.png" },
+];
+const emblems = [
+  { name:"Common", rarity:"Common", img:"assets/emblems/common.png" },
+  { name:"Mage", rarity:"Rare", img:"assets/emblems/mage.png" },
+  { name:"Assassin", rarity:"Epic", img:"assets/emblems/assassin.png" },
+  { name:"Fighter", rarity:"Legendary", img:"assets/emblems/fighter.png" },
+  { name:"Marksman", rarity:"Mythic", img:"assets/emblems/marksman.png" },
+  { name:"Support", rarity:"Legendary", img:"assets/emblems/support.png" },
+  { name:"Tank", rarity:"Mythic", img:"assets/emblems/tank.png" },
+];
 
-    const lanes = [
-      {name: "Gold Lane", rarity: "Common", img: "assets/lanes/Gold.png"},
-      {name: "EXP Lane", rarity: "Rare", img: "assets/lanes/Exp.png"},
-      {name: "Mid Lane", rarity: "Epic", img: "assets/lanes/Mid.png"},
-      {name: "Jungler", rarity: "Legendary", img: "assets/lanes/Jungler.png"},
-      {name: "Roam", rarity: "Mythic", img: "assets/lanes/Roam.png"}
-    ];
-    const emblems = [
-          {name: "Common", rarity: "Common", img: "assets/emblems/common.png"},
-      {name: "Mage", rarity: "Rare", img: "assets/emblems/mage.png"},
-      {name: "Assassin", rarity: "Epic", img: "assets/emblems/assassin.png"},
-      {name: "Fighter", rarity: "Legendary", img: "assets/emblems/fighter.png"},
-      {name: "Marksman", rarity: "Mythic", img: "assets/emblems/marksman.png"},
-      {name: "Support", rarity: "Legendary", img: "assets/emblems/support.png"},
-      {name: "Tank", rarity: "Mythic", img: "assets/emblems/tank.png"}
-    ]
+const wheelData = { heroes, spells, lanes, emblems };
+const wheelOrder = ["heroes","spells","lanes","emblems"];
+const wheelLabels = { heroes:"Heroes", spells:"Spells", lanes:"Lanes", emblems:"Emblems" };
+const rarityColors = { Common:"#4a4a5a", Rare:"#2a5a7a", Epic:"#5a3a7a", Legendary:"#8a7a2f", Mythic:"#7a2a2a" };
 
-let items = heroes;
-let visibleItems = [];
 const MAX_VISIBLE = 22;
-
-const canvas = document.getElementById("wheel");
-const ctx = canvas.getContext("2d");
-const center = canvas.width / 2;
-const radius = canvas.width * 0.48;
-
+let currentType = "heroes";
+let stage = 0;
+let visibleItems = [];
 let rotation = 0;
 let speed = 0;
-let lastTick = -1;
 let spinning = false;
-let winner = null;
+let lastTick = -1;
 let buildData = [];
+const imgCache = {};
 
-// Кэш изображений
-const imageCache = {};
-function preloadImages(list) {
+// ==================== CANVAS ====================
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+
+function preload(list) {
   list.forEach(item => {
-    if (!item.img) return;
-    const img = new Image();
-    img.src = item.img;
-    imageCache[item.img] = img;
+    if (!item.img || imgCache[item.img]) return;
+    const img = new Image(); img.src = item.img; imgCache[item.img] = img;
   });
 }
-preloadImages(heroes);
-preloadImages(spells);
-preloadImages(lanes);
-preloadImages(emblems);
+preload(heroes); preload(spells); preload(lanes); preload(emblems);
 
-function generateWheel() {
-  const shuffled = [...items].sort(() => Math.random() - 0.5);
+function generateWheel(type) {
+  const shuffled = [...wheelData[type]].sort(() => Math.random() - 0.5);
   visibleItems = shuffled.slice(0, MAX_VISIBLE);
 }
 
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+function drawWheel() {
+  const size = canvas.width;
+  const center = size / 2;
+  const radius = size * 0.46;
+  ctx.clearRect(0, 0, size, size);
   const sectors = visibleItems.length;
   if (!sectors) return;
   const angle = (Math.PI * 2) / sectors;
-  const iconSize = Math.min(120, radius * 1.8 / sectors);
 
   for (let i = 0; i < sectors; i++) {
     const a = i * angle + rotation;
     const item = visibleItems[i];
-
     ctx.beginPath();
     ctx.moveTo(center, center);
     ctx.arc(center, center, radius, a, a + angle);
     ctx.closePath();
-
-    switch (item.rarity) {
-      case "Common": ctx.fillStyle = "#444"; break;
-      case "Rare": ctx.fillStyle = "#3f6f88"; break;
-      case "Epic": ctx.fillStyle = "#6a4b7a"; break;
-      case "Legendary": ctx.fillStyle = "#8a7a2f"; break;
-      case "Mythic": ctx.fillStyle = "#7a3b3b"; break;
-      default: ctx.fillStyle = "#333";
-    }
+    ctx.fillStyle = rarityColors[item.rarity] || "#333";
     ctx.fill();
-    ctx.strokeStyle = "gold";
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(255,215,0,0.65)";
+    ctx.lineWidth = 2;
     ctx.stroke();
 
-    const icon = imageCache[item.img];
-    if (icon && icon.complete) {
+    const icon = imgCache[item.img];
+    if (icon && icon.complete && icon.naturalWidth > 0) {
+      const iconSize = Math.min(78, (radius * 1.6) / sectors);
       ctx.save();
       ctx.translate(center, center);
       ctx.rotate(a + angle / 2);
-      const dist = radius * 0.68;
-      ctx.translate(dist, 0);
+      ctx.translate(radius * 0.7, 0);
       ctx.rotate(-(a + angle / 2));
-      ctx.drawImage(icon, -iconSize / 2, -iconSize / 2, iconSize, iconSize);
+      ctx.drawImage(icon, -iconSize/2, -iconSize/2, iconSize, iconSize);
       ctx.restore();
     }
   }
+
+  // Center dot
+  const grad = ctx.createRadialGradient(center,center,0,center,center,radius*0.14);
+  const isDark = !document.body.classList.contains("light");
+  grad.addColorStop(0, isDark ? "#1a1f3a" : "#e0e8ff");
+  grad.addColorStop(1, isDark ? "#0d1225" : "#c8d4f0");
+  ctx.beginPath();
+  ctx.arc(center, center, radius * 0.11, 0, Math.PI*2);
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,215,0,0.85)";
+  ctx.lineWidth = 3;
+  ctx.stroke();
 }
 
 function animate() {
   if (spinning) {
-    if(Math.random()<0.2) spawnSpark();
     rotation += speed;
     speed *= 0.982;
-
     const sectors = visibleItems.length;
-    const angle = (Math.PI * 2) / sectors;
-    const pointerAngle = (Math.PI - rotation + Math.PI * 2) % (Math.PI * 2);
-    const currentSector = Math.floor(pointerAngle / angle);
-
-    if (currentSector !== lastTick && speed > 0.015) {
-      tickSound.currentTime = 0;
-      tickSound.play().catch(() => {});
-      lastTick = currentSector;
+    if (sectors > 0) {
+      const angle = (Math.PI*2) / sectors;
+      const pointerAngle = (Math.PI - rotation + Math.PI*4) % (Math.PI*2);
+      const sector = Math.floor(pointerAngle / angle);
+      if (sector !== lastTick && speed > 0.015) lastTick = sector;
+      if (speed < 0.003) {
+        spinning = false;
+        let norm = rotation % (Math.PI*2);
+        if (norm < 0) norm += Math.PI*2;
+        const pointed = (0 - norm + Math.PI*4) % (Math.PI*2);
+        const winnerIdx = Math.floor(pointed / angle) % sectors;
+        onWinner(visibleItems[winnerIdx]);
+      }
     }
-
-    if (speed < 0.003) {
-  spinning = false;
-
-  // Нормализуем угол поворота колеса
-  let normalizedRotation = rotation % (Math.PI * 2);
-  if (normalizedRotation < 0) normalizedRotation += Math.PI * 2;
-
-  // Стрелка указывает ВЛЕВО (на 0 градусов в canvas-координатах)
-  // Поэтому сектор под стрелкой — это тот, чей центр находится около 0 радиан относительно стрелки
-  const arrowAngle = 0; // стрелка смотрит влево (0 радиан)
-
-  // Угол сектора, на который указывает стрелка после поворота колеса
-  const pointedAngle = (arrowAngle - normalizedRotation + Math.PI * 2) % (Math.PI * 2);
-
-  // Находим индекс сектора (сектор начинается с 0)
-  const winnerSector = Math.floor(pointedAngle / angle) % sectors;
-
-  winner = visibleItems[winnerSector];
-  // Плавный snap к центру сектора под стрелкой
-const targetRotation = normalizedRotation + (pointedAngle - (winnerSector * angle + angle / 2));
-rotation = targetRotation;
-  showWinner();
-}
   }
-  draw();
+  drawWheel();
   requestAnimationFrame(animate);
 }
 
-function pullLever() {
-
-if (spinning) return;
-
-const lever = document.getElementById('lever');
-
-lever.classList.remove('pull');
-void lever.offsetWidth; // перезапуск анимации
-lever.classList.add('pull');
-
-spinning = true;
-
-speed = 0.35 + Math.random() * 0.25;
-
-lastTick = -1;
-
-spinSound.currentTime = 0;
-spinSound.play().catch(()=>{});
-
-}
-
-function showWinner() {
-  if (!winner) return;
-
-  const centerEl = document.getElementById('centerWinner');
-
-  if (winner.video) {
-
-    centerEl.innerHTML = `
-      <video id="winnerVideo" autoplay playsinline 
-      style="max-width:90vw; max-height:70vh; border-radius:20px; box-shadow:0 0 40px gold;">
-        <source src="${winner.video}" type="video/mp4">
-      </video>
-      <h2>${winner.name}</h2>
-    `;
-
-    const video = document.getElementById("winnerVideo");
-
-    video.addEventListener("loadedmetadata", () => {
-
-      const duration = video.duration * 1000;
-
-      setTimeout(nextStage, duration);
-
-    });
-
-  } else {
-
-    centerEl.innerHTML = `
-      <img src="${winner.img}" alt="${winner.name}">
-      <h2>${winner.name}</h2>
-    `;
-
-    setTimeout(nextStage, 5000); // картинка показывается 5 сек
-  }
-
-  centerEl.style.opacity = '1';
-
-
-  function nextStage(){
-    centerEl.style.opacity = '0';
-    stage = (stage + 1) % 4;
-    setWheel(wheelOrder[stage]);
-  }
-
-
-  // Сохранение билда
-  let currentBuild = {};
-
-  if (items === heroes) currentBuild.hero = winner;
-  else if (items === spells) currentBuild.spell = winner;
-  else if (items === lanes) currentBuild.lane = winner;
-  else if (items === emblems) currentBuild.emblem = winner;
-
-  if (!Array.isArray(buildData)) buildData = [];
-
+// ==================== WINNER ====================
+function onWinner(item) {
+  // Save build
   if (
     buildData.length === 0 ||
     (buildData[buildData.length-1].hero &&
      buildData[buildData.length-1].spell &&
      buildData[buildData.length-1].lane &&
      buildData[buildData.length-1].emblem)
-  ) {
-    buildData.push({});
-  }
-
-  Object.assign(buildData[buildData.length-1], currentBuild);
+  ) buildData.push({});
+  const last = buildData[buildData.length-1];
+  const key = { heroes:"hero", spells:"spell", lanes:"lane", emblems:"emblem" }[currentType];
+  last[key] = item;
   localStorage.setItem("mlbb_builds", JSON.stringify(buildData));
+
+  // Show winner
+  const overlay = document.getElementById("winnerOverlay");
+  const winImg = document.getElementById("winnerImg");
+  const winVid = document.getElementById("winnerVideo");
+  const winName = document.getElementById("winnerName");
+  const winRarity = document.getElementById("winnerRarity");
+
+  winName.textContent = item.name;
+  winRarity.textContent = item.rarity;
+  winRarity.className = "r-" + item.rarity.toLowerCase();
+
+  if (item.video) {
+    winImg.style.display = "none";
+    winVid.style.display = "block";
+    winVid.src = item.video;
+    winVid.load(); winVid.play().catch(() => {});
+    const glow = getRarityGlow(item.rarity);
+    winVid.style.filter = glow;
+  } else {
+    winVid.style.display = "none";
+    winVid.src = "";
+    winImg.style.display = "block";
+    winImg.src = item.img;
+    winImg.style.filter = getRarityGlow(item.rarity);
+  }
+  overlay.classList.add("show");
+
+  const delay = item.video ? 6000 : 4000;
+  setTimeout(() => {
+    closeWinner();
+    nextStage();
+  }, delay);
 }
+
+function getRarityGlow(r) {
+  switch(r) {
+    case "Mythic":    return "drop-shadow(0 0 22px #ff4444) drop-shadow(0 0 44px rgba(255,50,50,0.6))";
+    case "Legendary": return "drop-shadow(0 0 22px #ffd700) drop-shadow(0 0 44px rgba(255,215,0,0.55))";
+    case "Epic":      return "drop-shadow(0 0 18px #b44fff) drop-shadow(0 0 32px rgba(180,79,255,0.5))";
+    case "Rare":      return "drop-shadow(0 0 15px #4fc3f7)";
+    default:          return "none";
+  }
+}
+
+function closeWinner() {
+  document.getElementById("winnerOverlay").classList.remove("show");
+}
+
+function nextStage() {
+  stage = (stage + 1) % 4;
+  setWheel(wheelOrder[stage]);
+}
+
+// ==================== WHEEL CONTROL ====================
 function setWheel(type) {
-  if (type === "heroes") items = heroes;
-  else if (type === "spells") items = spells;
-  else if (type === "lanes") items = lanes;
-  else if (type === "emblems") items = emblems;
-
-  localStorage.setItem('wheelType', type);
-  generateWheel();
+  currentType = type;
+  stage = wheelOrder.indexOf(type);
+  generateWheel(type);
   rotation = 0;
-  draw();
+  localStorage.setItem("wheelType", type);
+  document.getElementById("labelName").textContent = wheelLabels[type];
+  document.getElementById("labelStep").textContent = "Step " + (stage+1) + " / 4";
+  document.querySelectorAll(".menu-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.type === type);
+  });
 }
 
-function loadBuild() {
-  const saved = localStorage.getItem("mlbb_builds");
-  if (saved) {
-    try {
-      const parsed = JSON.parse(saved);
-      buildData = Array.isArray(parsed) ? parsed : [];  // если не массив — сбрасываем
-    } catch (e) {
-      console.error("Ошибка парсинга билдов:", e);
-      buildData = [];
-    }
-  } else {
-    buildData = [];
-  }
+function reshuffleWheel() {
+  if (spinning) return;
+  generateWheel(currentType);
+  rotation = 0;
+}
 
-  let tableHTML = `
-    <h2 style="margin-bottom:20px;">Твои билды</h2>
-    <table style="width:100%; border-collapse:collapse; color:gold; font-size:1.1rem;">
-      <thead>
-        <tr style="border-bottom:2px solid gold;">
-          <th style="padding:12px; text-align:center;">№</th>
-          <th style="padding:12px; text-align:left;">Герой</th>
-          <th style="padding:12px; text-align:left;">Спелл</th>
-          <th style="padding:12px; text-align:left;">Линия</th>
-          <th style="padding:12px; text-align:left;">Эмблема</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
+function pullLever() {
+  if (spinning) return;
+  const arm = document.getElementById("leverArm");
+  arm.classList.remove("pull");
+  void arm.offsetWidth;
+  arm.classList.add("pull");
+  spinning = true;
+  speed = 0.32 + Math.random() * 0.22;
+  lastTick = -1;
+  const snd = document.getElementById("spinSound");
+  if (snd) { snd.currentTime = 0; snd.play().catch(() => {}); }
+}
 
+// ==================== BUILD ====================
+function openBuild() {
+  const body = document.getElementById("buildBody");
   if (buildData.length === 0) {
-    tableHTML += `<tr><td colspan="5" style="padding:20px; text-align:center;">Пока нет билдов. Крути колесо!</td></tr>`;
+    body.innerHTML = '<p class="empty-msg">No builds yet — spin the wheel to get started!</p>';
   } else {
-    buildData.forEach((build, index) => {
-      tableHTML += `
-        <tr style="border-bottom:1px solid rgba(255,215,0,0.2);">
-          <td style="padding:12px; text-align:center;">${index + 1}</td>
-          <td style="padding:12px;">
-            ${build.hero ? `<img src="${build.hero.img}" style="width:50px; vertical-align:middle; margin-right:10px;">${build.hero.name}` : '-'}
-          </td>
-          <td style="padding:12px;">
-            ${build.spell ? `<img src="${build.spell.img}" style="width:50px; vertical-align:middle; margin-right:10px;">${build.spell.name}` : '-'}
-          </td>
-          <td style="padding:12px;">
-            ${build.lane ? `<img src="${build.lane.img}" style="width:50px; vertical-align:middle; margin-right:10px;">${build.lane.name}` : '-'}
-          </td>
-          <td style="padding:12px;">
-            ${build.emblem ? `<img src="${build.emblem.img}" style="width:50px; vertical-align:middle; margin-right:10px;">${build.emblem.name}` : '-'}
-          </td>
-        </tr>
-      `;
-    });
+    let rows = buildData.map((b, i) => `
+      <tr>
+        <td class="cell-num">${i+1}</td>
+        <td>${b.hero ? `<div class="cell-item"><img src="${b.hero.img}" alt="${b.hero.name}"><span>${b.hero.name}</span></div>` : '<span class="cell-dash">—</span>'}</td>
+        <td>${b.spell ? `<div class="cell-item"><img src="${b.spell.img}" alt="${b.spell.name}"><span>${b.spell.name}</span></div>` : '<span class="cell-dash">—</span>'}</td>
+        <td>${b.lane ? `<div class="cell-item"><img src="${b.lane.img}" alt="${b.lane.name}"><span>${b.lane.name}</span></div>` : '<span class="cell-dash">—</span>'}</td>
+        <td>${b.emblem ? `<div class="cell-item"><img src="${b.emblem.img}" alt="${b.emblem.name}"><span>${b.emblem.name}</span></div>` : '<span class="cell-dash">—</span>'}</td>
+      </tr>`).join("");
+    body.innerHTML = `
+      <div class="table-wrap">
+        <table class="builds-table">
+          <thead><tr><th>#</th><th>Hero</th><th>Spell</th><th>Lane</th><th>Emblem</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <button class="clear-btn action-btn" onclick="clearBuilds()">Clear All</button>`;
   }
-
-  tableHTML += `</tbody></table>`;
-
-  document.getElementById('buildContent').innerHTML = tableHTML;
-  document.getElementById('buildOverlay').classList.add('visible');
+  document.getElementById("buildOverlay").classList.add("show");
 }
-// События
-document.getElementById('showBuildBtn').onclick = loadBuild;
-document.getElementById('closeBuild').onclick = () => {
-  document.getElementById('buildOverlay').classList.remove('visible');
-};
 
-const themeToggle = document.getElementById("theme-toggle");
-themeToggle.addEventListener("click", () => {
-  document.body.classList.toggle("light-theme");
-  const icon = themeToggle.querySelector("i");
-  icon.classList.toggle("fa-moon");
-  icon.classList.toggle("fa-sun");
+function closeBuild() {
+  document.getElementById("buildOverlay").classList.remove("show");
+}
+
+function clearBuilds() {
+  buildData = [];
+  localStorage.removeItem("mlbb_builds");
+  openBuild();
+}
+
+document.getElementById("buildOverlay").addEventListener("click", function(e) {
+  if (e.target === this) closeBuild();
 });
 
-// Старт
-window.addEventListener('load', () => {
-  const savedType = localStorage.getItem('wheelType') || 'heroes';
+// ==================== THEME ====================
+const themeBtn = document.getElementById("themeBtn");
+function applyTheme(t) {
+  document.body.classList.toggle("light", t === "light");
+  themeBtn.textContent = t === "light" ? "🌙" : "☀️";
+  localStorage.setItem("mlbb-theme", t);
+}
+themeBtn.addEventListener("click", () => {
+  const next = document.body.classList.contains("light") ? "dark" : "light";
+  applyTheme(next);
+});
+
+// ==================== KEYBOARD SHORTCUTS ====================
+const keyHints = document.getElementById("keyHints");
+document.getElementById("keyBtn").addEventListener("click", () => {
+  keyHints.classList.toggle("show");
+});
+document.addEventListener("click", e => {
+  if (!keyHints.contains(e.target) && e.target.id !== "keyBtn") {
+    keyHints.classList.remove("show");
+  }
+});
+
+document.addEventListener("keydown", e => {
+  const tag = e.target.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA") return;
+  switch (e.code) {
+    case "Space": e.preventDefault(); pullLever(); break;
+    case "KeyR":  reshuffleWheel(); break;
+    case "Digit1": setWheel("heroes");  break;
+    case "Digit2": setWheel("spells");  break;
+    case "Digit3": setWheel("lanes");   break;
+    case "Digit4": setWheel("emblems"); break;
+  }
+});
+
+// ==================== PARTICLES ====================
+const pc = document.getElementById("particles");
+const pctx = pc.getContext("2d");
+function resizeParticles() { pc.width = innerWidth; pc.height = innerHeight; }
+resizeParticles();
+window.addEventListener("resize", resizeParticles);
+
+const particles = Array.from({length:100}, () => ({
+  x: Math.random() * innerWidth,
+  y: Math.random() * innerHeight,
+  size: Math.random() * 1.8 + 0.5,
+  speed: Math.random() * 0.28 + 0.08
+}));
+
+function animateParticles() {
+  pctx.clearRect(0, 0, pc.width, pc.height);
+  particles.forEach(p => {
+    p.y -= p.speed;
+    if (p.y < 0) { p.y = pc.height; p.x = Math.random() * pc.width; }
+    pctx.beginPath();
+    pctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+    pctx.fillStyle = "rgba(0,220,255,0.55)";
+    pctx.fill();
+  });
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// ==================== INIT ====================
+window.addEventListener("load", () => {
+  const savedTheme = localStorage.getItem("mlbb-theme") || "dark";
+  applyTheme(savedTheme);
+  const savedType = localStorage.getItem("wheelType") || "heroes";
+  const savedBuilds = localStorage.getItem("mlbb_builds");
+  if (savedBuilds) { try { buildData = JSON.parse(savedBuilds); } catch { buildData = []; } }
   setWheel(savedType);
   requestAnimationFrame(animate);
-
-  const savedBuilds = localStorage.getItem("mlbb_builds");
-if (savedBuilds) {
-  buildData = JSON.parse(savedBuilds);
-}
 });
-// ===== PARTICLES BACKGROUND =====
-
-const particleCanvas = document.getElementById("particles");
-const pctx = particleCanvas.getContext("2d");
-
-particleCanvas.width = window.innerWidth;
-particleCanvas.height = window.innerHeight;
-
-let particles = [];
-
-for(let i=0;i<120;i++){
-particles.push({
-x:Math.random()*particleCanvas.width,
-y:Math.random()*particleCanvas.height,
-size:Math.random()*2+1,
-speed:Math.random()*0.3+0.1
-});
-}
-
-function animateParticles(){
-
-pctx.clearRect(0,0,particleCanvas.width,particleCanvas.height);
-
-particles.forEach(p=>{
-p.y -= p.speed;
-
-if(p.y < 0){
-p.y = particleCanvas.height;
-p.x = Math.random()*particleCanvas.width;
-}
-
-pctx.beginPath();
-pctx.arc(p.x,p.y,p.size,0,Math.PI*2);
-pctx.fillStyle="rgba(0,255,255,0.6)";
-pctx.fill();
-});
-
-requestAnimationFrame(animateParticles);
-}
-
-animateParticles();
-function spawnSpark(){
-
-const spark=document.createElement("div");
-
-const wheelRect=document.getElementById("wheelArea").getBoundingClientRect();
-
-spark.style.position="absolute";
-spark.style.width="5px";
-spark.style.height="5px";
-spark.style.background="gold";
-spark.style.borderRadius="50%";
-
-spark.style.left = wheelRect.left + Math.random()*wheelRect.width + "px";
-spark.style.top = wheelRect.top + Math.random()*wheelRect.height + "px";
-
-spark.style.boxShadow="0 0 15px gold";
-
-spark.style.pointerEvents="none";
-
-document.body.appendChild(spark);
-
-spark.animate([
-{transform:"scale(1)",opacity:1},
-{transform:"scale(0)",opacity:0}
-],{duration:600});
-
-setTimeout(()=>spark.remove(),600);
-
-}
 </script>
-<canvas id="particles"></canvas>
 </body>
 </html>
